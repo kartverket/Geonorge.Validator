@@ -71,7 +71,14 @@ namespace Geonorge.Validator
                     ValidatorType.Planomriss,
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0/Planomriss",
                     new[] { typeof(SkjemavalideringForGmlPlanomriss), typeof(IGmlValidationData) },
-                    new[] { ".gml" }
+                    new[] { ".gml" },
+                    options =>
+                    {
+                        options.SkipRule<KoordinatreferansesystemForKart3D>();
+                        options.SkipRule<KurverSkalHaGyldigGeometri>();
+                        options.SkipRule<BueKanIkkeHaDobbeltpunkter>();
+                        options.SkipRule<BueKanIkkeHaPunkterPåRettLinje>();
+                    }
                 );
             });
 

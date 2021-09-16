@@ -1,9 +1,6 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
-using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.Models;
-using Geonorge.Validator.Application.Services.Validators.Config;
-using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Services.Validators
@@ -11,30 +8,20 @@ namespace Geonorge.Validator.Application.Services.Validators
     public class ReguleringsplanforslagValidator : IReguleringsplanforslagValidator
     {
         private readonly IRuleValidator _validator;
-        private readonly ValidatorOptions _options;
 
         public ReguleringsplanforslagValidator(
-            IRuleValidator validator,
-            IOptions<ValidatorOptions> options)
+            IRuleValidator validator)
         {
             _validator = validator;
-            _options = options.Value;
         }
 
-        public List<Rule> Validate(DisposableList<InputData> inputData)
+        public List<Rule> Validate(string xmlNamespace, DisposableList<InputData> inputData)
         {
-            var validationData = GmlValidationData.Create(inputData);
+            using var validationData = GmlValidationData.Create(inputData);
 
-            _validator.Validate<IGmlValidationData>(validationData);
+            _validator.Validate(validationData);
 
             return _validator.GetAllRules();
-        }
-
-        public List<RuleSet> GetRuleInfo(string xmlNamespace)
-        {
-            var ruleTypes = _options.GetRuleTypes(xmlNamespace);
-
-            return _validator.GetRuleInfo(ruleTypes);
         }
     }
 }

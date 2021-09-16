@@ -21,32 +21,14 @@ namespace Geonorge.Validator.Application.Services.Validators
             _options = options.Value;
         }
 
-        public List<Rule> Validate(DisposableList<InputData> inputData)
+        public List<Rule> Validate(string xmlNamespace, DisposableList<InputData> inputData)
         {
-            var validationData = GmlValidationData.Create(inputData);
+            using var validationData = GmlValidationData.Create(inputData);
+            var options = _options.GetValidationOptions(xmlNamespace);
 
-            _validator.Validate<IGmlValidationData>(validationData, options =>
-            {
-                options.SkipRule<KoordinatreferansesystemForKart3D>();
-                options.SkipRule<KurverSkalHaGyldigGeometri>();
-                options.SkipRule<BueKanIkkeHaDobbeltpunkter>();
-                options.SkipRule<BueKanIkkeHaPunkterPåRettLinje>();
-            });
+            _validator.Validate(validationData, options);
 
             return _validator.GetAllRules();
-        }
-
-        public List<RuleSet> GetRuleInfo(string xmlNamespace)
-        {
-            var ruleTypes = _options.GetRuleTypes(xmlNamespace);
-
-            return _validator.GetRuleInfo(ruleTypes, options =>
-            {
-                options.SkipRule<KoordinatreferansesystemForKart3D>();
-                options.SkipRule<KurverSkalHaGyldigGeometri>();
-                options.SkipRule<BueKanIkkeHaDobbeltpunkter>();
-                options.SkipRule<BueKanIkkeHaPunkterPåRettLinje>();
-            });
         }
     }
 }

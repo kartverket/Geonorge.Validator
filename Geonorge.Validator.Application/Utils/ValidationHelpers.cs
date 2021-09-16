@@ -1,5 +1,6 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.Models.Report;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -11,11 +12,23 @@ namespace Geonorge.Validator.Application.Utils
 {
     public class ValidationHelpers
     {
-        public static DisposableList<InputData> GetInputData(List<IFormFile> files)
+        public static DisposableList<InputData> GetInputData(List<IFormFile> files, IEnumerable<string> allowedFileTypes)
         {
-            return files
-                .Select(file => new InputData(file.OpenReadStream(), file.FileName))
-                .ToDisposableList();
+            var inputData = new DisposableList<InputData>();
+            var invalidFiles = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (allowedFileTypes.Contains(Path.GetExtension(file.FileName)))
+                    inputData.Add(new InputData(file.OpenReadStream(), file.FileName));
+                else
+                    invalidFiles.Add(file.FileName);
+            }
+
+            if (invalidFiles.Any())
+                throw new InvalidFileException($"Ugyldig filformat: {string.Join(", ", invalidFiles)}");
+
+            return inputData;
         }
 
         public static T GetValidationData<T>(DisposableList<InputData> inputData, Func<DisposableList<InputData>, T> resolver) where T : class
