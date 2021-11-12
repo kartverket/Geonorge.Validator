@@ -14,13 +14,15 @@ namespace Geonorge.Validator.Application.Utils
     {
         public static DisposableList<InputData> GetInputData(List<IFormFile> files, IEnumerable<string> allowedFileTypes)
         {
+            allowedFileTypes ??= new[] { ".xml" };
+
             var inputData = new DisposableList<InputData>();
             var invalidFiles = new List<string>();
 
             foreach (var file in files)
             {
                 if (allowedFileTypes.Contains(Path.GetExtension(file.FileName)))
-                    inputData.Add(new InputData(file.OpenReadStream(), file.FileName));
+                    inputData.Add(new InputData(file.OpenReadStream(), file.FileName, null));
                 else
                     invalidFiles.Add(file.FileName);
             }
@@ -43,11 +45,12 @@ namespace Geonorge.Validator.Application.Utils
             return resolver.Invoke(dataList);
         }
 
-        public static ValidationReport CreateValidationReport(DateTime start, DisposableList<InputData> inputData, List<Rule> rules)
+        public static ValidationReport CreateValidationReport(DateTime start, string xmlNamespace, DisposableList<InputData> inputData, List<Rule> rules)
         {
             return new ValidationReport
             {
                 CorrelationId = ContextCorrelator.GetValue("CorrelationId") as string,
+                Namespace = xmlNamespace,
                 Errors = rules
                     .Where(rule => rule.Status == Status.FAILED)
                     .SelectMany(rule => rule.Messages)

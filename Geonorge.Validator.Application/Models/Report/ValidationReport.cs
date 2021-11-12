@@ -6,6 +6,7 @@ namespace Geonorge.Validator.Application.Models.Report
     public class ValidationReport
     {
         public string CorrelationId { get; set; }
+        public string Namespace { get; set; }
         public int Errors { get; set; }
         public int Warnings { get; set; }
         public List<ValidationRule> Rules { get; set; } = new();

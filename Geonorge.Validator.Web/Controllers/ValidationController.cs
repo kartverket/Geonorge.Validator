@@ -1,8 +1,11 @@
-﻿using Geonorge.Validator.Application.Models;
-using Geonorge.Validator.Application.Services;
+﻿using Geonorge.Validator.Application.Services.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Controllers
 {
@@ -20,14 +23,14 @@ namespace Geonorge.Validator.Controllers
         }
 
         [HttpPost]
-        public IActionResult Validate([FromForm] ValidationSumbittal submittal)
+        public async Task<IActionResult> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile = null)
         {
             try
             {
-                if (!submittal?.IsValid ?? false)
+                if (!xmlFiles?.Any() ?? true)
                     return BadRequest();
 
-                var report = _validationService.Validate(submittal.Files, submittal.Namespace);
+                var report = await _validationService.Validate(xmlFiles, xsdFile);
 
                 return Ok(report);
             }

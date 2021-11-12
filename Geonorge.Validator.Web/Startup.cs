@@ -1,12 +1,13 @@
-using Arkitektum.XmlSchemaValidator.Config;
 using DiBK.RuleValidator.Config;
-using DiBK.RuleValidator.Rules.Gml;
-using Geonorge.Validator.Application.Rules.Schema.Planomriss;
-using Geonorge.Validator.Application.Rules.Schema.Reguleringsplanforslag;
-using Geonorge.Validator.Application.Services;
-using Geonorge.Validator.Application.Services.Validators;
+using Geonorge.Validator.Application.HttpClients.StaticData;
+using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.Services.RuleService;
+using Geonorge.Validator.Application.Services.Validation;
+using Geonorge.Validator.Application.Services.Validator;
+using Geonorge.Validator.Application.Services.XsdValidation;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
+using Geonorge.XsdValidator.Config;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -20,16 +21,14 @@ using Serilog;
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Geonorge.Validator
 {
     public class Startup
     {
-        private static readonly Assembly _schemaRuleAssembly = Assembly.Load("Geonorge.Validator.Application");
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -42,9 +41,9 @@ namespace Geonorge.Validator
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
-                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                    options.JsonSerializerOptions.IgnoreNullValues = true;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 });
 
             services.AddSwaggerGen(options =>
@@ -54,49 +53,23 @@ namespace Geonorge.Validator
 
             services.AddRuleValidator(new[] 
             {
-                _schemaRuleAssembly,
-                Assembly.Load("DiBK.RuleValidator.Rules.Gml")
+                Assembly.Load("Geonorge.Validator.Application"),
+                Assembly.Load("DiBK.RuleValidator.Rules.Gml"),
+                Assembly.Load("Reguleringsplanforslag.Rules"),
             });
 
-            services.AddValidators(options =>
+            services.AddValidators();
+
+            services.AddXsdValidator(options =>
             {
-                options.AddValidator<IReguleringsplanforslagValidator, ReguleringsplanforslagValidator>(
-                    ValidatorType.Reguleringsplanforslag,
-                    "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
-                    new[] { typeof(SkjemavalideringForReguleringsplanforslag), typeof(IGmlValidationData) },
-                    new[] { ".gml" }
-                );
-
-                options.AddValidator<IPlanomrissValidator, PlanomrissValidator>(
-                    ValidatorType.Planomriss,
-                    "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0/Planomriss",
-                    new[] { typeof(SkjemavalideringForGmlPlanomriss), typeof(IGmlValidationData) },
-                    new[] { ".gml" },
-                    options =>
-                    {
-                        options.SkipRule<KoordinatreferansesystemForKart3D>();
-                        options.SkipRule<KurverSkalHaGyldigGeometri>();
-                        options.SkipRule<BueKanIkkeHaDobbeltpunkter>();
-                        options.SkipRule<BueKanIkkeHaPunkterPåRettLinje>();
-                    }
-                );
-            });
-
-            services.AddXmlSchemaValidator(options =>
-            {
-                options.AddSchema(
-                    ValidatorType.Reguleringsplanforslag,
-                    "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
-                    "http://skjema.geonorge.no/SOSITEST/produktspesifikasjon/Reguleringsplanforslag/5.0/reguleringsplanforslag-5.0_rev20210827.xsd"
-                );
-
-                options.AddSchema(
-                    ValidatorType.Planomriss,
-                    GetResourceStream("planomriss-5.0.xsd")                    
-                );
-
                 options.CacheFilesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Geonorge.Validator/XSD");
                 options.CacheDurationDays = 30;
+                options.CacheableHosts = new[]
+                {
+                    "www.w3.org",
+                    "schemas.opengis.net",
+                    "shapechange.net"
+                };
             });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -105,6 +78,11 @@ namespace Geonorge.Validator
             services.AddTransient<IRuleService, RuleService>();
             services.AddTransient<IXsdValidationService, XsdValidationService>();
             services.AddTransient<IValidatorService, ValidatorService>();
+
+            services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
+            services.AddHttpClient<IStaticDataHttpClient, StaticDataHttpClient>();
+
+            services.Configure<StaticDataConfig>(Configuration.GetSection(StaticDataConfig.SectionName));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IHostApplicationLifetime hostApplicationLifetime)
@@ -131,8 +109,6 @@ namespace Geonorge.Validator
 
             app.UseMiddleware<SerilogMiddleware>();
 
-            app.UseXmlSchemaValidator();
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -142,13 +118,6 @@ namespace Geonorge.Validator
             app.UseEndpoints(endpoints => endpoints.MapControllers());
 
             hostApplicationLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
-        }
-
-        private static Stream GetResourceStream(string fileName)
-        {
-            var name = _schemaRuleAssembly.GetManifestResourceNames().SingleOrDefault(name => name.EndsWith(fileName));
-
-            return name != null ? _schemaRuleAssembly.GetManifestResourceStream(name) : null;
         }
     }
 }

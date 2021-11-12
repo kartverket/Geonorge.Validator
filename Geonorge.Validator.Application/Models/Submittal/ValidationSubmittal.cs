@@ -8,6 +8,6 @@ namespace Geonorge.Validator.Application.Models
     {
         public List<IFormFile> Files { get; set; }
         public string Namespace { get; set; }
-        public bool IsValid => (Files?.Any() ?? false) && !string.IsNullOrWhiteSpace(Namespace);
+        public bool IsValid => (Files?.Any() ?? false);
     }
 }

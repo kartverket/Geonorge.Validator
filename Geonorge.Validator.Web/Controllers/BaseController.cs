@@ -24,7 +24,7 @@ namespace Geonorge.Validator.Controllers
             return exception switch
             {
                 ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest(),
-                InvalidFileException ex => BadRequest(ex.Message),
+                InvalidFileException _ or InvalidXsdException _ => BadRequest(exception.Message),
                 Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
                 _ => null,
             };

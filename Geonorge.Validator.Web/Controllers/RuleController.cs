@@ -1,5 +1,5 @@
 ﻿using Geonorge.Validator.Application.Models;
-using Geonorge.Validator.Application.Services;
+using Geonorge.Validator.Application.Services.RuleService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;

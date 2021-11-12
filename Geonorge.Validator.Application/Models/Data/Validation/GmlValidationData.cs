@@ -1,9 +1,7 @@
-﻿using DiBK.RuleValidator.Rules.Gml;
-using DiBK.RuleValidator.Extensions;
-using System.Collections.Generic;
-using Geonorge.Validator.Application.Utils;
-using System.Linq;
+﻿using DiBK.RuleValidator.Extensions;
+using DiBK.RuleValidator.Rules.Gml;
 using System;
+using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Models
 {
@@ -12,25 +10,15 @@ namespace Geonorge.Validator.Application.Models
         public List<GmlDocument> Surfaces { get; } = new();
         public List<GmlDocument> Solids { get; } = new();
 
-        public static IGmlValidationData Create(DisposableList<InputData> inputData)
+        private GmlValidationData(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
         {
-            var gmlDocuments = ValidationHelpers.GetValidationData(inputData, data => data
-                .Select(data => GmlDocument.Create(data))
-                .ToList());
+            Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
+            Solids.AddRange(solids ?? new List<GmlDocument>());
+        }
 
-            var validationData = new GmlValidationData();
-
-            foreach (var document in gmlDocuments)
-            {
-                var dimensions = GmlHelper.GetDimensions(document.Document.Root);
-
-                if (dimensions == 2)
-                    validationData.Surfaces.Add(document);
-                else if (dimensions == 3)
-                    validationData.Solids.Add(document);
-            }
-
-            return validationData;
+        public static IGmlValidationData Create(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
+        {
+            return new GmlValidationData(surfaces, solids);
         }
 
         public void Dispose()

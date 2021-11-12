@@ -16,4 +16,19 @@ namespace Geonorge.Validator.Application.Exceptions
         {
         }
     }
+
+    public class InvalidXsdException : Exception
+    {
+        public InvalidXsdException()
+        {
+        }
+
+        public InvalidXsdException(string message) : base(message)
+        {
+        }
+
+        public InvalidXsdException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }

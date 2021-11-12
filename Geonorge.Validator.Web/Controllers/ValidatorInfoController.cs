@@ -1,4 +1,4 @@
-﻿using Geonorge.Validator.Application.Services;
+﻿using Geonorge.Validator.Application.Services.Validator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
