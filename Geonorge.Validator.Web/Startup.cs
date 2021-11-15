@@ -58,7 +58,7 @@ namespace Geonorge.Validator
                 Assembly.Load("Reguleringsplanforslag.Rules"),
             });
 
-            services.AddValidators();
+            services.AddRuleValidators();
 
             services.AddXsdValidator(options =>
             {

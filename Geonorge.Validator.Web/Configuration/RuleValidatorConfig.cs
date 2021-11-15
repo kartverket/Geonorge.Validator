@@ -12,10 +12,11 @@ namespace Geonorge.Validator.Web.Configuration
 {
     public static class RuleValidatorConfig
     {
-        public static void AddValidators(this IServiceCollection services)
+        public static void AddRuleValidators(this IServiceCollection services)
         {
             services.AddValidators(options =>
             {
+
                 options.AddValidator<IReguleringsplanforslagValidator, ReguleringsplanforslagValidator>(
                     ValidatorType.Reguleringsplanforslag,
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",

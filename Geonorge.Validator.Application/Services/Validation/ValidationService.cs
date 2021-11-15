@@ -45,8 +45,8 @@ namespace Geonorge.Validator.Application.Services.Validation
             var allowedFileTypes = _options.GetAllowedFileTypes(xmlNamespace);
 
             using var inputData = GetInputData(xmlFiles, allowedFileTypes);
-            var schemaRule = _xsdValidationService.Validate(inputData, xsdFile?.OpenReadStream());
-            var rules = new List<Rule> { schemaRule };
+            var xsdRule = _xsdValidationService.Validate(inputData, xsdFile?.OpenReadStream());
+            var rules = new List<Rule> { xsdRule };
 
             rules.AddRange(await Validate(xmlNamespace, xsdVersion, inputData));
 

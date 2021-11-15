@@ -22,7 +22,7 @@ namespace Geonorge.XsdValidator.Validator
 
         public List<string> Validate(Stream xmlStream, XmlSchemaSet xmlSchemaSet)
         {
-            var xmlReaderSettings = SetupXmlValidation(xmlSchemaSet);
+            var xmlReaderSettings = GetXmlReaderSettings(xmlSchemaSet);
 
             Validate(xmlStream, xmlReaderSettings);
 
@@ -45,7 +45,7 @@ namespace Geonorge.XsdValidator.Validator
             }
         }
 
-        private XmlReaderSettings SetupXmlValidation(XmlSchemaSet xmlSchemaSet)
+        private XmlReaderSettings GetXmlReaderSettings(XmlSchemaSet xmlSchemaSet)
         {
             var xmlReaderSettings = new XmlReaderSettings { ValidationType = ValidationType.Schema };
 
