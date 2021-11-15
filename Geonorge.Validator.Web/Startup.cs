@@ -88,7 +88,11 @@ namespace Geonorge.Validator
                 app.UseDeveloperExceptionPage();
 
             app.UseSwagger();
-            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Geonorge Validator v1"));
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Geonorge Validator v1");
+                options.RoutePrefix = "api/swagger";
+            });
 
             app.UseCors(options => options
                 .AllowAnyMethod()
