@@ -14,7 +14,7 @@ namespace Geonorge.Validator.Application.Utils
     {
         public static DisposableList<InputData> GetInputData(List<IFormFile> files, IEnumerable<string> allowedFileTypes)
         {
-            allowedFileTypes ??= new[] { ".xml" };
+            allowedFileTypes ??= new[] { ".xml", ".gml" };
 
             var inputData = new DisposableList<InputData>();
             var invalidFiles = new List<string>();
