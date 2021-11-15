@@ -11,7 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static Geonorge.Validator.Application.HttpClients.StaticData.StaticDataConfig;
+using static Geonorge.Validator.Application.HttpClients.StaticData.StaticDataSettings;
 
 namespace Geonorge.Validator.Application.HttpClients.StaticData
 {
@@ -23,23 +23,23 @@ namespace Geonorge.Validator.Application.HttpClients.StaticData
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
-        public HttpClient Client { get; }
-        private readonly StaticDataConfig _config;
+        private readonly StaticDataSettings _settings;
         private readonly ILogger<StaticDataHttpClient> _logger;
+        public HttpClient Client { get; }
 
         public StaticDataHttpClient(
             HttpClient client,
-            IOptions<StaticDataConfig> options,
+            IOptions<StaticDataSettings> options,
             ILogger<StaticDataHttpClient> logger)
         {
             Client = client;
-            _config = options.Value;
+            _settings = options.Value;
             _logger = logger;
         }
 
         public async Task<List<GmlDictionaryEntry>> GetArealformål()
         {
-            return await GetData(_config.Arealformål, stream =>
+            return await GetData(_settings.Arealformål, stream =>
             {
                 return XDocument.Load(stream)
                     .GetElements("//*:dictionaryEntry/*:Definition")
@@ -51,7 +51,7 @@ namespace Geonorge.Validator.Application.HttpClients.StaticData
 
         public async Task<List<GmlDictionaryEntry>> GetFeltnavnArealformål()
         {
-            return await GetData(_config.FeltnavnArealformål, stream =>
+            return await GetData(_settings.FeltnavnArealformål, stream =>
             {
                 return XDocument.Load(stream)
                     .GetElements("//*:dictionaryEntry/*:Definition")
@@ -63,7 +63,7 @@ namespace Geonorge.Validator.Application.HttpClients.StaticData
 
         public async Task<List<GeonorgeCodelistValue>> GetHensynskategori()
         {
-            return await GetData(_config.Hensynskategori, stream =>
+            return await GetData(_settings.Hensynskategori, stream =>
             {
                 return XDocument.Load(stream)
                     .GetElements("//*:containeditems/*:Registeritem")
@@ -75,7 +75,7 @@ namespace Geonorge.Validator.Application.HttpClients.StaticData
 
         private async Task<T> GetData<T>(DataSource source, Func<Stream, T> resolver) where T : class
         {
-            var filePath = GetFilePath(source.FileName);
+            var filePath = Path.Combine(_settings.CacheFilesPath, source.FileName);
             var data = await LoadDataFromDisk<T>(filePath, source.CacheDays);
 
             if (data != null)
@@ -118,11 +118,6 @@ namespace Geonorge.Validator.Application.HttpClients.StaticData
                 return null;
 
             return JsonConvert.DeserializeObject<T>(await File.ReadAllTextAsync(filePath));
-        }
-
-        private static string GetFilePath(string fileName)
-        {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Geonorge.Validator/StaticData", fileName);
         }
     }
 }

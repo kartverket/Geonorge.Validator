@@ -10,11 +10,11 @@ namespace Geonorge.XsdValidator.Validator
 {
     public class XsdValidator : IXsdValidator
     {
-        private readonly XsdValidatorOptions _options;
+        private readonly XsdValidatorSettings _options;
         private readonly ILogger<XsdValidator> _logger;
 
         public XsdValidator(
-            IOptions<XsdValidatorOptions> options,
+            IOptions<XsdValidatorSettings> options,
             ILogger<XsdValidator> logger)
         {
             _options = options.Value;

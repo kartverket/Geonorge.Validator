@@ -9,11 +9,11 @@ namespace Geonorge.XsdValidator.Utils
 {
     public class XmlFileCacheResolver : XmlUrlResolver
     {
-        private readonly XsdValidatorOptions _options;
+        private readonly XsdValidatorSettings _options;
         private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
-            XsdValidatorOptions options)
+            XsdValidatorSettings options)
         {
             _options = options;
             _client = new();

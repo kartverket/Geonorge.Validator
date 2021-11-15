@@ -18,9 +18,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using Serilog;
-using System;
 using System.Globalization;
-using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -60,17 +58,7 @@ namespace Geonorge.Validator
 
             services.AddRuleValidators();
 
-            services.AddXsdValidator(options =>
-            {
-                options.CacheFilesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Geonorge.Validator/XSD");
-                options.CacheDurationDays = 30;
-                options.CacheableHosts = new[]
-                {
-                    "www.w3.org",
-                    "schemas.opengis.net",
-                    "shapechange.net"
-                };
-            });
+            services.AddXsdValidator(Configuration);
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -82,7 +70,7 @@ namespace Geonorge.Validator
             services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
             services.AddHttpClient<IStaticDataHttpClient, StaticDataHttpClient>();
 
-            services.Configure<StaticDataConfig>(Configuration.GetSection(StaticDataConfig.SectionName));
+            services.Configure<StaticDataSettings>(Configuration.GetSection(StaticDataSettings.SectionName));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IHostApplicationLifetime hostApplicationLifetime)

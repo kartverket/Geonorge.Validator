@@ -16,7 +16,6 @@ namespace Geonorge.Validator.Web.Configuration
         {
             services.AddValidators(options =>
             {
-
                 options.AddValidator<IReguleringsplanforslagValidator, ReguleringsplanforslagValidator>(
                     ValidatorType.Reguleringsplanforslag,
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",

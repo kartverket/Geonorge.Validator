@@ -1,15 +1,15 @@
 ﻿using Geonorge.XsdValidator.Validator;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using XmlSchemaValidator = Geonorge.XsdValidator.Validator.XsdValidator;
 
 namespace Geonorge.XsdValidator.Config
 {
     public static class XsdValidatorConfig
     {
-        public static void AddXsdValidator(this IServiceCollection services, Action<XsdValidatorOptions> options)
+        public static void AddXsdValidator(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure(options);
+            services.Configure<XsdValidatorSettings>(configuration.GetSection(XsdValidatorSettings.SectionName));
             services.AddTransient<IXsdValidator, XmlSchemaValidator>();
         }
     }

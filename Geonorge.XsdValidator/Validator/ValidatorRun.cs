@@ -12,9 +12,9 @@ namespace Geonorge.XsdValidator.Validator
     {
         private const int ValidationErrorCountLimit = 1000;
         private readonly List<string> _schemaValidationResult;
-        private readonly XsdValidatorOptions _options;
+        private readonly XsdValidatorSettings _options;
 
-        public ValidatorRun(XsdValidatorOptions options)
+        public ValidatorRun(XsdValidatorSettings options)
         {
             _options = options;
             _schemaValidationResult = new List<string>();
