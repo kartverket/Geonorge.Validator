@@ -1,4 +1,5 @@
-﻿using Geonorge.Validator.Application.Services.Validation;
+﻿using Geonorge.Validator.Application.Models.Report;
+using Geonorge.Validator.Application.Services.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,9 @@ namespace Geonorge.Validator.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile = null)
+        [RequestFormLimits(MultipartBodyLengthLimit = 209715200)]
+        [RequestSizeLimit(209715200)]
+        public async Task<IActionResult> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile)
         {
             try
             {

@@ -20,7 +20,6 @@ namespace Geonorge.Validator.Web.Configuration
                     ValidatorType.Reguleringsplanforslag,
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
                     new[] { "5.0_rev20210827", "5.0_rev20211104" },
-                    new[] { ".gml" },
                     typeof(Skjemavalidering),
                     new[] { typeof(IGmlValidationData), typeof(IRpfValidationData) },
                     options =>
@@ -35,7 +34,6 @@ namespace Geonorge.Validator.Web.Configuration
                     ValidatorType.Plangrense,
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0/Planomriss",
                     new[] { "5.0_rev20210608" },
-                    new[] { ".gml" },
                     typeof(Skjemavalidering),
                     new[] { typeof(IGmlValidationData) },
                     options =>

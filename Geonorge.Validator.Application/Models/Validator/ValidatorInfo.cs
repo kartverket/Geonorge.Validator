@@ -6,6 +6,5 @@ namespace Geonorge.Validator.Application.Models.Validator
     {
         public string Name { get; set; }
         public string Namespace { get; set; }
-        public IEnumerable<string> FileTypes { get; set; }
     }
 }

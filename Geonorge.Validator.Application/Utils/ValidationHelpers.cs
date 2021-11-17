@@ -1,36 +1,25 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.Models.Report;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Geonorge.Validator.Application.Utils
 {
     public class ValidationHelpers
     {
-        public static DisposableList<InputData> GetInputData(List<IFormFile> files, IEnumerable<string> allowedFileTypes)
+        private static readonly Regex _dimensionsRegex = new(@"srsDimension=""(?<dimensions>(\d))""", RegexOptions.Compiled);
+        private static readonly Regex _gmlNamespaceRegex = new(@"xmlns:gml=""(?<gml_ns>(.*?))""", RegexOptions.Compiled);
+
+        public static DisposableList<InputData> GetInputData(List<IFormFile> files)
         {
-            allowedFileTypes ??= new[] { ".xml", ".gml" };
-
-            var inputData = new DisposableList<InputData>();
-            var invalidFiles = new List<string>();
-
-            foreach (var file in files)
-            {
-                if (allowedFileTypes.Contains(Path.GetExtension(file.FileName)))
-                    inputData.Add(new InputData(file.OpenReadStream(), file.FileName, null));
-                else
-                    invalidFiles.Add(file.FileName);
-            }
-
-            if (invalidFiles.Any())
-                throw new InvalidFileException($"Ugyldig filformat: {string.Join(", ", invalidFiles)}");
-
-            return inputData;
+            return files
+                .Select(file => new InputData(file.OpenReadStream(), file.FileName, null))
+                .ToDisposableList();
         }
 
         public static T GetValidationData<T>(DisposableList<InputData> inputData, Func<DisposableList<InputData>, T> resolver) where T : class
@@ -43,6 +32,32 @@ namespace Geonorge.Validator.Application.Utils
                 data.Stream.Seek(0, SeekOrigin.Begin);
 
             return resolver.Invoke(dataList);
+        }
+
+        public static (string GmlNamespace, int Dimensions) GetGmlMetadata(InputData inputData)
+        {
+            using var memoryStream = new MemoryStream();
+            inputData.Stream.CopyTo(memoryStream);
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            inputData.Stream.Seek(0, SeekOrigin.Begin);
+
+            using var streamReader = new StreamReader(memoryStream);
+            var xmlString = streamReader.ReadToEnd();
+
+            var dimensionsMatch = _dimensionsRegex.Match(xmlString);
+            int dimensions = 0;
+
+            if (dimensionsMatch.Success)
+                dimensions = int.Parse(dimensionsMatch.Groups["dimensions"].Value);
+
+            var gmlNamespaceMatch = _gmlNamespaceRegex.Match(xmlString);
+            string gmlNamespace = null;
+
+            if (gmlNamespaceMatch.Success)
+                gmlNamespace = gmlNamespaceMatch.Groups["gml_ns"].Value;
+
+            return (gmlNamespace, dimensions);
         }
 
         public static ValidationReport CreateValidationReport(DateTime start, string xmlNamespace, DisposableList<InputData> inputData, List<Rule> rules)

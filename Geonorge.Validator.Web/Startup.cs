@@ -1,16 +1,20 @@
 using DiBK.RuleValidator.Config;
+using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.HttpClients.StaticData;
 using Geonorge.Validator.Application.HttpClients.Xsd;
 using Geonorge.Validator.Application.Services.RuleService;
 using Geonorge.Validator.Application.Services.Validation;
 using Geonorge.Validator.Application.Services.Validator;
 using Geonorge.Validator.Application.Services.XsdValidation;
+using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Web.Configuration;
+using Geonorge.Validator.Web.Extensions;
 using Geonorge.Validator.Web.Middleware;
 using Geonorge.XsdValidator.Config;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +23,7 @@ using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using Serilog;
 using System.Globalization;
+using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -36,6 +41,18 @@ namespace Geonorge.Validator
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Optimal;
+            });
+
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.MimeTypes = new[] { "application/json" };
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -66,11 +83,14 @@ namespace Geonorge.Validator
             services.AddTransient<IRuleService, RuleService>();
             services.AddTransient<IXsdValidationService, XsdValidationService>();
             services.AddTransient<IValidatorService, ValidatorService>();
+            services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
 
             services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
             services.AddHttpClient<IStaticDataHttpClient, StaticDataHttpClient>();
+            services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
 
             services.Configure<StaticDataSettings>(Configuration.GetSection(StaticDataSettings.SectionName));
+            services.Configure<CodelistSettings>(Configuration.GetSection(CodelistSettings.SectionName));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IHostApplicationLifetime hostApplicationLifetime)
@@ -88,15 +108,19 @@ namespace Geonorge.Validator
                 app.UseDeveloperExceptionPage();
 
             app.UseSwagger();
+
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Geonorge Validator v1");
+                var url = $"{(!env.IsLocal() ? "/api" : "")}/swagger/v1/swagger.json";
+                options.SwaggerEndpoint(url, "Geonorge Validator v1");
             });
 
             app.UseCors(options => options
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowAnyOrigin());
+
+            app.UseResponseCompression();
 
             app.UseMiddleware<SerilogMiddleware>();
 

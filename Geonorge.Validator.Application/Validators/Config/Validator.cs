@@ -13,7 +13,6 @@ namespace Geonorge.Validator.Application.Validators.Config
         public IEnumerable<Type> RuleTypes { get; init; }
         public Type ServiceType { get; init; }
         public Type ImplementationType { get; init; }
-        public IEnumerable<string> AllowedFileTypes { get; init; }
         public Action<ValidationOptions> ValidationOptions { get; init; }
     }
 }

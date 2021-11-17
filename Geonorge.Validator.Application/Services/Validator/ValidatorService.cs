@@ -26,8 +26,7 @@ namespace Geonorge.Validator.Application.Services.Validator
                     return new ValidatorInfo
                     {
                         Name = validator.ValidatorType.GetDescription(),
-                        Namespace = validator.XmlNamespace,
-                        FileTypes = validator.AllowedFileTypes
+                        Namespace = validator.XmlNamespace
                     };
                 })
                 .ToList();

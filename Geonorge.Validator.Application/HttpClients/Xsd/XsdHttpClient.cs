@@ -16,7 +16,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
 {
     public class XsdHttpClient : IXsdHttpClient
     {
-        private static readonly Regex _xmlNamespaceRegex = new(@"xsi:schemaLocation=""(?<schema_loc>(.*?))""", RegexOptions.Compiled);
+        private static readonly Regex _schemaLocationRegex = new(@"xsi:schemaLocation=""(?<schema_loc>(.*?))""", RegexOptions.Compiled);
 
         private readonly ILogger<XsdHttpClient> _logger;
         public HttpClient Client { get; }
@@ -29,41 +29,26 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             _logger = logger;
         }
 
-        public async Task<(string XmlNamespace, string XsdVersion)> GetXmlNamespaceAndXsdVersion(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        public async Task<Stream> GetXsdFromXmlFiles(List<IFormFile> xmlFiles)
         {
-            if (xsdFile != null)
-                return await GetTargetNamespaceAndVersionFromXsd(xsdFile.OpenReadStream(), xsdFile.FileName);
+            var schemaUri = GetSchemaUriFromXmlFiles(xmlFiles);
 
-            return await GetTargetNamespaceAndVersionFromXmlFiles(xmlFiles);
+            return await FetchXsd(schemaUri);
         }
 
-        private async Task<(string TargetNamespace, string Version)> GetTargetNamespaceAndVersionFromXsd(Stream stream, string fileName)
-        {
-            try
-            {
-                var document = await XDocument.LoadAsync(stream, LoadOptions.None, new CancellationToken());
-
-                return (
-                    document.Root.XPath2SelectOne<XAttribute>("@targetNamespace")?.Value,
-                    document.Root.XPath2SelectOne<XAttribute>("@version")?.Value
-                );
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Ugyldig applikasjonsskjema: '{fileName}'.", fileName);
-                throw new InvalidXsdException($"Ugyldig applikasjonsskjema: '{fileName}'.");
-            }
-        }
-
-        private async Task<(string TargetNamespace, string Version)> GetTargetNamespaceAndVersionFromXsd(string schemaUri)
+        private async Task<Stream> FetchXsd(string schemaUri)
         {
             try
             {
                 using var response = await Client.GetAsync(schemaUri);
                 response.EnsureSuccessStatusCode();
-                using var stream = await response.Content.ReadAsStreamAsync();
 
-                return await GetTargetNamespaceAndVersionFromXsd(stream, schemaUri);
+                using var stream = await response.Content.ReadAsStreamAsync();
+                var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                return memoryStream;
             }
             catch (Exception exception)
             {
@@ -72,14 +57,14 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             }
         }
 
-        private async Task<(string TargetNamespace, string Version)> GetTargetNamespaceAndVersionFromXmlFiles(List<IFormFile> xmlFiles)
+        private static string GetSchemaUriFromXmlFiles(List<IFormFile> xmlFiles)
         {
             var schemaUris = xmlFiles
                 .Select(xmlFile =>
                 {
                     using var streamReader = new StreamReader(xmlFile.OpenReadStream());
                     var xmlString = streamReader.ReadToEnd();
-                    var match = _xmlNamespaceRegex.Match(xmlString);
+                    var match = _schemaLocationRegex.Match(xmlString);
 
                     if (!match.Success)
                         return null;
@@ -96,7 +81,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             if (schemaUri == null)
                 throw new InvalidXsdException("Filene i datasettet mangler applikasjonsskjema.");
 
-            return await GetTargetNamespaceAndVersionFromXsd(schemaUri);
+            return schemaUri;
         }
     }
 }

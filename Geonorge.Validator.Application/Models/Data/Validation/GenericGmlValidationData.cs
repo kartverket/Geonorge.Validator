@@ -1,24 +1,28 @@
 ﻿using DiBK.RuleValidator.Extensions;
-using DiBK.RuleValidator.Rules.Gml;
+using Geonorge.Validator.Application.Models.Data.Codelist;
 using System;
 using System.Collections.Generic;
 
-namespace Geonorge.Validator.Application.Models
+namespace Geonorge.Validator.Application.Models.Data.Validation
 {
-    public class GmlValidationData : IGmlValidationData
+    public class GenericGmlValidationData : IGenericGmlValidationData
     {
         public List<GmlDocument> Surfaces { get; } = new();
         public List<GmlDocument> Solids { get; } = new();
+        public List<CodeSpace> CodeSpaces { get; } = new();
 
-        private GmlValidationData(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
+        private GenericGmlValidationData(
+            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodeSpace> codeSpaces)
         {
             Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
             Solids.AddRange(solids ?? new List<GmlDocument>());
+            CodeSpaces.AddRange(codeSpaces ?? new List<CodeSpace>());
         }
 
-        public static IGmlValidationData Create(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
+        public static IGenericGmlValidationData Create(
+            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodeSpace> codeSpaces)
         {
-            return new GmlValidationData(surfaces, solids);
+            return new GenericGmlValidationData(surfaces, solids, codeSpaces);
         }
 
         public void Dispose()
