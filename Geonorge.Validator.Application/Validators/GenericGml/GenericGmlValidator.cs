@@ -3,15 +3,11 @@ using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.Models;
-using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using static Geonorge.Validator.Application.Utils.ValidationHelpers;
-using static Geonorge.Validator.Application.Utils.XsdHelpers;
 
 namespace Geonorge.Validator.Application.Validators.GenericGml
 {
@@ -52,8 +48,8 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 
             foreach (var data in inputData)
             {
-                /*if (!data.IsValid)
-                    continue;*/
+                if (!data.IsValid)
+                    continue;
 
                 (string gmlNamespace, int dimensions) = GetGmlMetadata(data);
 
