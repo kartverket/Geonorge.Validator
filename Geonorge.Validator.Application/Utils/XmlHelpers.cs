@@ -10,11 +10,21 @@ using Wmhelp.XPath2;
 
 namespace Geonorge.Validator.Application.Utils
 {
-    public class XsdHelpers
+    public class XmlHelpers
     {
         public static async Task<(string XmlNamespace, string XsdVersion)> GetXmlNamespaceAndXsdVersion(Stream xsdStream)
         {
             var document = await LoadXDocumentAsync(xsdStream);
+
+            var @namespace = document.Root.GetNamespaceOfPrefix("gml");
+
+            if (@namespace != null)
+            {
+                var a = document.Root.XPath2SelectOne<XAttribute>($"//*:import[@namespace = '{@namespace.NamespaceName}']/@schemaLocation")?.Value;
+
+                var b = a;
+            }
+
 
             return (
                 document.Root.XPath2SelectOne<XAttribute>("@targetNamespace")?.Value,

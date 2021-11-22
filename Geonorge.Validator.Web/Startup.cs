@@ -84,6 +84,7 @@ namespace Geonorge.Validator
             services.AddTransient<IXsdValidationService, XsdValidationService>();
             services.AddTransient<IValidatorService, ValidatorService>();
             services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
+            services.AddTransient<IXsdCodelistExtractor, XsdCodelistExtractor>();
 
             services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
             services.AddHttpClient<IStaticDataHttpClient, StaticDataHttpClient>();

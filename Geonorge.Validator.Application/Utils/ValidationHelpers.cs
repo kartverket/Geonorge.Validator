@@ -6,10 +6,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Geonorge.Validator.Application.Utils
 {
+    public enum GmlVersion
+    {
+        GML_31,
+        GML_32
+    }
+
+    public class GmlMetadata
+    {
+
+    }
+
     public class ValidationHelpers
     {
         private static readonly Regex _dimensionsRegex = new(@"srsDimension=""(?<dimensions>(\d))""", RegexOptions.Compiled);
@@ -34,16 +46,30 @@ namespace Geonorge.Validator.Application.Utils
             return resolver.Invoke(dataList);
         }
 
+        public static string ReadLines(Stream stream, int numberOfLines)
+        {
+            if (numberOfLines < 1)
+                throw new ArgumentException("numberOfLines må være større enn 0");
+
+            var counter = 0;
+            var stringBuilder = new StringBuilder(numberOfLines * 250);
+            using var streamReader = new StreamReader(stream);
+
+            while (counter++ < numberOfLines && !streamReader.EndOfStream)
+                stringBuilder.Append(streamReader.ReadLine());
+
+            return stringBuilder.ToString();
+        }
+
         public static (string GmlNamespace, int Dimensions) GetGmlMetadata(InputData inputData)
         {
             using var memoryStream = new MemoryStream();
             inputData.Stream.CopyTo(memoryStream);
 
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            inputData.Stream.Seek(0, SeekOrigin.Begin);
+            memoryStream.Position = 0;
+            inputData.Stream.Position = 0;
 
-            using var streamReader = new StreamReader(memoryStream);
-            var xmlString = streamReader.ReadToEnd();
+            var xmlString = ReadLines(memoryStream, 250);
 
             var dimensionsMatch = _dimensionsRegex.Match(xmlString);
             int dimensions = 0;

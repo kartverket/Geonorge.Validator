@@ -9,13 +9,13 @@ namespace Geonorge.XsdValidator.Utils
 {
     public class XmlFileCacheResolver : XmlUrlResolver
     {
-        private readonly XsdValidatorSettings _options;
+        private readonly XsdValidatorSettings _settings;
         private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
-            XsdValidatorSettings options)
+            XsdValidatorSettings settings)
         {
-            _options = options;
+            _settings = settings;
             _client = new();
         }
 
@@ -32,7 +32,7 @@ namespace Geonorge.XsdValidator.Utils
                 {
                     var lastUpdated = DateTime.Now.Subtract(File.GetLastWriteTime(filePath));
 
-                    if (lastUpdated.TotalDays < _options.CacheDurationDays)
+                    if (lastUpdated.TotalDays < _settings.CacheDurationDays)
                         return File.OpenRead(filePath);                   
                 }
 
@@ -61,12 +61,12 @@ namespace Geonorge.XsdValidator.Utils
 
         private bool ShouldCache(Uri uri)
         {
-            return _options.CacheableHosts == null || _options.CacheableHosts.Contains(uri.Host);
+            return _settings.CacheableHosts == null || _settings.CacheableHosts.Contains(uri.Host);
         }
 
         private string GetFilePath(Uri uri)
         {
-            return Path.GetFullPath(Path.Combine(_options.CacheFilesPath, uri.Host + uri.LocalPath));
+            return Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, uri.Host + uri.LocalPath));
         }
 
         private static FileStream CreateFile(string filePath)

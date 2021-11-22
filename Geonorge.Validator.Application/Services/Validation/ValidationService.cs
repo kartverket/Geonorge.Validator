@@ -15,7 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static Geonorge.Validator.Application.Utils.ValidationHelpers;
-using static Geonorge.Validator.Application.Utils.XsdHelpers;
+using static Geonorge.Validator.Application.Utils.XmlHelpers;
 
 namespace Geonorge.Validator.Application.Services.Validation
 {

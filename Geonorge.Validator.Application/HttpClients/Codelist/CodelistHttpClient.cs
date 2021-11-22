@@ -1,4 +1,5 @@
-﻿using Geonorge.Validator.Application.Models.Data.Codelist;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Models.Data.Codelist;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -7,11 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
-using static Geonorge.Validator.Application.Utils.XsdHelpers;
+using static Geonorge.Validator.Application.Utils.XmlHelpers;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Geonorge.Validator.Application.HttpClients.Codelist
 {
@@ -23,22 +27,27 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
+        private readonly IXsdCodelistExtractor _xsdCodelistExtractor;
         private readonly CodelistSettings _settings;
         private readonly ILogger<CodelistHttpClient> _logger;
         public HttpClient Client { get; }
 
         public CodelistHttpClient(
             HttpClient client,
+            IXsdCodelistExtractor xsdCodelistExtractor,
             IOptions<CodelistSettings> options,
             ILogger<CodelistHttpClient> logger)
         {
             Client = client;
+            _xsdCodelistExtractor = xsdCodelistExtractor;
             _settings = options.Value;
             _logger = logger;
         }
 
-        public async Task<List<CodeSpace>> GetCodeSpaces(Stream xsdStream)
+        public async Task<List<CodeSpace>> GetCodeSpaces(
+            IEnumerable<Stream> xmlStreams, Stream xsdStream, List<CodelistSelector> codelistSelectors)
         {
+            var codelists = await GetCodelistsFromXsd(xmlStreams, xsdStream, codelistSelectors);
             var codeSpaceDictionary = await GetGmlCodeSpacesFromXsd(xsdStream);
 
             if (!codeSpaceDictionary.Any())
@@ -77,7 +86,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
 
             try
             {
-                return await FetchData(uri, DataResolver);
+                return await FetchData(uri);
             }
             catch (Exception exception)
             {
@@ -86,7 +95,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             }
         }
 
-        private async Task<List<CodelistValue>> FetchData(Uri uri, Func<Stream, Task<List<CodelistValue>>> resolver)
+        private async Task<List<CodelistValue>> FetchData(Uri uri)
         {
             var filePath = GetFilePath(uri);
             var data = await LoadDataFromDisk(filePath);
@@ -94,35 +103,31 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             if (data != null)
                 return data;
 
-            using var response = await Client.GetAsync(uri.AbsoluteUri);
-            response.EnsureSuccessStatusCode();
-            using var stream = await response.Content.ReadAsStreamAsync();
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri.AbsoluteUri);
 
-            data = await resolver.Invoke(stream);
+            if (!Path.HasExtension(uri.AbsoluteUri))
+                request.Headers.Add(HttpRequestHeader.Accept.ToString(), "application/xml");
+
+            using var response = await Client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            data = await CreateCodelist(stream);
 
             await SaveDataToDisk(filePath, data);
 
             return data;
         }
 
-        private readonly Func<Stream, Task<List<CodelistValue>>> DataResolver = async stream =>
+        private async Task<Dictionary<string, Uri>> GetCodelistsFromXsd(IEnumerable<Stream> xmlStreams, Stream xsdStream, List<CodelistSelector> codelistSelectors)
         {
-            var document = await XDocument.LoadAsync(stream, LoadOptions.None, new CancellationToken());
+            var codelists = new Dictionary<string, Uri>();
 
-            if (!IsCodelist(document))
-                return null;
+            foreach (var xmlStream in xmlStreams)
+                codelists.Append(await _xsdCodelistExtractor.GetCodelistsFromXsd(xmlStream, xsdStream, codelistSelectors));
 
-            return document.Root.Descendants("Registeritem")
-                .Select(element =>
-                {
-                    return new CodelistValue(
-                        element.Element("codevalue").Value,
-                        element.Element("label")?.Value,
-                        element.Element("description")?.Value
-                    );
-                })
-                .ToList();
-        };
+            return codelists;
+        }
 
         private string GetFilePath(Uri uri)
         {
@@ -142,6 +147,25 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 return null;
 
             return JsonConvert.DeserializeObject<List<CodelistValue>>(await File.ReadAllTextAsync(filePath));
+        }
+
+        private static async Task<List<CodelistValue>> CreateCodelist(Stream stream)
+        {
+            var document = await XDocument.LoadAsync(stream, LoadOptions.None, new CancellationToken());
+
+            if (!IsCodelist(document))
+                return null;
+
+            return document.Root.Descendants("Registeritem")
+                .Select(element =>
+                {
+                    return new CodelistValue(
+                        element.Element("codevalue").Value,
+                        element.Element("label")?.Value,
+                        element.Element("description")?.Value
+                    );
+                })
+                .ToList();
         }
 
         private static async Task SaveDataToDisk(string filePath, object data)

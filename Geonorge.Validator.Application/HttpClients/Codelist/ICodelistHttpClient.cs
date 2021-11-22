@@ -8,6 +8,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
     public interface ICodelistHttpClient
     {
         Task<List<CodelistValue>> FetchCodelist(string url);
-        Task<List<CodeSpace>> GetCodeSpaces(Stream xsdStream);
+        Task<List<CodeSpace>> GetCodeSpaces(IEnumerable<Stream> xmlStreams, Stream xsdStream, List<CodelistSelector> codelistSelectors);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Geonorge.XsdValidator.Config;
 using Geonorge.XsdValidator.Translator;
-using Geonorge.XsdValidator.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -12,11 +11,9 @@ namespace Geonorge.XsdValidator.Validator
     {
         private const int ValidationErrorCountLimit = 1000;
         private readonly List<string> _schemaValidationResult;
-        private readonly XsdValidatorSettings _options;
 
-        public ValidatorRun(XsdValidatorSettings options)
+        public ValidatorRun()
         {
-            _options = options;
             _schemaValidationResult = new List<string>();
         }
 
@@ -29,15 +26,18 @@ namespace Geonorge.XsdValidator.Validator
             return _schemaValidationResult;
         }
 
+
         private void Validate(Stream xmlStream, XmlReaderSettings xmlReaderSettings)
         {
-            using var validationReader = XmlReader.Create(xmlStream, xmlReaderSettings);
+            using var reader = XmlReader.Create(xmlStream, xmlReaderSettings);
 
             try
             {
-                while (validationReader.Read())
+                while (reader.Read())
+                {
                     if (_schemaValidationResult.Count >= ValidationErrorCountLimit)
                         break;
+                }
             }
             catch (XmlException exception)
             {
@@ -49,13 +49,7 @@ namespace Geonorge.XsdValidator.Validator
         {
             var xmlReaderSettings = new XmlReaderSettings { ValidationType = ValidationType.Schema };
 
-            xmlReaderSettings.XmlResolver = new XmlFileCacheResolver(_options);
-
-            if (xmlSchemaSet != null)
-                xmlReaderSettings.Schemas.Add(xmlSchemaSet);
-            else
-                xmlReaderSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessSchemaLocation;
-
+            xmlReaderSettings.Schemas.Add(xmlSchemaSet);            
             xmlReaderSettings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
             xmlReaderSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
             xmlReaderSettings.ValidationFlags &= ~XmlSchemaValidationFlags.ProcessIdentityConstraints;
@@ -67,7 +61,7 @@ namespace Geonorge.XsdValidator.Validator
         private void ValidationCallBack(object sender, ValidationEventArgs args)
         {
             var prefix = $"Linje {args.Exception.LineNumber}, posisjon {args.Exception.LinePosition}: ";
-            
+
             switch (args.Severity)
             {
                 case XmlSeverityType.Error:

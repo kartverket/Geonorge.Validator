@@ -2,8 +2,10 @@
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
@@ -29,7 +31,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
         {
             foreach (var codeSpace in codeSpaces)
             {
-                var codeSpaceElements = document.GetElements(codeSpace.XPath);
+                var codeSpaceElements = GetCodeSpaceElements(document, codeSpace);
 
                 foreach (var codeSpaceElement in codeSpaceElements)
                 {
@@ -45,6 +47,21 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                     }
                 }
             }
+        }
+
+        private static List<XElement> GetCodeSpaceElements(GmlDocument document, CodeSpace codeSpace)
+        {
+            var xPath = codeSpace.XPath;
+            var elementNames = xPath.Split("//*:").Skip(1);
+            var featureName = elementNames.First();
+            var features = document.GetFeatures(featureName);
+
+            if (!features.Any())
+                return document.GetFeatures().GetElements(xPath).ToList();
+
+            var subXPath = $"//*:{string.Join("//*:", elementNames.Skip(1))}";
+
+            return features.GetElements(subXPath).ToList();
         }
     }
 }
