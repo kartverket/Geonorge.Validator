@@ -2,10 +2,10 @@ using DiBK.RuleValidator.Config;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.HttpClients.StaticData;
 using Geonorge.Validator.Application.HttpClients.Xsd;
-using Geonorge.Validator.Application.Services.RuleService;
+using Geonorge.Validator.Application.Services.Cache;
 using Geonorge.Validator.Application.Services.Validation;
-using Geonorge.Validator.Application.Services.Validator;
 using Geonorge.Validator.Application.Services.XsdValidation;
+using Geonorge.Validator.Application.Utils.Codelist;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Extensions;
@@ -80,15 +80,18 @@ namespace Geonorge.Validator
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddTransient<IValidationService, ValidationService>();
-            services.AddTransient<IRuleService, RuleService>();
             services.AddTransient<IXsdValidationService, XsdValidationService>();
-            services.AddTransient<IValidatorService, ValidatorService>();
             services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
             services.AddTransient<IXsdCodelistExtractor, XsdCodelistExtractor>();
 
             services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
             services.AddHttpClient<IStaticDataHttpClient, StaticDataHttpClient>();
             services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
+
+            /*
+             * Ikke ferdig:
+             * services.AddHostedService<CacheService>();
+             */
 
             services.Configure<StaticDataSettings>(Configuration.GetSection(StaticDataSettings.SectionName));
             services.Configure<CodelistSettings>(Configuration.GetSection(CodelistSettings.SectionName));

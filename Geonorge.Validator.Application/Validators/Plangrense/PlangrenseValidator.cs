@@ -5,9 +5,8 @@ using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Validators.Config;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.ValidationHelpers;
+using GmlHelper = Geonorge.Validator.Application.Utils.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.Plangrense
 {
@@ -26,7 +25,7 @@ namespace Geonorge.Validator.Application.Validators.Plangrense
 
         public async Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData)
         {
-            using var validationData = GetGmlValidationData(inputData);
+            using var validationData = await GetGmlValidationData(inputData);
 
             var options = _options.GetValidationOptions(xmlNamespace);
 
@@ -35,7 +34,7 @@ namespace Geonorge.Validator.Application.Validators.Plangrense
             return _validator.GetAllRules();
         }
 
-        private static IGmlValidationData GetGmlValidationData(DisposableList<InputData> inputData)
+        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
@@ -45,8 +44,8 @@ namespace Geonorge.Validator.Application.Validators.Plangrense
                 if (!data.IsValid)
                     continue;
 
-                (_, int dimensions) = GetGmlMetadata(data);
                 var document = GmlDocument.Create(data);
+                var dimensions = await GmlHelper.GetDimensionsAsync(data.Stream);
 
                 if (dimensions == 2)
                     gmlDocuments2D.Add(document);

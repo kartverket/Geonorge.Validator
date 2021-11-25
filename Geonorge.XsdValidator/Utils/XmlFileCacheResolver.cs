@@ -1,5 +1,6 @@
 ﻿using Geonorge.XsdValidator.Config;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +19,8 @@ namespace Geonorge.XsdValidator.Utils
             _settings = settings;
             _client = new();
         }
+
+        public List<string> CachedUris { get; } = new();
 
         public override object GetEntity(Uri absoluteUri, string role, Type ofObjectToReturn)
         {
@@ -41,13 +44,14 @@ namespace Geonorge.XsdValidator.Utils
 
                 var memoryStream = new MemoryStream();
                 stream.CopyTo(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                memoryStream.Position = 0;
 
                 if (ShouldCache(absoluteUri) && memoryStream.Length > 0)
                 {
                     using var fileStream = CreateFile(filePath);
                     memoryStream.CopyTo(fileStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    memoryStream.Position = 0;
+                    CacheUri(absoluteUri.AbsoluteUri);
                 }
 
                 stream.Dispose();
@@ -62,6 +66,11 @@ namespace Geonorge.XsdValidator.Utils
         private bool ShouldCache(Uri uri)
         {
             return _settings.CacheableHosts == null || _settings.CacheableHosts.Contains(uri.Host);
+        }
+
+        private void CacheUri(string uri)
+        {
+            CachedUris.Add($"{uri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
         }
 
         private string GetFilePath(Uri uri)

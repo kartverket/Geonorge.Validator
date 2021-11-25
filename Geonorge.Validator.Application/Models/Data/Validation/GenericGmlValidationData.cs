@@ -9,18 +9,18 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
     {
         public List<GmlDocument> Surfaces { get; } = new();
         public List<GmlDocument> Solids { get; } = new();
-        public List<CodeSpace> CodeSpaces { get; } = new();
+        public List<GmlCodeSpace> CodeSpaces { get; } = new();
 
         private GenericGmlValidationData(
-            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodeSpace> codeSpaces)
+            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<GmlCodeSpace> codeSpaces)
         {
             Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
             Solids.AddRange(solids ?? new List<GmlDocument>());
-            CodeSpaces.AddRange(codeSpaces ?? new List<CodeSpace>());
+            CodeSpaces.AddRange(codeSpaces ?? new List<GmlCodeSpace>());
         }
 
         public static IGenericGmlValidationData Create(
-            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodeSpace> codeSpaces)
+            IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<GmlCodeSpace> codeSpaces)
         {
             return new GenericGmlValidationData(surfaces, solids, codeSpaces);
         }

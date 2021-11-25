@@ -1,5 +1,5 @@
-﻿using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.Models.Data.Codelist;
+﻿using Geonorge.Validator.Application.Models.Data.Codelist;
+using Geonorge.Validator.Application.Utils.Codelist;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -10,11 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
-using static Geonorge.Validator.Application.Utils.XmlHelpers;
+using Wmhelp.XPath2;
+using static Geonorge.Validator.Application.Utils.XmlHelper;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Geonorge.Validator.Application.HttpClients.Codelist
@@ -30,6 +29,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
         private readonly IXsdCodelistExtractor _xsdCodelistExtractor;
         private readonly CodelistSettings _settings;
         private readonly ILogger<CodelistHttpClient> _logger;
+        private readonly List<string> _cachedUris = new();
         public HttpClient Client { get; }
 
         public CodelistHttpClient(
@@ -44,89 +44,186 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             _logger = logger;
         }
 
-        public async Task<List<CodeSpace>> GetCodeSpaces(
-            IEnumerable<Stream> xmlStreams, Stream xsdStream, List<CodelistSelector> codelistSelectors)
+        public async Task<List<CodeSpace>> GetCodeSpacesAsync(
+            Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
         {
-            var codelists = await GetCodelistsFromXsd(xmlStreams, xsdStream, codelistSelectors);
-            var codeSpaceDictionary = await GetGmlCodeSpacesFromXsd(xsdStream);
+            _cachedUris.Clear();
 
-            if (!codeSpaceDictionary.Any())
+            var codelistData = await GetCodelistDataAsync(xsdStream, xmlStreams, codelistSelectors);
+
+            if (codelistData == null)
                 return new();
-
-            var codelistTasks = codeSpaceDictionary
-                .ToLookup(kvp => kvp.Value, kvp => kvp.Key)
-                .Select(grouping => (Grouping: grouping, Task: FetchCodelist(grouping.Key)));
-
-            await Task.WhenAll(codelistTasks.Select(task => task.Task));
 
             var codeSpaces = new List<CodeSpace>();
 
-            foreach (var codelistTask in codelistTasks)
+            foreach (var (uriAndXPaths, httpRequest) in codelistData)
             {
-                var codelist = await codelistTask.Task;
+                var codelist = await httpRequest;
 
                 if (codelist == null)
                     continue;
 
-                var url = codelistTask.Grouping.Key;
+                var url = uriAndXPaths.Key.AbsoluteUri;
 
-                foreach (var xPath in codelistTask.Grouping)
+                foreach (var xPath in uriAndXPaths)
                     codeSpaces.Add(new CodeSpace(xPath, url, codelist));
             }
+
+            await SaveCachedCodelistUrisAsync();
 
             return codeSpaces;
         }
 
-        public async Task<List<CodelistValue>> FetchCodelist(string url)
+        public async Task<List<GmlCodeSpace>> GetCodeSpacesForGmlAsync(
+            Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
         {
-            var uri = new Uri(url);
+            _cachedUris.Clear();
 
+            var codelistData = await GetCodelistDataAsync(xsdStream, xmlStreams, codelistSelectors);
+
+            if (codelistData == null)
+                return new();
+
+            var gmlCodeSpaces = new List<GmlCodeSpace>();
+
+            foreach (var (uriAndXPaths, httpRequest) in codelistData)
+            {
+                var codelist = await httpRequest;
+
+                if (codelist == null)
+                    continue;
+
+                var url = uriAndXPaths.Key.AbsoluteUri;
+
+                foreach (var fullXPath in uriAndXPaths)
+                {
+                    var (featureMemberName, xPath) = GetFeatureMemberNameWithXPathFromXPath(fullXPath);
+
+                    var gmlCodeSpace = gmlCodeSpaces
+                        .SingleOrDefault(gmlCodeSpace => gmlCodeSpace.FeatureMemberName == featureMemberName);
+
+                    if (gmlCodeSpace != null)
+                    {
+                        gmlCodeSpace.CodeSpaces.Add(new CodeSpace(xPath, url, codelist));
+                    }
+                    else
+                    {
+                        gmlCodeSpace = new(featureMemberName);
+                        gmlCodeSpace.CodeSpaces.Add(new CodeSpace(xPath, url, codelist));
+                        gmlCodeSpaces.Add(gmlCodeSpace);
+                    }
+                }
+            }
+
+            await SaveCachedCodelistUrisAsync();
+
+            return gmlCodeSpaces;
+        }
+
+        public async Task UpdateCacheAsync()
+        {
+            var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
+
+            if (!File.Exists(cacheListFilePath))
+                return;
+
+            var lines = await File.ReadAllLinesAsync(cacheListFilePath);
+            var tasks = new List<(Task<List<CodelistItem>> Request, Uri uri, string FilePath)>();
+
+            foreach (var line in lines)
+            {
+                var lineSplit = line.Split(",");
+                var lastCached = DateTime.Parse(lineSplit[1]);
+
+                if ((DateTime.Now - lastCached).TotalHours < 24 || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
+                    continue;
+
+                var filePath = GetFilePath(uri);
+                var task = FetchDataAsync(uri);
+
+                tasks.Add((task, uri, filePath));
+            }
+
+            _cachedUris.Clear();
+
+            await Task.WhenAll(tasks.Select(task => task.Request));
+
+            foreach (var (request, uri, filePath) in tasks)
+            {
+                var data = await request;
+
+                if (data == null)
+                    continue;
+
+                await SaveDataToDiskAsync(filePath, data);
+
+                _cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
+            }
+
+            await SaveCachedCodelistUrisAsync();
+        }
+
+        private async Task<IEnumerable<(IGrouping<Uri, string> uriAndXPaths, Task<List<CodelistItem>> httpRequest)>> GetCodelistDataAsync(
+            Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
+        {
+            var codelistUris = await _xsdCodelistExtractor.GetCodelistUrisAsync(xsdStream, xmlStreams, codelistSelectors);
+
+            if (!codelistUris.Any())
+                return null;
+
+            var codelistData = codelistUris
+                .ToLookup(kvp => kvp.Value, kvp => kvp.Key)
+                .Select(grouping => (Grouping: grouping, Task: FetchCodelistAsync(grouping.Key)));
+
+            await Task.WhenAll(codelistData.Select(task => task.Task));
+
+            return codelistData;
+        }
+
+        private async Task<List<CodelistItem>> FetchCodelistAsync(Uri uri)
+        {
             if (!_settings.AllowedHosts.Contains(uri.Host))
                 return null;
 
-            try
-            {
-                return await FetchData(uri);
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Kunne ikke laste ned kodeliste fra {url}", url);
-                return null;
-            }
-        }
-
-        private async Task<List<CodelistValue>> FetchData(Uri uri)
-        {
             var filePath = GetFilePath(uri);
-            var data = await LoadDataFromDisk(filePath);
+            var data = await LoadDataFromDiskAsync(filePath);
 
             if (data != null)
                 return data;
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, uri.AbsoluteUri);
+            data = await FetchDataAsync(uri);
 
-            if (!Path.HasExtension(uri.AbsoluteUri))
-                request.Headers.Add(HttpRequestHeader.Accept.ToString(), "application/xml");
+            if (data == null)
+                return null;
 
-            using var response = await Client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            await SaveDataToDiskAsync(filePath, data);
 
-            using var stream = await response.Content.ReadAsStreamAsync();
-            data = await CreateCodelist(stream);
-
-            await SaveDataToDisk(filePath, data);
+            _cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
 
             return data;
         }
 
-        private async Task<Dictionary<string, Uri>> GetCodelistsFromXsd(IEnumerable<Stream> xmlStreams, Stream xsdStream, List<CodelistSelector> codelistSelectors)
+        private async Task<List<CodelistItem>> FetchDataAsync(Uri uri)
         {
-            var codelists = new Dictionary<string, Uri>();
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, uri.AbsoluteUri);
 
-            foreach (var xmlStream in xmlStreams)
-                codelists.Append(await _xsdCodelistExtractor.GetCodelistsFromXsd(xmlStream, xsdStream, codelistSelectors));
+                if (!Path.HasExtension(uri.AbsoluteUri))
+                    request.Headers.Add(HttpRequestHeader.Accept.ToString(), "application/xml");
 
-            return codelists;
+                using var response = await Client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+
+                return await CreateCodelistAsync(stream);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Kunne ikke laste ned kodeliste fra {uri}", uri.AbsoluteUri);
+                return null;
+            }
         }
 
         private string GetFilePath(Uri uri)
@@ -136,7 +233,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             return Path.ChangeExtension(path, "json");
         }
 
-        private async Task<List<CodelistValue>> LoadDataFromDisk(string filePath)
+        private async Task<List<CodelistItem>> LoadDataFromDiskAsync(string filePath)
         {
             if (!File.Exists(filePath))
                 return null;
@@ -146,35 +243,96 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             if (sinceLastUpdate.TotalDays >= _settings.CacheDurationDays)
                 return null;
 
-            return JsonConvert.DeserializeObject<List<CodelistValue>>(await File.ReadAllTextAsync(filePath));
+            return JsonConvert.DeserializeObject<List<CodelistItem>>(await File.ReadAllTextAsync(filePath));
         }
 
-        private static async Task<List<CodelistValue>> CreateCodelist(Stream stream)
+        private async Task SaveCachedCodelistUrisAsync()
         {
-            var document = await XDocument.LoadAsync(stream, LoadOptions.None, new CancellationToken());
+            if (!_cachedUris.Any())
+                return;
 
-            if (!IsCodelist(document))
-                return null;
+            var filePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
+            var existingCachedUris = Array.Empty<string>();
 
-            return document.Root.Descendants("Registeritem")
-                .Select(element =>
-                {
-                    return new CodelistValue(
-                        element.Element("codevalue").Value,
-                        element.Element("label")?.Value,
-                        element.Element("description")?.Value
-                    );
-                })
-                .ToList();
+            if (File.Exists(filePath))
+                existingCachedUris = await File.ReadAllLinesAsync(filePath);
+
+            var union = _cachedUris.UnionBy(existingCachedUris, uri => uri.Split(',')[0]);
+
+            await File.WriteAllLinesAsync(filePath, union);
         }
 
-        private static async Task SaveDataToDisk(string filePath, object data)
+        private static async Task<List<CodelistItem>> CreateCodelistAsync(Stream stream)
+        {
+            var document = await LoadXDocumentAsync(stream);
+            var codelistType = GetCodelistType(document);
+
+            return codelistType switch
+            {
+                CodelistType.GeonorgeCodelist => MapFromGeonorgeCodelist(document),
+                CodelistType.GmlDictionary => MapFromGmlDictionary(document),
+                _ => null,
+            };
+        }
+
+        private static async Task SaveDataToDiskAsync(string filePath, object data)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
             await File.WriteAllTextAsync(filePath, JsonConvert.SerializeObject(data, _jsonSerializerSettings));
         }
 
-        private static bool IsCodelist(XDocument document) => document.Root.Element("containedItemClass")?.Value == "CodelistValue";
+        private static CodelistType GetCodelistType(XDocument document)
+        {
+            if (document.Root.Name == "Register" && document.Root.Element("containedItemClass")?.Value == "CodelistValue")
+                return CodelistType.GeonorgeCodelist;
+
+            if (document.Root.Name == "{http://www.opengis.net/gml/3.2}Dictionary")
+                return CodelistType.GmlDictionary;
+
+            return CodelistType.Unknown;
+        }
+
+        private static (string FeatureMemberName, string XPath) GetFeatureMemberNameWithXPathFromXPath(string xPath)
+        {
+            const string featureMemberPath = "*:FeatureCollection/*:featureMember/";
+
+            var restPath = xPath[featureMemberPath.Length..];
+            var elementNames = restPath.Split("/");
+            var featureMemberName = elementNames[0].TrimStart("*:".ToCharArray());
+            var elementPath = string.Join("/", elementNames.Skip(1));
+
+            return (featureMemberName, elementPath);
+        }
+
+        private static List<CodelistItem> MapFromGeonorgeCodelist(XDocument document)
+        {
+            return document.Root.XPath2SelectElements("*:containeditems/*:Registeritem")
+                .Select(element =>
+                {
+                    return new CodelistItem(
+                        element.XPath2SelectElement("*:label")?.Value,
+                        element.XPath2SelectElement("*:codevalue")?.Value,
+                        element.XPath2SelectElement("*:description")?.Value
+                    );
+                })
+                .OrderBy(codelistItem => codelistItem.Name)
+                .ToList();
+        }
+
+        private static List<CodelistItem> MapFromGmlDictionary(XDocument document)
+        {
+            return document.Root.XPath2SelectElements("*:dictionaryEntry")
+                .Select(element =>
+                {
+                    return new CodelistItem(
+                        element.XPath2SelectElement("//*:name")?.Value,
+                        element.XPath2SelectElement("//*:identifier")?.Value,
+                        element.XPath2SelectElement("//*:description")?.Value
+                    );
+                })
+                .OrderBy(codelistItem => codelistItem.Name)
+                .ToList();
+        }
     }
 }

@@ -1,6 +1,9 @@
 ﻿using Geonorge.XsdValidator.Config;
 using Serilog;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Schema;
 
 namespace Geonorge.XsdValidator.Utils
@@ -12,27 +15,41 @@ namespace Geonorge.XsdValidator.Utils
             if (xsdStream == null)
                 return null;
 
-            var xmlSchemaSet = new XmlSchemaSet { XmlResolver = new XmlFileCacheResolver(settings) };
+            var xmlResolver = new XmlFileCacheResolver(settings);
+            var xmlSchemaSet = new XmlSchemaSet { XmlResolver = xmlResolver };
             var xmlSchema = XmlSchema.Read(xsdStream, null);
-            xsdStream.Seek(0, SeekOrigin.Begin);
 
+            xsdStream.Position = 0;
             xmlSchemaSet.Add(xmlSchema);
 
-            return CompileSchemaSet(xmlSchemaSet);
-        }
-
-        private static XmlSchemaSet CompileSchemaSet(XmlSchemaSet xmlSchemaSet)
-        {
             try
             {
                 xmlSchemaSet.Compile();
+                SaveCachedXsdUris(xmlResolver.CachedUris, settings);
+
                 return xmlSchemaSet;
             }
             catch (XmlSchemaException exception)
             {
-                Log.Logger.Error(exception, "Could not compile XmlSchemaSet!");
+                Log.Logger.Error(exception, "Kunne ikke kompilere XmlSchemaSet!");
                 throw;
             }
+        }
+
+        private static void SaveCachedXsdUris(List<string> cachedUris, XsdValidatorSettings settings)
+        {
+            if (!cachedUris.Any())
+                return;
+
+            var filePath = Path.GetFullPath(Path.Combine(settings.CacheFilesPath, settings.CachedUrisFileName));
+            var existingCachedUris = Array.Empty<string>();
+
+            if (File.Exists(filePath))
+                existingCachedUris = File.ReadAllLines(filePath);
+
+            var union = existingCachedUris.Union(cachedUris);
+
+            File.WriteAllLines(filePath, union);
         }
     }
 }

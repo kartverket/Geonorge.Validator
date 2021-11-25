@@ -1,11 +1,13 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Models.Report;
 using Geonorge.Validator.Application.Services.XsdValidation;
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.GenericGml;
+using Geonorge.XsdValidator.Config;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,8 +16,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.ValidationHelpers;
-using static Geonorge.Validator.Application.Utils.XmlHelpers;
+using static Geonorge.Validator.Application.Utils.ValidationHelper;
+using static Geonorge.Validator.Application.Utils.XmlHelper;
 
 namespace Geonorge.Validator.Application.Services.Validation
 {
@@ -24,20 +26,23 @@ namespace Geonorge.Validator.Application.Services.Validation
         private readonly IXsdValidationService _xsdValidationService;
         private readonly IXsdHttpClient _xsdHttpClient;
         private readonly IServiceProvider _serviceProvider;
-        private readonly ValidatorOptions _options;
+        private readonly ValidatorOptions _validatorOptions;
+        private readonly string _xsdCacheFilesPath;
         private readonly ILogger<ValidationService> _logger;
 
         public ValidationService(
             IXsdValidationService xsdValidationService,
             IXsdHttpClient xsdHttpClient,
             IHttpContextAccessor httpContextAccessor,
-            IOptions<ValidatorOptions> options,
+            IOptions<ValidatorOptions> validatorOptions,
+            IOptions<XsdValidatorSettings> xsdValidatorOptions,
             ILogger<ValidationService> logger)
         {
             _xsdValidationService = xsdValidationService;
             _xsdHttpClient = xsdHttpClient;
             _serviceProvider = httpContextAccessor.HttpContext.RequestServices;
-            _options = options.Value;
+            _validatorOptions = validatorOptions.Value;
+            _xsdCacheFilesPath = xsdValidatorOptions.Value.CacheFilesPath;
             _logger = logger;
         }
 
@@ -46,31 +51,31 @@ namespace Geonorge.Validator.Application.Services.Validation
             var startTime = DateTime.Now;
 
             var xsdStream = xsdFile?.OpenReadStream() ?? await _xsdHttpClient.GetXsdFromXmlFiles(xmlFiles);
-            (string xmlNamespace, string xsdVersion) = await GetXmlNamespaceAndXsdVersion(xsdStream);
+            var xmlMetadata = await XmlMetadata.CreateAsync(xsdStream, _xsdCacheFilesPath);
 
             using var inputData = GetInputData(xmlFiles);
             var xsdRule = _xsdValidationService.Validate(inputData, xsdStream);
             var rules = new List<Rule> { xsdRule };
 
-            rules.AddRange(await Validate(inputData, xmlNamespace, xsdVersion, xsdStream));
+            rules.AddRange(await Validate(inputData, xmlMetadata, xsdStream));
 
-            return CreateValidationReport(startTime, xmlNamespace, inputData, rules);
+            return CreateValidationReport(startTime, xmlMetadata.Namespace, inputData, rules);
         }
 
-        private async Task<List<Rule>> Validate(DisposableList<InputData> inputData, string xmlNamespace, string xsdVersion, Stream xsdStream)
+        private async Task<List<Rule>> Validate(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Stream xsdStream)
         {
             if (inputData.All(data => !data.IsValid))
                 return new();
 
-            var validator = GetValidator(xmlNamespace, xsdVersion);
+            var validator = GetValidator(xmlMetadata.Namespace, xmlMetadata.XsdVersion);
 
             if (validator != null)
-                return await validator.Validate(xmlNamespace, inputData);
+                return await validator.Validate(xmlMetadata.Namespace, inputData);
 
-            if (InputDataIsGml(inputData))
+            if (xmlMetadata.GmlVersion != null)
             {
                 var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
-                return await genericGmlValidator.Validate(inputData, xsdStream);
+                return await genericGmlValidator.Validate(inputData, xsdStream, xmlMetadata.GmlVersion);
             }
 
             return new();
@@ -78,14 +83,12 @@ namespace Geonorge.Validator.Application.Services.Validation
 
         private IValidator GetValidator(string xmlNamespace, string xsdVersion)
         {
-            var validator = _options.GetValidator(xmlNamespace);
+            var validator = _validatorOptions.GetValidator(xmlNamespace);
 
             if (validator == null || !validator.XsdVersions.Contains(xsdVersion))
                 return null;
 
             return _serviceProvider.GetService(validator.ServiceType) as IValidator;
         }
-
-        private static bool InputDataIsGml(DisposableList<InputData> inputData) => inputData.All(data => Path.GetExtension(data.FileName) == ".gml");
     }
 }

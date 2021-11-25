@@ -2,10 +2,8 @@
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
@@ -27,41 +25,34 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             return HasMessages ? Status.FAILED : Status.PASSED;
         }
 
-        private void Validate(GmlDocument document, List<CodeSpace> codeSpaces)
+        private void Validate(GmlDocument document, List<GmlCodeSpace> gmlCodeSpaces)
         {
-            foreach (var codeSpace in codeSpaces)
+            foreach (var gmlCodeSpace in gmlCodeSpaces)
             {
-                var codeSpaceElements = GetCodeSpaceElements(document, codeSpace);
-
-                foreach (var codeSpaceElement in codeSpaceElements)
+                var featureElements = document.GetFeatures(gmlCodeSpace.FeatureMemberName);
+                
+                foreach (var featureElement in featureElements)
                 {
-                    var codevalue = codeSpaceElement.Value;
-
-                    if (!codeSpace.Codelist.Any(codelistValue => codelistValue.Codevalue == codevalue))
+                    foreach (var codeSpace in gmlCodeSpace.CodeSpaces)
                     {
-                        this.AddMessage(
-                            $"Kodeverdien '{codevalue}' er ikke i henhold til kodelisten '{codeSpace.Url}'",
-                            document.FileName,
-                            new[] { codeSpaceElement.GetXPath() }
-                        );
+                        var codeElement = featureElement.GetElement(codeSpace.XPath);
+                        
+                        if (codeElement == null)
+                            continue;
+
+                        var code = codeElement.Value;
+
+                        if (!codeSpace.Codelist.Any(codelistValue => codelistValue.Value == code))
+                        {
+                            this.AddMessage(
+                                $"Kodeverdien '{code}' er ikke i henhold til kodelisten '{codeSpace.Url}'.",
+                                document.FileName,
+                                new[] { codeElement.GetXPath() }
+                            );
+                        }
                     }
                 }
             }
-        }
-
-        private static List<XElement> GetCodeSpaceElements(GmlDocument document, CodeSpace codeSpace)
-        {
-            var xPath = codeSpace.XPath;
-            var elementNames = xPath.Split("//*:").Skip(1);
-            var featureName = elementNames.First();
-            var features = document.GetFeatures(featureName);
-
-            if (!features.Any())
-                return document.GetFeatures().GetElements(xPath).ToList();
-
-            var subXPath = $"//*:{string.Join("//*:", elementNames.Skip(1))}";
-
-            return features.GetElements(subXPath).ToList();
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 
-namespace Geonorge.Validator.Application.HttpClients.Codelist
+namespace Geonorge.Validator.Application.Utils.Codelist
 {
     internal sealed class XmlReaderPathWrapper : IDisposable
     {

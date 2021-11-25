@@ -2,16 +2,16 @@
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Geonorge.Validator.Application.HttpClients.Codelist
+namespace Geonorge.Validator.Application.Utils.Codelist
 {
-    public class CodelistSelector
+    public class XsdCodelistSelector
     {
         public XmlQualifiedName QualifiedName { get; private set; }
         public Func<XElement, string> UriResolver { get; private set; }
 
-        public CodelistSelector(XmlQualifiedName qualifiedName, Func<XElement, string> uriResolver)
+        public XsdCodelistSelector(string elementType, string @namespace, Func<XElement, string> uriResolver)
         {
-            QualifiedName = qualifiedName;
+            QualifiedName = new(elementType, @namespace);
             UriResolver = uriResolver;
         }
     }

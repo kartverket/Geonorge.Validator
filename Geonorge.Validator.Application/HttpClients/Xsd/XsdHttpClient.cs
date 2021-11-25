@@ -6,10 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.ValidationHelpers;
+using Geonorge.Validator.Application.Utils;
 
 namespace Geonorge.Validator.Application.HttpClients.Xsd
 {
@@ -61,7 +60,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             var schemaUris = xmlFiles
                 .Select(xmlFile =>
                 {
-                    var xmlString = ReadLines(xmlFile.OpenReadStream(), 10);
+                    var xmlString = XmlHelper.ReadLines(xmlFile.OpenReadStream(), 10);
                     var match = _schemaLocationRegex.Match(xmlString);
 
                     if (!match.Success)

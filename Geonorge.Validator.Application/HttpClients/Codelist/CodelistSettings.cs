@@ -4,6 +4,7 @@
     {
         public static readonly string SectionName = "Codelists";
         public string CacheFilesPath { get; set; }
+        public string CachedUrisFileName { get; set; }
         public int CacheDurationDays { get; set; }
         public string[] AllowedHosts { get; set; }
     }

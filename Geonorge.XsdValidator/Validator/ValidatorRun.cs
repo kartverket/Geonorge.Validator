@@ -1,5 +1,4 @@
-﻿using Geonorge.XsdValidator.Config;
-using Geonorge.XsdValidator.Translator;
+﻿using Geonorge.XsdValidator.Translator;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;

@@ -6,6 +6,6 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
 {
     public interface IGenericGmlValidationData : IGmlValidationData
     {
-        List<CodeSpace> CodeSpaces { get; }
+        List<GmlCodeSpace> CodeSpaces { get; }
     }
 }
