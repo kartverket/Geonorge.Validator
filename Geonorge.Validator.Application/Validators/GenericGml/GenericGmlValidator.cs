@@ -77,8 +77,6 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
                     gmlDocuments2D.Add(document);
                 else if (dimensions == 3)
                     gmlDocuments3D.Add(document);
-
-                data.Stream.Position = 0;
             }
 
             return GmlValidationData.Create(gmlDocuments2D, gmlDocuments3D);
