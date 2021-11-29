@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using Serilog;
+using Serilog.Events;
 using System.Globalization;
 using System.IO.Compression;
 using System.Reflection;
@@ -105,6 +106,11 @@ namespace Geonorge.Validator
 
             Ogr.RegisterAll();
             Ogr.UseExceptions();
+
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .ReadFrom.Configuration(Configuration)
+                .CreateLogger();
 
             loggerFactory.AddSerilog(Log.Logger, true);
 

@@ -5,9 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiBK.RuleValidator" Version="1.0.5" />
-    <PackageReference Include="DiBK.RuleValidator.Extensions" Version="1.0.6" />
-    <PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="1.0.7" />
+    <PackageReference Include="DiBK.RuleValidator" Version="1.0.6" />
+    <PackageReference Include="DiBK.RuleValidator.Extensions" Version="1.0.7" />
+    <PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="1.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />

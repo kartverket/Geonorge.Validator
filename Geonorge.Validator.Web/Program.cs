@@ -16,12 +16,12 @@ namespace Geonorge.Validator
 
             try
             {
-                Log.Information("Starting application...");
+                Log.Information("Starter applikasjon...");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Could not start application!");
+                Log.Fatal(ex, "Kunne ikke starte applikasjonen!");
             }
             finally
             {
