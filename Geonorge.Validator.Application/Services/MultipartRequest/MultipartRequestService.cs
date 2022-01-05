@@ -25,26 +25,33 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             var inputFiles = new InputFiles();
             MultipartSection section;
 
-            while ((section = await reader.ReadNextSectionAsync()) != null)
+            try
             {
-                if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition) || !contentDisposition.IsFileDisposition())
-                    continue;
+                while ((section = await reader.ReadNextSectionAsync()) != null)
+                {
+                    if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition) || !contentDisposition.IsFileDisposition())
+                        continue;
 
-                var name = contentDisposition.Name.Value;
+                    var name = contentDisposition.Name.Value;
 
-                if (name != "xmlFiles" && name != "xsdFile")
-                    continue;
+                    if (name != "xmlFiles" && name != "xsdFile")
+                        continue;
 
-                var fileType = await FileHelper.GetFileType(section);
+                    var fileType = await FileHelper.GetFileType(section);
 
-                if (name == "xmlFiles" && (fileType == FileType.XML || fileType == FileType.GML32))
-                    inputFiles.XmlFiles.Add(await CreateFormFile(contentDisposition, section));
+                    if (name == "xmlFiles" && (fileType == FileType.XML || fileType == FileType.GML32))
+                        inputFiles.XmlFiles.Add(await CreateFormFile(contentDisposition, section));
 
-                else if (name == "xsdFile" && inputFiles.XsdFile == null && fileType == FileType.XSD)
-                    inputFiles.XsdFile = await CreateFormFile(contentDisposition, section);
+                    else if (name == "xsdFile" && inputFiles.XsdFile == null && fileType == FileType.XSD)
+                        inputFiles.XsdFile = await CreateFormFile(contentDisposition, section);
+                }
+
+                return inputFiles;
             }
-
-            return inputFiles;
+            catch
+            {
+                return null;
+            }
         }
 
         private static async Task<IFormFile> CreateFormFile(ContentDispositionHeaderValue contentDisposition, MultipartSection section)

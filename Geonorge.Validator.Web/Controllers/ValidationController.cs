@@ -29,7 +29,7 @@ namespace Geonorge.Validator.Controllers
             {
                 var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
 
-                if (!inputFiles.XmlFiles.Any())
+                if (inputFiles == null || !inputFiles.XmlFiles.Any())
                     return BadRequest();
 
                 var report = await _validationService.ValidateAsync(inputFiles.XmlFiles, inputFiles.XsdFile);
