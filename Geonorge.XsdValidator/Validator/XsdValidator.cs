@@ -20,7 +20,7 @@ namespace Geonorge.XsdValidator.Validator
         {
             var xmlSchemaSet = CreateXmlSchemaSet(xsdStream, _settings);
 
-            return new ValidatorRun().Validate(xmlStream, xmlSchemaSet);
+            return new Validation(_settings.MaxMessageCount).Validate(xmlStream, xmlSchemaSet);
         }
     }
 }

@@ -6,14 +6,15 @@ using System.Xml.Schema;
 
 namespace Geonorge.XsdValidator.Validator
 {
-    internal class ValidatorRun
+    internal class Validation
     {
-        private const int ValidationErrorCountLimit = 1000;
-        private readonly List<string> _schemaValidationResult;
+        private readonly int _maxMessageCount;
+        private readonly List<string> _messages;
 
-        public ValidatorRun()
+        public Validation(int maxMessageCount = 1000)
         {
-            _schemaValidationResult = new List<string>();
+            _maxMessageCount = maxMessageCount;
+            _messages = new List<string>();
         }
 
         public List<string> Validate(Stream xmlStream, XmlSchemaSet xmlSchemaSet)
@@ -22,7 +23,7 @@ namespace Geonorge.XsdValidator.Validator
 
             Validate(xmlStream, xmlReaderSettings);
 
-            return _schemaValidationResult;
+            return _messages;
         }
 
         private void Validate(Stream xmlStream, XmlReaderSettings xmlReaderSettings)
@@ -33,13 +34,13 @@ namespace Geonorge.XsdValidator.Validator
             {
                 while (reader.Read())
                 {
-                    if (_schemaValidationResult.Count >= ValidationErrorCountLimit)
+                    if (_messages.Count >= _maxMessageCount)
                         break;
                 }
             }
             catch (XmlException exception)
             {
-                _schemaValidationResult.Add(MessageTranslator.TranslateError(exception.Message));
+                _messages.Add(MessageTranslator.TranslateError(exception.Message));
             }
         }
 
@@ -70,7 +71,7 @@ namespace Geonorge.XsdValidator.Validator
                     break;
             }
 
-            _schemaValidationResult.Add(prefix);
+            _messages.Add(prefix);
         }
     }
 }
