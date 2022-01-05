@@ -7,6 +7,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
 {
     public interface IXsdHttpClient
     {
-        Task<Stream> GetXsdFromXmlFiles(List<IFormFile> xmlFiles);
+        Task<MemoryStream> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles);
+        Task<int> UpdateCacheAsync();
     }
 }

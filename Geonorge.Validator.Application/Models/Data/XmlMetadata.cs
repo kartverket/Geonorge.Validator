@@ -12,6 +12,7 @@ namespace Geonorge.Validator.Application.Models.Data
         public string Namespace { get; private set; }
         public string XsdVersion { get; private set; }
         public string GmlVersion { get; private set; }
+        public bool IsGml32 => GmlVersion?.StartsWith("3.2") ?? false;
 
         private XmlMetadata(string @namespace, string xsdVersion, string gmlVersion)
         {

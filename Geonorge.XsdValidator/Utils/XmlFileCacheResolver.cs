@@ -32,12 +32,7 @@ namespace Geonorge.XsdValidator.Utils
                 var filePath = GetFilePath(absoluteUri);
 
                 if (File.Exists(filePath))
-                {
-                    var lastUpdated = DateTime.Now.Subtract(File.GetLastWriteTime(filePath));
-
-                    if (lastUpdated.TotalDays < _settings.CacheDurationDays)
-                        return File.OpenRead(filePath);                   
-                }
+                    return File.OpenRead(filePath);                   
 
                 using var response = _client.GetAsync(absoluteUri).Result;
                 var stream = response.Content.ReadAsStream();

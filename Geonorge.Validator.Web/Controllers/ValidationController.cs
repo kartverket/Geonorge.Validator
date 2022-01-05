@@ -1,11 +1,6 @@
-﻿using Geonorge.Validator.Application.Services.Validation;
-using Microsoft.AspNetCore.Http;
+﻿using Geonorge.Validator.Application.Services.MultipartRequest;
+using Geonorge.Validator.Application.Services.Validation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Controllers
 {
@@ -13,26 +8,31 @@ namespace Geonorge.Validator.Controllers
     [Route("validering")]
     public class ValidationController : BaseController
     {
-        private readonly IValidationService _validationService; 
+        private readonly IValidationService _validationService;
+        private readonly IMultipartRequestService _multipartRequestService;
 
         public ValidationController(
             IValidationService validationService,
+            IMultipartRequestService multipartRequestService,
             ILogger<ValidationController> logger) : base(logger)
         {
             _validationService = validationService;
+            _multipartRequestService = multipartRequestService;
         }
 
         [HttpPost]
-        [RequestFormLimits(MultipartBodyLengthLimit = 209715200)]
-        [RequestSizeLimit(209715200)]
-        public async Task<IActionResult> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        [RequestFormLimits(MultipartBodyLengthLimit = 209_715_200)]
+        [RequestSizeLimit(209_715_200)]
+        public async Task<IActionResult> Validate()
         {
             try
             {
-                if (!xmlFiles?.Any() ?? true)
+                var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
+
+                if (!inputFiles.XmlFiles.Any())
                     return BadRequest();
 
-                var report = await _validationService.Validate(xmlFiles, xsdFile);
+                var report = await _validationService.Validate(inputFiles.XmlFiles, inputFiles.XsdFile);
 
                 return Ok(report);
             }

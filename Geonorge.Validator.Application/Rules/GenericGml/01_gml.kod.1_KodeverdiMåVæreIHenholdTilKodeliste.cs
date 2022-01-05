@@ -15,14 +15,12 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             Name = "Kodeverdi må være i henhold til kodeliste";
         }
 
-        protected override Status Validate(IGenericGmlValidationData data)
+        protected override void Validate(IGenericGmlValidationData data)
         {
             if (!data.CodeSpaces.Any() || !data.Surfaces.Any() && !data.Solids.Any())
-                return Status.NOT_EXECUTED;
+                SkipRule();
 
             data.Surfaces.Concat(data.Solids).ToList().ForEach(document => Validate(document, data.CodeSpaces));
-
-            return HasMessages ? Status.FAILED : Status.PASSED;
         }
 
         private void Validate(GmlDocument document, List<GmlCodeSpace> gmlCodeSpaces)
@@ -47,7 +45,8 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                             this.AddMessage(
                                 $"Kodeverdien '{code}' er ikke i henhold til kodelisten '{codeSpace.Url}'.",
                                 document.FileName,
-                                new[] { codeElement.GetXPath() }
+                                new[] { codeElement.GetXPath() },
+                                new[] { featureElement.GetAttribute("gml:id") }
                             );
                         }
                     }

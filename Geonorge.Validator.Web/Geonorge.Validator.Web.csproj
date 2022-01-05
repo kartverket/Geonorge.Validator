@@ -2,12 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>af703952-6d95-4c86-819c-ce3f0b58c7ed</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DiBK.RuleValidator" Version="1.0.6" />
-		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="1.0.8" />
+		<PackageReference Include="DiBK.RuleValidator" Version="2.0.0-alpha" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.0-alpha" />
 		<PackageReference Include="MaxRev.Gdal.Core" Version="3.2.0.320" />
 		<PackageReference Include="Serilog" Version="2.10.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
@@ -28,12 +29,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Geonorge.Validator.Application\Geonorge.Validator.Application.csproj" />
 		<ProjectReference Include="..\Geonorge.XsdValidator\Geonorge.XsdValidator.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="Reguleringsplanforslag.Rules">
-			<HintPath>..\Geonorge.Validator.Application\Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 
 </Project>

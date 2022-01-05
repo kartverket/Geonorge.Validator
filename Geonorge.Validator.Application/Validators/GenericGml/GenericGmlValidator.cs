@@ -28,9 +28,9 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             _codelistHttpClient = codelistHttpClient;
         }
 
-        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Stream xsdStream, string gmlVersion)
+        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Stream xsdStream)
         {
-            using var gmlValidationData = await GetGmlValidationData(inputData, gmlVersion);
+            using var gmlValidationData = await GetGmlValidationData(inputData);
 
             using var genericGmlValidationData = GenericGmlValidationData.Create(
                 gmlValidationData.Surfaces, 
@@ -38,15 +38,15 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
                 await GetCodeSpacesAsync(inputData, xsdStream)
             );
 
-            _validator.Validate(gmlValidationData, options => options.SkipRule<Datasettoppløsning>());
-            _validator.Validate(genericGmlValidationData);
+            await _validator.Validate(gmlValidationData, options => options.SkipRule<Datasettoppløsning>());
+            await _validator.Validate(genericGmlValidationData);
 
             return _validator.GetAllRules();
         }
 
         private async Task<List<GmlCodeSpace>> GetCodeSpacesAsync(DisposableList<InputData> inputData, Stream xsdStream)
         {
-            return await _codelistHttpClient.GetCodeSpacesForGmlAsync(
+            return await _codelistHttpClient.GetGmlCodeSpacesAsync(
                 xsdStream,
                 inputData.Where(data => data.IsValid).Select(data => data.Stream),
                 new[]
@@ -60,14 +60,14 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             );
         }
 
-        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData, string gmlVersion)
+        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
 
             foreach (var data in inputData)
             {
-                if (!data.IsValid || !gmlVersion.StartsWith("3.2"))
+                if (!data.IsValid)
                     continue;
 
                 var document = GmlDocument.Create(data);

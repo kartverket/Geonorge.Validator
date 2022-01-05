@@ -45,34 +45,7 @@ namespace Geonorge.Validator.Application.Utils
                     .SelectMany(rule => rule.Messages)
                     .Count(),
                 Rules = rules
-                    .ConvertAll(rule =>
-                    {
-                        return new ValidationRule
-                        {
-                            Id = rule.Id,
-                            Name = rule.Name,
-                            Messages = rule.Messages
-                                .Select(message =>
-                                {
-                                    return message switch
-                                    {
-                                        GmlRuleMessage msg => new ValidationRuleMessage(msg.Message, msg.FileName, msg.XPath, msg.GmlIds),
-                                        XmlRuleMessage msg => new ValidationRuleMessage(msg.Message, msg.FileName, msg.XPath, null),
-                                        RuleMessage msg => new ValidationRuleMessage(msg.Message, msg.FileName, null, null),
-                                        _ => null,
-                                    };
-                                })
-                                .Where(message => message != null)
-                                .ToList(),
-                            MessageType = rule.MessageType.ToString(),
-                            Status = rule.Status.ToString(),
-                            PreCondition = rule.PreCondition,
-                            ChecklistReference = rule.ChecklistReference,
-                            Description = rule.Description,
-                            Source = rule.Source,
-                            Documentation = rule.Documentation
-                        };
-                    }),
+                    .ConvertAll(rule => new ValidationRule(rule)),
                 StartTime = start,
                 EndTime = DateTime.Now,
                 Files = inputData

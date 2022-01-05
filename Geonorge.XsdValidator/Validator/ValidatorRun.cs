@@ -25,7 +25,6 @@ namespace Geonorge.XsdValidator.Validator
             return _schemaValidationResult;
         }
 
-
         private void Validate(Stream xmlStream, XmlReaderSettings xmlReaderSettings)
         {
             using var reader = XmlReader.Create(xmlStream, xmlReaderSettings);

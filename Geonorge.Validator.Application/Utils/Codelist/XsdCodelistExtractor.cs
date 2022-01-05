@@ -24,7 +24,8 @@ namespace Geonorge.Validator.Application.Utils.Codelist
             _settings = options.Value;
         }
 
-        public async Task<Dictionary<string, Uri>> GetCodelistUrisAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
+        public async Task<Dictionary<string, Uri>> GetCodelistUrisAsync(
+            Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
         {
             var xsdDocument = await LoadXDocumentAsync(xsdStream, LoadOptions.SetLineInfo);
             var relevantCodelistSelectors = GetRelevantCodelistSelectors(xsdDocument, codelistSelectors);
@@ -54,7 +55,8 @@ namespace Geonorge.Validator.Application.Utils.Codelist
             return xmlReaderSettings;
         }
 
-        private static Dictionary<string, Uri> GetCodelistUris(XDocument xsdDocument, XmlReaderSettings xmlReaderSettings, Stream xmlStream, List<XsdCodelistSelector> codelistSelectors)
+        private static Dictionary<string, Uri> GetCodelistUris(
+            XDocument xsdDocument, XmlReaderSettings xmlReaderSettings, Stream xmlStream, List<XsdCodelistSelector> codelistSelectors)
         {            
             using var reader = XmlReader.Create(xmlStream, xmlReaderSettings);
             using var wrapper = new XmlReaderPathWrapper(reader);

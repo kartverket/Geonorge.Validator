@@ -26,19 +26,19 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
+        private readonly HttpClient _httpClient;
         private readonly IXsdCodelistExtractor _xsdCodelistExtractor;
         private readonly CodelistSettings _settings;
         private readonly ILogger<CodelistHttpClient> _logger;
         private readonly List<string> _cachedUris = new();
-        public HttpClient Client { get; }
 
         public CodelistHttpClient(
-            HttpClient client,
+            HttpClient httpClient,
             IXsdCodelistExtractor xsdCodelistExtractor,
             IOptions<CodelistSettings> options,
             ILogger<CodelistHttpClient> logger)
         {
-            Client = client;
+            _httpClient = httpClient;
             _xsdCodelistExtractor = xsdCodelistExtractor;
             _settings = options.Value;
             _logger = logger;
@@ -74,7 +74,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             return codeSpaces;
         }
 
-        public async Task<List<GmlCodeSpace>> GetCodeSpacesForGmlAsync(
+        public async Task<List<GmlCodeSpace>> GetGmlCodeSpacesAsync(
             Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors)
         {
             _cachedUris.Clear();
@@ -120,12 +120,12 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             return gmlCodeSpaces;
         }
 
-        public async Task UpdateCacheAsync()
+        public async Task<int> UpdateCacheAsync()
         {
             var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
 
             if (!File.Exists(cacheListFilePath))
-                return;
+                return 0;
 
             var lines = await File.ReadAllLinesAsync(cacheListFilePath);
             var tasks = new List<(Task<List<CodelistItem>> Request, Uri uri, string FilePath)>();
@@ -161,6 +161,8 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             }
 
             await SaveCachedCodelistUrisAsync();
+
+            return _cachedUris.Count;
         }
 
         private async Task<IEnumerable<(IGrouping<Uri, string> uriAndXPaths, Task<List<CodelistItem>> httpRequest)>> GetCodelistDataAsync(
@@ -212,7 +214,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 if (!Path.HasExtension(uri.AbsoluteUri))
                     request.Headers.Add(HttpRequestHeader.Accept.ToString(), "application/xml");
 
-                using var response = await Client.SendAsync(request);
+                using var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
                 using var stream = await response.Content.ReadAsStreamAsync();
@@ -233,19 +235,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             return Path.ChangeExtension(path, "json");
         }
 
-        private async Task<List<CodelistItem>> LoadDataFromDiskAsync(string filePath)
-        {
-            if (!File.Exists(filePath))
-                return null;
-
-            var sinceLastUpdate = DateTime.Now.Subtract(File.GetLastWriteTime(filePath));
-
-            if (sinceLastUpdate.TotalDays >= _settings.CacheDurationDays)
-                return null;
-
-            return JsonConvert.DeserializeObject<List<CodelistItem>>(await File.ReadAllTextAsync(filePath));
-        }
-
         private async Task SaveCachedCodelistUrisAsync()
         {
             if (!_cachedUris.Any())
@@ -260,6 +249,14 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             var union = _cachedUris.UnionBy(existingCachedUris, uri => uri.Split(',')[0]);
 
             await File.WriteAllLinesAsync(filePath, union);
+        }
+
+        private static async Task<List<CodelistItem>> LoadDataFromDiskAsync(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return null;
+
+            return JsonConvert.DeserializeObject<List<CodelistItem>>(await File.ReadAllTextAsync(filePath));
         }
 
         private static async Task<List<CodelistItem>> CreateCodelistAsync(Stream stream)

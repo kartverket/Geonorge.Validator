@@ -9,7 +9,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
     public interface ICodelistHttpClient
     {
         Task<List<CodeSpace>> GetCodeSpacesAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors);
-        Task<List<GmlCodeSpace>> GetCodeSpacesForGmlAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors);
-        Task UpdateCacheAsync();
+        Task<List<GmlCodeSpace>> GetGmlCodeSpacesAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors);
+        Task<int> UpdateCacheAsync();
     }
 }

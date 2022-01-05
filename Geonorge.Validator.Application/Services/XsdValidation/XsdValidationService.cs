@@ -5,6 +5,7 @@ using Geonorge.Validator.Application.Rules.Schema;
 using Geonorge.XsdValidator.Validator;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -35,7 +36,10 @@ namespace Geonorge.Validator.Application.Services.XsdValidation
                 data.IsValid = !messages.Any();
                 data.Stream.Seek(0, SeekOrigin.Begin);
 
-                xsdRule.Messages.AddRange(messages.Select(message => new RuleMessage { Message = message, FileName = data.FileName }));
+                messages
+                    .Select(message => new RuleMessage { Message = message, Properties = new Dictionary<string, object> { { "FileName", data.FileName } } })
+                    .ToList()
+                    .ForEach(xsdRule.AddMessage);
             }
 
             xsdRule.Status = !xsdRule.Messages.Any() ? Status.PASSED : Status.FAILED;

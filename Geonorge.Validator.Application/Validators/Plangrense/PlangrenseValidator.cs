@@ -29,7 +29,7 @@ namespace Geonorge.Validator.Application.Validators.Plangrense
 
             var options = _options.GetValidationOptions(xmlNamespace);
 
-            _validator.Validate(validationData, options);
+            await _validator.Validate(validationData, options);
 
             return _validator.GetAllRules();
         }

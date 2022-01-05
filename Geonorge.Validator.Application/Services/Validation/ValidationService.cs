@@ -17,7 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static Geonorge.Validator.Application.Utils.ValidationHelper;
-using static Geonorge.Validator.Application.Utils.XmlHelper;
 
 namespace Geonorge.Validator.Application.Services.Validation
 {
@@ -50,7 +49,7 @@ namespace Geonorge.Validator.Application.Services.Validation
         {
             var startTime = DateTime.Now;
 
-            var xsdStream = xsdFile?.OpenReadStream() ?? await _xsdHttpClient.GetXsdFromXmlFiles(xmlFiles);
+            var xsdStream = xsdFile?.OpenReadStream() ?? await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
             var xmlMetadata = await XmlMetadata.CreateAsync(xsdStream, _xsdCacheFilesPath);
 
             using var inputData = GetInputData(xmlFiles);
@@ -72,13 +71,12 @@ namespace Geonorge.Validator.Application.Services.Validation
             if (validator != null)
                 return await validator.Validate(xmlMetadata.Namespace, inputData);
 
-            if (xmlMetadata.GmlVersion != null)
-            {
-                var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
-                return await genericGmlValidator.Validate(inputData, xsdStream, xmlMetadata.GmlVersion);
-            }
+            if (!xmlMetadata.IsGml32)
+                return new();
 
-            return new();
+            var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
+                
+            return await genericGmlValidator.Validate(inputData, xsdStream);
         }
 
         private IValidator GetValidator(string xmlNamespace, string xsdVersion)
