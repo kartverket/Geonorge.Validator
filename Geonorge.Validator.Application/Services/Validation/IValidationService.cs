@@ -7,6 +7,6 @@ namespace Geonorge.Validator.Application.Services.Validation
 {
     public interface IValidationService
     {
-        Task<ValidationReport> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile);
+        Task<ValidationReport> ValidateAsync(List<IFormFile> xmlFiles, IFormFile xsdFile);
     }
 }

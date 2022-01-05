@@ -47,6 +47,10 @@ namespace Geonorge.Validator.Application.Models.Data
             try
             {
                 var filePath = Path.GetFullPath(Path.Combine(xsdCacheFilesPath, uri.Host + uri.LocalPath));
+
+                if (!File.Exists(filePath))
+                    return null;
+
                 using var stream = File.OpenRead(filePath);
                 var gmlXsdDocument = await XmlHelper.LoadXDocumentAsync(stream);
 

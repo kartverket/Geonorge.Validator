@@ -45,23 +45,23 @@ namespace Geonorge.Validator.Application.Services.Validation
             _logger = logger;
         }
 
-        public async Task<ValidationReport> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        public async Task<ValidationReport> ValidateAsync(List<IFormFile> xmlFiles, IFormFile xsdFile)
         {
             var startTime = DateTime.Now;
 
             var xsdStream = xsdFile?.OpenReadStream() ?? await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
+            using var inputData = GetInputData(xmlFiles);
+            
+            var xsdRule = _xsdValidationService.Validate(inputData, xsdStream);
             var xmlMetadata = await XmlMetadata.CreateAsync(xsdStream, _xsdCacheFilesPath);
 
-            using var inputData = GetInputData(xmlFiles);
-            var xsdRule = _xsdValidationService.Validate(inputData, xsdStream);
             var rules = new List<Rule> { xsdRule };
-
-            rules.AddRange(await Validate(inputData, xmlMetadata, xsdStream));
+            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdStream));
 
             return CreateValidationReport(startTime, xmlMetadata.Namespace, inputData, rules);
         }
 
-        private async Task<List<Rule>> Validate(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Stream xsdStream)
+        private async Task<List<Rule>> ValidateAsync(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Stream xsdStream)
         {
             if (inputData.All(data => !data.IsValid))
                 return new();

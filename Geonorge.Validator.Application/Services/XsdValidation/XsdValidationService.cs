@@ -34,7 +34,7 @@ namespace Geonorge.Validator.Application.Services.XsdValidation
                 var messages = _xsdValidator.Validate(data.Stream, xsdStream);
 
                 data.IsValid = !messages.Any();
-                data.Stream.Seek(0, SeekOrigin.Begin);
+                data.Stream.Position = 0;
 
                 messages
                     .Select(message => new RuleMessage { Message = message, Properties = new Dictionary<string, object> { { "FileName", data.FileName } } })

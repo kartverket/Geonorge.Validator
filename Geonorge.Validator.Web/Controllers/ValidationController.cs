@@ -32,7 +32,7 @@ namespace Geonorge.Validator.Controllers
                 if (!inputFiles.XmlFiles.Any())
                     return BadRequest();
 
-                var report = await _validationService.Validate(inputFiles.XmlFiles, inputFiles.XsdFile);
+                var report = await _validationService.ValidateAsync(inputFiles.XmlFiles, inputFiles.XsdFile);
 
                 return Ok(report);
             }
