@@ -38,7 +38,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
                 await GetCodeSpacesAsync(inputData, xsdStream)
             );
 
-            await _validator.Validate(gmlValidationData, options => options.SkipRule<Datasettoppløsning>());
+            await _validator.Validate(gmlValidationData);
             await _validator.Validate(genericGmlValidationData);
 
             return _validator.GetAllRules();

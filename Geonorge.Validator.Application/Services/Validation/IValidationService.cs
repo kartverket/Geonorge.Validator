@@ -1,4 +1,4 @@
-﻿using Geonorge.Validator.Application.Models.Report;
+﻿using DiBK.RuleValidator.Extensions;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;

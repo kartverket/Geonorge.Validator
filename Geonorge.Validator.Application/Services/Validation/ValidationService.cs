@@ -2,8 +2,8 @@
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.HttpClients.Xsd;
 using Geonorge.Validator.Application.Models.Data;
-using Geonorge.Validator.Application.Models.Report;
 using Geonorge.Validator.Application.Services.XsdValidation;
+using Geonorge.Validator.Application.Utils;
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.GenericGml;
@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.ValidationHelper;
+using static DiBK.RuleValidator.Extensions.Helpers.ValidationHelper;
 
 namespace Geonorge.Validator.Application.Services.Validation
 {
@@ -58,7 +58,7 @@ namespace Geonorge.Validator.Application.Services.Validation
             var rules = new List<Rule> { xsdRule };
             rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdStream));
 
-            return CreateValidationReport(startTime, xmlMetadata.Namespace, inputData, rules);
+            return CreateValidationReport(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, startTime, xmlMetadata.Namespace);
         }
 
         private async Task<List<Rule>> ValidateAsync(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Stream xsdStream)
@@ -87,6 +87,13 @@ namespace Geonorge.Validator.Application.Services.Validation
                 return null;
 
             return _serviceProvider.GetService(validator.ServiceType) as IValidator;
+        }
+
+        private static DisposableList<InputData> GetInputData(List<IFormFile> files)
+        {
+            return files
+                .Select(file => new InputData(file.OpenReadStream(), file.FileName, null))
+                .ToDisposableList();
         }
     }
 }
