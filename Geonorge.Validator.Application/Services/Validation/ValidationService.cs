@@ -16,7 +16,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static DiBK.RuleValidator.Extensions.Helpers.ValidationHelper;
 
 namespace Geonorge.Validator.Application.Services.Validation
 {
@@ -58,7 +57,7 @@ namespace Geonorge.Validator.Application.Services.Validation
             var rules = new List<Rule> { xsdRule };
             rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdStream));
 
-            return CreateValidationReport(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, startTime, xmlMetadata.Namespace);
+            return ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, xmlMetadata.Namespace, startTime);
         }
 
         private async Task<List<Rule>> ValidateAsync(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Stream xsdStream)

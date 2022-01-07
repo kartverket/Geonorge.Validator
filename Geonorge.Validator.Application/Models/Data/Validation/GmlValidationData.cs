@@ -7,6 +7,7 @@ namespace Geonorge.Validator.Application.Models
 {
     public class GmlValidationData : IGmlValidationData
     {
+        private bool _disposed = false;
         public List<GmlDocument> Surfaces { get; } = new();
         public List<GmlDocument> Solids { get; } = new();
 
@@ -29,11 +30,16 @@ namespace Geonorge.Validator.Application.Models
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-                return;
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    Surfaces.ForEach(surface => surface.Dispose());
+                    Solids.ForEach(solid => solid.Dispose());
+                }
 
-            Surfaces.ForEach(surface => surface.Dispose());
-            Solids.ForEach(solid => solid.Dispose());
+                _disposed = true;
+            }
         }
     }
 }

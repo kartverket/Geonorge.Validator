@@ -88,7 +88,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
 
             foreach (var (uriAndXPaths, httpRequest) in codelistData)
             {
-                var codelist = await httpRequest;
+                var codelist = httpRequest.Result;
 
                 if (codelist == null)
                     continue;
@@ -150,7 +150,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
 
             foreach (var (request, uri, filePath) in tasks)
             {
-                var data = await request;
+                var data = request.Result;
 
                 if (data == null)
                     continue;
