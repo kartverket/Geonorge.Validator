@@ -1,5 +1,6 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
+using DiBK.RuleValidator.Extensions.Gml;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Validators.Config;

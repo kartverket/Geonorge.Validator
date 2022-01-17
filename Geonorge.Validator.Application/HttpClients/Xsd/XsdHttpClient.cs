@@ -130,7 +130,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             var schemaUris = xmlFiles
                 .Select(xmlFile =>
                 {
-                    var xmlString = XmlHelper.ReadLines(xmlFile.OpenReadStream(), 10);
+                    var xmlString = XmlHelper.ReadLines(xmlFile.OpenReadStream(), 50);
                     var match = _schemaLocationRegex.Match(xmlString);
 
                     if (!match.Success)
