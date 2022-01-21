@@ -53,7 +53,7 @@ services.AddSwaggerGen(options =>
 
 services.AddRuleValidator(settings =>
 {
-    settings.AddAssemblies(
+    settings.AddRules(
         "Geonorge.Validator.Application",
         "DiBK.RuleValidator.Rules.Gml"
     );
