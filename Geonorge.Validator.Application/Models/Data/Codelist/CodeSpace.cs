@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DiBK.RuleValidator.Extensions;
+using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Models.Data.Codelist
 {

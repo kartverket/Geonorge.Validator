@@ -10,7 +10,7 @@ namespace Geonorge.Validator.Application.Utils
     public class FileHelper
     {
         private static readonly Regex _xmlRegex = new(@"^<\?xml.*?<", RegexOptions.Compiled | RegexOptions.Singleline);
-        private static readonly Regex _gml32Regex = new(@"^<\?xml.*?<gml:FeatureCollection.*? xmlns:gml=""http:\/\/www\.opengis\.net\/gml\/3\.2""", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex _gml32Regex = new(@"^<\?xml.*?<\w+:FeatureCollection.*?xmlns:\w+=""http:\/\/www\.opengis\.net\/gml\/3\.2""", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex _xsdRegex = new(@"^<\?xml.*?<(.*:)?schema .*?xmlns(:.*)?=""http:\/\/www\.w3\.org\/2001\/XMLSchema""", RegexOptions.Compiled | RegexOptions.Singleline);
 
         public static async Task<FileType> GetFileType(MultipartSection section)

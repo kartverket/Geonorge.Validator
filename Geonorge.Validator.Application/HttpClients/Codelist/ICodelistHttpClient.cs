@@ -1,5 +1,7 @@
-﻿using Geonorge.Validator.Application.Models.Data.Codelist;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Utils.Codelist;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
     {
         Task<List<CodeSpace>> GetCodeSpacesAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors);
         Task<List<GmlCodeSpace>> GetGmlCodeSpacesAsync(Stream xsdStream, IEnumerable<Stream> xmlStreams, IEnumerable<XsdCodelistSelector> codelistSelectors);
+        Task<List<CodelistItem>> GetCodelistAsync(Uri uri);
         Task<int> UpdateCacheAsync();
     }
 }

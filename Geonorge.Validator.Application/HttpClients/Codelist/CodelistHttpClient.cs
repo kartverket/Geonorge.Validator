@@ -1,4 +1,5 @@
-﻿using Geonorge.Validator.Application.Models.Data.Codelist;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Utils.Codelist;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -118,6 +119,17 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             await SaveCachedCodelistUrisAsync();
 
             return gmlCodeSpaces;
+        }
+
+        public async Task<List<CodelistItem>> GetCodelistAsync(Uri uri)
+        {
+            _cachedUris.Clear();
+
+            var codeList = await FetchCodelistAsync(uri);
+
+            await SaveCachedCodelistUrisAsync();
+
+            return codeList;
         }
 
         public async Task<int> UpdateCacheAsync()

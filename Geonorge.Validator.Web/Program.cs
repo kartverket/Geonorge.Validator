@@ -55,7 +55,8 @@ services.AddRuleValidator(settings =>
 {
     settings.AddRules(
         "Geonorge.Validator.Application",
-        "DiBK.RuleValidator.Rules.Gml"
+        "DiBK.RuleValidator.Rules.Gml",
+        "Reguleringsplanforslag.Rules"
     );
 
     settings.MaxMessageCount = 500;

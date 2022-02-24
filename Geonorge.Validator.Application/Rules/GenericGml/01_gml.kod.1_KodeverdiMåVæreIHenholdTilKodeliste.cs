@@ -28,7 +28,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
         {
             foreach (var gmlCodeSpace in gmlCodeSpaces)
             {
-                var featureElements = document.GetFeatures(gmlCodeSpace.FeatureMemberName);
+                var featureElements = document.GetFeatureElements(gmlCodeSpace.FeatureMemberName);
                 
                 foreach (var featureElement in featureElements)
                 {

@@ -5,14 +5,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DiBK.RuleValidator" Version="2.0.0-alpha.4" />
-		<PackageReference Include="DiBK.RuleValidator.Extensions" Version="2.0.0-alpha.6" />
-		<PackageReference Include="DiBK.RuleValidator.Extensions.Gml" Version="2.0.0-alpha.4" />
-		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.0-alpha.8" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.0-alpha.12" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.14" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -26,11 +23,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Rules\Assemblies\" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	  <Reference Include="Reguleringsplanforslag.Rules">
+	    <HintPath>Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Rules\Assemblies\Reguleringsplanforslag.Rules.dll">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 	
 </Project>
