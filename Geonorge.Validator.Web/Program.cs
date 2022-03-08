@@ -79,8 +79,8 @@ services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
 
 services.AddHostedService<CacheService>();
 
-services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
+services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
 
 var cultureInfo = new CultureInfo("nb-NO");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
