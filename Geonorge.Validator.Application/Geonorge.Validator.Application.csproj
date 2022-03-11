@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DiBK.RuleValidator.Extensions.Gml" Version="2.0.0-alpha.9" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.0-alpha.14" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
@@ -27,9 +27,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="DiBK.RuleValidator.Rules.Gml">
-	    <HintPath>..\..\..\..\Users\TorAndersGustavsen\Desktop\DiBK.RuleValidator.Rules.Gml.dll</HintPath>
-	  </Reference>
 	  <Reference Include="Reguleringsplanforslag.Rules">
 	    <HintPath>Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
 	  </Reference>
