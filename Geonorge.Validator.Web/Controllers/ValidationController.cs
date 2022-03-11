@@ -21,8 +21,8 @@ namespace Geonorge.Validator.Controllers
         }
 
         [HttpPost]
-        [RequestFormLimits(MultipartBodyLengthLimit = 209_715_200)]
-        [RequestSizeLimit(209_715_200)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
+        [RequestSizeLimit(1_048_576_000)]
         public async Task<IActionResult> Validate()
         {
             try
