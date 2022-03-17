@@ -12,7 +12,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
     {
         public override void Create()
         {
-            Id = "gml.kod.1";
+            Id = "gml.kod.2";
             Name = "Kodeverdi må være i henhold til kodeliste";
         }
 

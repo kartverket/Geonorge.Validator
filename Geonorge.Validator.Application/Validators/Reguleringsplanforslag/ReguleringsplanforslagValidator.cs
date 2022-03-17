@@ -47,7 +47,7 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
             return _validator.GetAllRules();
         }
 
-        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
+        private async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
@@ -66,7 +66,11 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
                     gmlDocuments3D.Add(document);
             }
 
-            return GmlValidationData.Create(gmlDocuments2D, gmlDocuments3D);
+            return GmlValidationData.Create(
+                gmlDocuments2D, 
+                gmlDocuments3D, 
+                await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Målemetode)
+            );
         }
 
         private async Task<Kodelister> GetKodelister()

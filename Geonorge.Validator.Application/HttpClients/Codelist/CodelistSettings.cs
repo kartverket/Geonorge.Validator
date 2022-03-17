@@ -15,6 +15,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             public Uri Arealformål { get; set; }
             public Uri Feltnavn { get; set; }
             public Uri Hensynskategori { get; set; }
+            public Uri Målemetode { get; set; }
         }
     }
 }
