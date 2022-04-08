@@ -25,6 +25,12 @@ namespace Geonorge.XsdValidator.Translator
             if (Translate(message, Translations.RequiredAttributeMissing, out translation))
                 return translation;
 
+            if (Translate(message, Translations.AttributeNotDeclared, out translation))
+                return translation;
+
+            if (Translate(message, Translations.DefaultAttributeCouldNotBeApplied, out translation))
+                return translation;
+
             if (Translate(message, Translations.TextOnly, out translation))
                 return translation;
 

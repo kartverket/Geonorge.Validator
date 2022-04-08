@@ -4,10 +4,12 @@ namespace Geonorge.Validator.Application.Validators
 {
     public enum ValidatorType
     {
-        [Description("Plangrense v5.0")]
+        [Description("Plangrense 5.0")]
         Plangrense,
-        [Description("Reguleringsplanforslag v5.0")]
+        [Description("Reguleringsplanforslag 5.0")]
         Reguleringsplanforslag,
+        [Description("GML 3.2.1")]
+        GML_321,
         Undefined
     }
 }

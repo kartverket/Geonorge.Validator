@@ -1,7 +1,4 @@
 ﻿using Geonorge.Validator.Application.Utils;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Web.Middleware
 {

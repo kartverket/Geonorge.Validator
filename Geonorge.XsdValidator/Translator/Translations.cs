@@ -42,6 +42,16 @@
             "Det obligatoriske attributtet '{attr}' mangler."
         );
 
+        public static Translation AttributeNotDeclared = new(
+            @"^The '(?<attr>[^ ]*)' attribute is not declared.$",
+            "Attributtet '{attr}' er ikke erklært."
+        );
+
+        public static Translation DefaultAttributeCouldNotBeApplied = new(
+            @"^Default attribute '(?<attr>[^ ]*)' for element '(?<element>[^ ]*)' could not be applied as the attribute namespace is not mapped to a prefix in the instance document.$",
+            "Standard-attributtet '{attr}' for elementet '{element}' kan ikke brukes, fordi attributtets navneområde ikke er tilordnet et prefiks i instansdokumentet."
+        );
+
         public static Translation TextOnly = new(
             @"^The element '(?<element>[^ ]*)' cannot contain child element '(?<childElement>[^ ]*)' because the parent element's content model is text only.",
             "Elementet '{element}' kan ikke inneholde barnelement '{childElement}' fordi foreldreelementets innholdsmodell er kun tekst."

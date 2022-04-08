@@ -1,11 +1,6 @@
-﻿using Geonorge.Validator.Application.Services.Validation;
-using Microsoft.AspNetCore.Http;
+﻿using Geonorge.Validator.Application.Services.MultipartRequest;
+using Geonorge.Validator.Application.Services.Validation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Controllers
 {
@@ -13,24 +8,31 @@ namespace Geonorge.Validator.Controllers
     [Route("validering")]
     public class ValidationController : BaseController
     {
-        private readonly IValidationService _validationService; 
+        private readonly IValidationService _validationService;
+        private readonly IMultipartRequestService _multipartRequestService;
 
         public ValidationController(
             IValidationService validationService,
+            IMultipartRequestService multipartRequestService,
             ILogger<ValidationController> logger) : base(logger)
         {
             _validationService = validationService;
+            _multipartRequestService = multipartRequestService;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Validate(List<IFormFile> xmlFiles, IFormFile xsdFile = null)
+        [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
+        [RequestSizeLimit(1_048_576_000)]
+        public async Task<IActionResult> Validate()
         {
             try
             {
-                if (!xmlFiles?.Any() ?? true)
+                var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
+
+                if (inputFiles == null || !inputFiles.XmlFiles.Any())
                     return BadRequest();
 
-                var report = await _validationService.Validate(xmlFiles, xsdFile);
+                var report = await _validationService.ValidateAsync(inputFiles.XmlFiles, inputFiles.XsdFile);
 
                 return Ok(report);
             }

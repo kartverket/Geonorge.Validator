@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.HttpClients.Xsd
 {
     public interface IXsdHttpClient
     {
-        Task<(string XmlNamespace, string XsdVersion)> GetXmlNamespaceAndXsdVersion(List<IFormFile> xmlFiles, IFormFile xsdFile);
+        Task<MemoryStream> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles);
+        Task<int> UpdateCacheAsync();
     }
 }
