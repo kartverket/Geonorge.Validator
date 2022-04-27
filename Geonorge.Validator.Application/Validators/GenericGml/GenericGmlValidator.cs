@@ -7,7 +7,6 @@ using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Utils.Codelist;
-using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,16 +20,13 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
     {
         private readonly IRuleValidator _validator;
         private readonly ICodelistHttpClient _codelistHttpClient;
-        private readonly CodelistSettings _codelistSettings;
 
         public GenericGmlValidator(
             IRuleValidator validator,
-            ICodelistHttpClient codelistHttpClient,
-            IOptions<CodelistSettings> codelistOptions)
+            ICodelistHttpClient codelistHttpClient)
         {
             _validator = validator;
             _codelistHttpClient = codelistHttpClient;
-            _codelistSettings = codelistOptions.Value;
         }
 
         public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Stream xsdStream)
@@ -70,7 +66,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             );
         }
 
-        private async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
+        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
@@ -91,8 +87,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 
             return GmlValidationData.Create(
                 gmlDocuments2D,
-                gmlDocuments3D,
-                await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Målemetode)
+                gmlDocuments3D
             );
         }
     }

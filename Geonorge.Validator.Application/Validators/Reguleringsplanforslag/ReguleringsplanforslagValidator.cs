@@ -68,8 +68,7 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
 
             return GmlValidationData.Create(
                 gmlDocuments2D, 
-                gmlDocuments3D, 
-                await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Målemetode)
+                gmlDocuments3D
             );
         }
 
