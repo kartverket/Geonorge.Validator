@@ -11,18 +11,16 @@ namespace Geonorge.Validator.Application.Models
         private bool _disposed = false;
         public List<GmlDocument> Surfaces { get; } = new();
         public List<GmlDocument> Solids { get; } = new();
-        public List<CodelistItem> Målemetoder { get; } = new();
 
-        private GmlValidationData(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodelistItem> målemetoder)
+        private GmlValidationData(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
         {
             Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
             Solids.AddRange(solids ?? new List<GmlDocument>());
-            Målemetoder.AddRange(målemetoder ?? new List<CodelistItem>());
         }
 
-        public static IGmlValidationData Create(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids, IEnumerable<CodelistItem> målemetoder)
+        public static IGmlValidationData Create(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
         {
-            return new GmlValidationData(surfaces, solids, målemetoder);
+            return new GmlValidationData(surfaces, solids);
         }
 
         public void Dispose()

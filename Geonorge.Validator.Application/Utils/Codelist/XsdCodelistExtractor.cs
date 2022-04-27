@@ -57,7 +57,7 @@ namespace Geonorge.Validator.Application.Utils.Codelist
 
         private static Dictionary<string, Uri> GetCodelistUris(
             XDocument xsdDocument, XmlReaderSettings xmlReaderSettings, Stream xmlStream, List<XsdCodelistSelector> codelistSelectors)
-        {            
+        {
             using var reader = XmlReader.Create(xmlStream, xmlReaderSettings);
             using var wrapper = new XmlReaderPathWrapper(reader);
 

@@ -15,7 +15,7 @@ namespace Geonorge.Validator.Application.Utils
         {
             try
             {
-                var document = await XDocument.LoadAsync(xmlStream, loadOptions, new CancellationToken());
+                var document = await XDocument.LoadAsync(xmlStream, loadOptions, default);
                 xmlStream.Position = 0;
 
                 return document;

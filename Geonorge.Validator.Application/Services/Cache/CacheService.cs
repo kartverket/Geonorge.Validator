@@ -35,10 +35,10 @@ namespace Geonorge.Validator.Application.Services.Cache
                 await Task.Delay(GetTimeUntilNextTask(), stoppingToken);
 
                 var count1 = await _codelistHttpClient.UpdateCacheAsync();
-                _logger.LogInformation("Oppdaterer cache for kodelister: {0} filer ble oppdatert", count1);
+                _logger.LogInformation("Oppdaterer cache for kodelister: {count} filer ble oppdatert", count1);
 
                 var count2 = await _xsdHttpClient.UpdateCacheAsync();
-                _logger.LogInformation("Oppdaterer cache for XML-skjemaer: {0} filer ble oppdatert", count2);
+                _logger.LogInformation("Oppdaterer cache for XML-skjemaer: {count} filer ble oppdatert", count2);
             }
             while (!stoppingToken.IsCancellationRequested);
         }
