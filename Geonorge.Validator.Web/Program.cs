@@ -17,6 +17,7 @@ using OSGeo.OGR;
 using Serilog;
 using System.Globalization;
 using System.IO.Compression;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -81,6 +82,19 @@ services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
+
+var urlProxy = configuration.GetValue<string>("UrlProxy");
+
+if (!string.IsNullOrWhiteSpace(urlProxy))
+{
+    WebProxy proxy = new WebProxy(urlProxy);
+
+    proxy.Credentials = CredentialCache.DefaultCredentials;
+
+    WebRequest.DefaultWebProxy = proxy;
+    HttpClient.DefaultProxy = proxy;
+}
+
 
 var cultureInfo = new CultureInfo("nb-NO");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
