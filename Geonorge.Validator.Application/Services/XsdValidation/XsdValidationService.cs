@@ -2,6 +2,7 @@
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Rules.Schema;
+using Geonorge.XsdValidator.Models;
 using Geonorge.XsdValidator.Validator;
 using Microsoft.Extensions.Logging;
 using System;
@@ -24,14 +25,14 @@ namespace Geonorge.Validator.Application.Services.XsdValidation
             _logger = logger;
         }
 
-        public XsdRule Validate(DisposableList<InputData> inputData, Stream xsdStream)
+        public XsdRule Validate(DisposableList<InputData> inputData, XsdData xsdData)
         {
             var xsdRule = GetXsdRule();
             var startTime = DateTime.Now;
 
             foreach (var data in inputData)
             {
-                var messages = _xsdValidator.Validate(data.Stream, xsdStream);
+                var messages = _xsdValidator.Validate(data.Stream, xsdData);
 
                 data.IsValid = !messages.Any();
                 data.Stream.Position = 0;

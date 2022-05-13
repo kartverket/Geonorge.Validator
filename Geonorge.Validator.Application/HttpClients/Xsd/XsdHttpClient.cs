@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Geonorge.Validator.Application.Utils;
 using Microsoft.Extensions.Options;
 using Geonorge.XsdValidator.Config;
+using Geonorge.XsdValidator.Models;
 
 namespace Geonorge.Validator.Application.HttpClients.Xsd
 {
@@ -32,11 +33,15 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             _logger = logger;
         }
 
-        public async Task<MemoryStream> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles)
+        public async Task<XsdData> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles)
         {
             var schemaUri = GetSchemaUriFromXmlFiles(xmlFiles);
-
-            return await FetchXsdAsync(schemaUri);
+            
+            return new XsdData
+            {
+                Stream = await FetchXsdAsync(schemaUri),
+                BaseUri = GetBaseUri(schemaUri)
+            };
         }
 
         public async Task<int> UpdateCacheAsync()
@@ -156,6 +161,14 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             var bytes = memoryStream.ToArray();
             using var fileStream = File.Open(filePath, FileMode.Create);
             await fileStream.WriteAsync(bytes);
+        }
+
+        private static Uri GetBaseUri(string schemaUriString)
+        {
+            var uri = new Uri(schemaUriString);
+            var baseUriString = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped) + string.Join("", uri.Segments.SkipLast(1));
+
+            return new Uri(baseUriString);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Geonorge.Validator.Application.Extensions;
 using Geonorge.XsdValidator.Config;
+using Geonorge.XsdValidator.Models;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,8 @@ namespace Geonorge.Validator.Application.Utils.Codelist
 
         private XmlReaderSettings GetXmlReaderSettings(Stream xsdStream)
         {
-            var xmlSchemaSet = CreateXmlSchemaSet(xsdStream, _settings);
+            var xsdData = new XsdData { Stream = xsdStream };
+            var xmlSchemaSet = CreateXmlSchemaSet(xsdData, _settings);
             var xmlReaderSettings = new XmlReaderSettings { ValidationType = ValidationType.Schema };
 
             xmlReaderSettings.Schemas.Add(xmlSchemaSet);
