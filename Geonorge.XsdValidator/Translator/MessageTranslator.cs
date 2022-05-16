@@ -107,10 +107,7 @@ namespace Geonorge.XsdValidator.Translator
             var values = new Dictionary<string, string>();
 
             foreach (Group group in match.Groups)
-            {
-                if (!string.IsNullOrWhiteSpace(group.Value))
-                    values.Add(group.Name, group.Value);
-            }
+                values.Add(group.Name, group.Value);
 
             return values;
         }

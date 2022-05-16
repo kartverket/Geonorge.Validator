@@ -1,4 +1,5 @@
 ﻿using Geonorge.XsdValidator.Config;
+using Geonorge.XsdValidator.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -10,16 +11,16 @@ namespace Geonorge.XsdValidator.Utils
 {
     public class XsdHelper
     {
-        public static XmlSchemaSet CreateXmlSchemaSet(Stream xsdStream, XsdValidatorSettings settings)
+        public static XmlSchemaSet CreateXmlSchemaSet(XsdData xsdData, XsdValidatorSettings settings)
         {
-            if (xsdStream == null)
+            if (xsdData?.Stream == null)
                 return null;
 
-            var xmlResolver = new XmlFileCacheResolver(settings);
+            var xmlResolver = new XmlFileCacheResolver(xsdData.BaseUri, settings);
             var xmlSchemaSet = new XmlSchemaSet { XmlResolver = xmlResolver };
-            var xmlSchema = XmlSchema.Read(xsdStream, null);
+            var xmlSchema = XmlSchema.Read(xsdData.Stream, null);
 
-            xsdStream.Position = 0;
+            xsdData.Stream.Position = 0;
             xmlSchemaSet.Add(xmlSchema);
 
             try

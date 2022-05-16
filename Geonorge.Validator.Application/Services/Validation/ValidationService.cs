@@ -8,6 +8,7 @@ using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.XsdValidator.Config;
+using Geonorge.XsdValidator.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,14 +49,14 @@ namespace Geonorge.Validator.Application.Services.Validation
         {
             var startTime = DateTime.Now;
 
-            var xsdStream = xsdFile?.OpenReadStream() ?? await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
+            var xsdData = await GetXsdDataAsync(xmlFiles, xsdFile);
             using var inputData = GetInputData(xmlFiles);
-            
-            var xsdRule = _xsdValidationService.Validate(inputData, xsdStream);
-            var xmlMetadata = await XmlMetadata.CreateAsync(xsdStream, _xsdCacheFilesPath);
+
+            var xsdRule = _xsdValidationService.Validate(inputData, xsdData);
+            var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Stream, _xsdCacheFilesPath);
 
             var rules = new List<Rule> { xsdRule };
-            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdStream));
+            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdData.Stream));
 
             return ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, xmlMetadata.Namespace, startTime);
         }
@@ -74,7 +75,7 @@ namespace Geonorge.Validator.Application.Services.Validation
                 return new();
 
             var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
-                
+
             return await genericGmlValidator.Validate(inputData, xsdStream);
         }
 
@@ -86,6 +87,14 @@ namespace Geonorge.Validator.Application.Services.Validation
                 return null;
 
             return _serviceProvider.GetService(validator.ServiceType) as IValidator;
+        }
+
+        private async Task<XsdData> GetXsdDataAsync(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        {
+            if (xsdFile == null)
+                return await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
+
+            return new XsdData { Stream = xsdFile.OpenReadStream() };
         }
 
         private static DisposableList<InputData> GetInputData(List<IFormFile> files)

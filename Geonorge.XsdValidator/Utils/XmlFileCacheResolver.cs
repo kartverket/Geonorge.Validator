@@ -10,12 +10,15 @@ namespace Geonorge.XsdValidator.Utils
 {
     public class XmlFileCacheResolver : XmlUrlResolver
     {
+        private readonly Uri _baseUri;
         private readonly XsdValidatorSettings _settings;
         private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
+            Uri baseUri,
             XsdValidatorSettings settings)
         {
+            _baseUri = baseUri;
             _settings = settings;
             _client = new();
         }
@@ -27,26 +30,28 @@ namespace Geonorge.XsdValidator.Utils
             if (absoluteUri == null)
                 throw new ArgumentNullException(nameof(absoluteUri));
 
-            if (absoluteUri.Scheme == "http" && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
+            var uri = ResolveUri(absoluteUri);
+
+            if (uri.Scheme == "http" && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
             {
-                var filePath = GetFilePath(absoluteUri);
+                var filePath = GetFilePath(uri);
 
                 if (File.Exists(filePath))
                     return File.OpenRead(filePath);                   
 
-                using var response = _client.GetAsync(absoluteUri).Result;
+                using var response = _client.GetAsync(uri).Result;
                 var stream = response.Content.ReadAsStream();
 
                 var memoryStream = new MemoryStream();
                 stream.CopyTo(memoryStream);
                 memoryStream.Position = 0;
 
-                if (ShouldCache(absoluteUri) && memoryStream.Length > 0)
+                if (ShouldCache(uri) && memoryStream.Length > 0)
                 {
                     using var fileStream = CreateFile(filePath);
                     memoryStream.CopyTo(fileStream);
                     memoryStream.Position = 0;
-                    CacheUri(absoluteUri.AbsoluteUri);
+                    CacheUri(uri.AbsoluteUri);
                 }
 
                 stream.Dispose();
@@ -54,8 +59,16 @@ namespace Geonorge.XsdValidator.Utils
             }
             else
             {
-                return base.GetEntity(absoluteUri, role, ofObjectToReturn);
+                return base.GetEntity(uri, role, ofObjectToReturn);
             }
+        }
+
+        private Uri ResolveUri(Uri absoluteUri)
+        {
+            if (absoluteUri.Scheme == "file" && _baseUri != null)
+                return new Uri(_baseUri, absoluteUri.Segments.Last());
+
+            return absoluteUri;
         }
 
         private bool ShouldCache(Uri uri)
