@@ -7,6 +7,11 @@
             "Elementet '{element}' i navneområdet '{ns}' har ugyldig barnelement '{childElement}' i navneområdet '{childNs}'."
         );
 
+        public static Translation InvalidChildWithoutNamesapce = new(
+            @"^The element '(?<element>[^ ]*)' in namespace '(?<ns>[^ ]*)' has invalid child element '(?<childElement>[^ ]*)'.",
+            "Elementet '{element}' i navneområdet '{ns}' har ugyldig barnelement '{childElement}'."
+        );
+
         public static Translation IncompleteContent = new(
             @"^The element '(?<element>[^ ]*)' in namespace '(?<ns>[^ ]*)' has incomplete content.",
             "Elementet '{element}' i navneområdet '{ns}' har ufullstendig innhold."

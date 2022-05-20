@@ -5,6 +5,7 @@ using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
@@ -29,13 +30,13 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             foreach (var gmlCodeSpace in gmlCodeSpaces)
             {
                 var featureElements = document.GetFeatureElements(gmlCodeSpace.FeatureMemberName);
-                
-                foreach (var featureElement in featureElements)
+
+                Parallel.ForEach(featureElements, element =>
                 {
                     foreach (var codeSpace in gmlCodeSpace.CodeSpaces)
                     {
-                        var codeElement = featureElement.GetElement(codeSpace.XPath);
-                        
+                        var codeElement = element.GetElement(codeSpace.XPath);
+
                         if (codeElement == null)
                             continue;
 
@@ -47,11 +48,11 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                                 $"Kodeverdien '{code}' er ikke i henhold til kodelisten '{codeSpace.Url}'.",
                                 document.FileName,
                                 new[] { codeElement.GetXPath() },
-                                new[] { featureElement.GetAttribute("gml:id") }
+                                new[] { element.GetAttribute("gml:id") }
                             );
                         }
                     }
-                }
+                });
             }
         }
     }

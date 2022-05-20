@@ -6,6 +6,6 @@ namespace Geonorge.XsdValidator.Validator
 {
     public interface IXsdValidator
     {
-        List<string> Validate(Stream xmlStream, XsdData xsdData);
+        XsdValidatorResult Validate(Stream xmlStream, XsdData xsdData);
     }
 }

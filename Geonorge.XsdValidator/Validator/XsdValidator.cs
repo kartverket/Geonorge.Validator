@@ -3,7 +3,6 @@ using Geonorge.XsdValidator.Exceptions;
 using Geonorge.XsdValidator.Models;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using static Geonorge.XsdValidator.Utils.XsdHelper;
 
@@ -19,13 +18,13 @@ namespace Geonorge.XsdValidator.Validator
             _settings = options.Value;
         }
 
-        public List<string> Validate(Stream xmlStream, XsdData xsdData)
+        public XsdValidatorResult Validate(Stream xmlStream, XsdData xsdData)
         {
             try
             {
                 var xmlSchemaSet = CreateXmlSchemaSet(xsdData, _settings);
 
-                return new Validation(_settings.MaxMessageCount).Validate(xmlStream, xmlSchemaSet);
+                return new Validation(_settings.MaxMessageCount).Validate(xmlStream, xmlSchemaSet, xsdData.Stream, _settings.CodelistSelectors);
             }
             catch (Exception exception)
             {

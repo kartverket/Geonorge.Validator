@@ -4,14 +4,11 @@ using DiBK.RuleValidator.Extensions.Gml;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.Models;
-using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
-using Geonorge.Validator.Application.Utils.Codelist;
+using Geonorge.Validator.Application.Services.Notification;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Wmhelp.XPath2;
 using GmlHelper = Geonorge.Validator.Application.Utils.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.GenericGml
@@ -20,24 +17,32 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
     {
         private readonly IRuleValidator _validator;
         private readonly ICodelistHttpClient _codelistHttpClient;
+        private readonly INotificationService _notificationService;
 
         public GenericGmlValidator(
             IRuleValidator validator,
-            ICodelistHttpClient codelistHttpClient)
+            ICodelistHttpClient codelistHttpClient,
+            INotificationService notificationService)
         {
             _validator = validator;
             _codelistHttpClient = codelistHttpClient;
+            _notificationService = notificationService;
         }
 
-        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Stream xsdStream)
+        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Dictionary<string, Uri> codelistUris)
         {
-            using var gmlValidationData = await GetGmlValidationData(inputData);
+            await _notificationService.SendAsync("Bearbeider data");
 
-            using var genericGmlValidationData = GenericGmlValidationData.Create(
+            var gmlValidationData = await GetGmlValidationData(inputData);
+            var codeSpaces = await _codelistHttpClient.GetGmlCodeSpacesAsync(codelistUris);
+
+            var genericGmlValidationData = GenericGmlValidationData.Create(
                 gmlValidationData.Surfaces, 
                 gmlValidationData.Solids,
-                await GetCodeSpacesAsync(inputData, xsdStream)
+                codeSpaces
             );
+
+            await _notificationService.SendAsync("Validerer");
 
             await _validator.Validate(gmlValidationData, options =>
             {
@@ -47,23 +52,12 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 
             await _validator.Validate(genericGmlValidationData);
 
-            return _validator.GetAllRules();
-        }
+            gmlValidationData.Dispose();
+            genericGmlValidationData.Dispose();
 
-        private async Task<List<GmlCodeSpace>> GetCodeSpacesAsync(DisposableList<InputData> inputData, Stream xsdStream)
-        {
-            return await _codelistHttpClient.GetGmlCodeSpacesAsync(
-                xsdStream,
-                inputData.Where(data => data.IsValid).Select(data => data.Stream),
-                new[]
-                {
-                    new XsdCodelistSelector(
-                        "CodeType", 
-                        "http://www.opengis.net/gml/3.2",
-                        element => element.XPath2SelectElement("//*:defaultCodeSpace")?.Value
-                    )
-                }
-            );
+            await _notificationService.SendAsync("Lager rapport");
+
+            return _validator.GetAllRules();
         }
 
         private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)

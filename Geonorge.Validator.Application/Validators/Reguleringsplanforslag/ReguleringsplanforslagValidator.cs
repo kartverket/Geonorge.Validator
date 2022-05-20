@@ -5,6 +5,7 @@ using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Data.Validation;
+using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Validators.Config;
 using Microsoft.Extensions.Options;
 using Reguleringsplanforslag.Rules.Models;
@@ -19,35 +20,47 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
     {
         private readonly IRuleValidator _validator;
         private readonly ICodelistHttpClient _codelistHttpClient;
+        private readonly INotificationService _notificationService;
         private readonly ValidatorOptions _options;
         private readonly CodelistSettings _codelistSettings;
 
         public ReguleringsplanforslagValidator(
             IRuleValidator validator,
             ICodelistHttpClient codelistHttpClient,
+            INotificationService notificationService,
             IOptions<ValidatorOptions> options,
             IOptions<CodelistSettings> codelistOptions)
         {
             _validator = validator;
             _codelistHttpClient = codelistHttpClient;
+            _notificationService = notificationService;
             _options = options.Value;
             _codelistSettings = codelistOptions.Value;
         }
 
         public async Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData)
         {
-            using var gmlValidationData = await GetGmlValidationData(inputData);
-            using var rpfValidationData = RpfValidationData.Create(gmlValidationData.Surfaces, gmlValidationData.Solids.FirstOrDefault(), await GetKodelister());
+            await _notificationService.SendAsync("Bearbeider data");
+
+            var gmlValidationData = await GetGmlValidationData(inputData);
+            var rpfValidationData = RpfValidationData.Create(gmlValidationData.Surfaces, gmlValidationData.Solids.FirstOrDefault(), await GetKodelister());
 
             var options = _options.GetValidationOptions(xmlNamespace);
+
+            await _notificationService.SendAsync("Validerer");
 
             await _validator.Validate(gmlValidationData);
             await _validator.Validate(rpfValidationData, options);
 
+            gmlValidationData.Dispose();
+            rpfValidationData.Dispose();
+
+            await _notificationService.SendAsync("Lager rapport");
+
             return _validator.GetAllRules();
         }
 
-        private async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
+        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
