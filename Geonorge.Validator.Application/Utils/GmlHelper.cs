@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -12,12 +13,12 @@ namespace Geonorge.Validator.Application.Utils
         {
             stream.Position = 0;
 
-            using var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
+            var buffer = new byte[50000];
+            await stream.ReadAsync(buffer.AsMemory(0, 50000));
 
-            memoryStream.Position = 0;
             stream.Position = 0;
 
+            using var memoryStream = new MemoryStream(buffer);
             using var streamReader = new StreamReader(memoryStream);
             var gmlString = await streamReader.ReadToEndAsync();
 

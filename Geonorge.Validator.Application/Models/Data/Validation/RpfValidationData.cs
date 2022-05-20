@@ -11,6 +11,7 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
 {
     public class RpfValidationData : IRpfValidationData
     {
+        private bool _disposed = false;
         public List<GmlDocument> Plankart2D { get; } = new();
         public GmlDocument Plankart3D { get; }
         public Kodelister Kodelister { get; }
@@ -38,10 +39,18 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposing)
-                return;
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    Plankart2D.ForEach(plankart => plankart.Dispose());
 
-            Plankart2D.ForEach(plankart => plankart.Dispose());
+                    if (Plankart3D != null)
+                        Plankart3D.Dispose();
+                }
+
+                _disposed = true;
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Geonorge.Validator.Application.Utils.Codelist
+namespace Geonorge.XsdValidator.Validator
 {
     public class XsdCodelistSelector
     {

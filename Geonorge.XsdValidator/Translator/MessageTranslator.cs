@@ -9,7 +9,7 @@ namespace Geonorge.XsdValidator.Translator
         {
             if (Translate(message, Translations.InvalidChild, out var translation))
                 return $"{translation}{AddTranslations(message, Translations.ListOfPossibleElements)}.{AddTranslations(message, Translations.OtherElements)}.";
-
+           
             if (Translate(message, Translations.IncompleteContent, out translation))
                 return $"{translation}{AddTranslations(message, Translations.ListOfPossibleElements)}.{AddTranslations(message, Translations.OtherElements)}.";
 
@@ -21,6 +21,9 @@ namespace Geonorge.XsdValidator.Translator
 
             if (Translate(message, Translations.InvalidAttribute, out translation))
                 return $"{translation}{AddTranslation(message, Translations.InvalidValue)}{AddTranslation(message, Translations.InvalidCharacter)}";
+
+            if (Translate(message, Translations.InvalidChildWithoutNamesapce, out translation))
+                return translation;
 
             if (Translate(message, Translations.RequiredAttributeMissing, out translation))
                 return translation;

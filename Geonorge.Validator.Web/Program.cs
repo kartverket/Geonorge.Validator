@@ -1,11 +1,12 @@
 using DiBK.RuleValidator.Config;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.Hubs;
 using Geonorge.Validator.Application.Services.Cache;
 using Geonorge.Validator.Application.Services.MultipartRequest;
+using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.Validation;
 using Geonorge.Validator.Application.Services.XsdValidation;
-using Geonorge.Validator.Application.Utils.Codelist;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Web;
 using Geonorge.Validator.Web.Configuration;
@@ -20,6 +21,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -46,6 +48,8 @@ services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
+services.AddSignalR();
+
 services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Geonorge Validator", Version = "v1" });
@@ -54,26 +58,31 @@ services.AddSwaggerGen(options =>
 
 services.AddRuleValidator(settings =>
 {
-    settings.AddRules(
-        "Geonorge.Validator.Application",
-        "DiBK.RuleValidator.Rules.Gml",
-        "Reguleringsplanforslag.Rules"
-    );
+    settings.AddRuleAssembly("Geonorge.Validator.Application");
+    settings.AddRuleAssembly("DiBK.RuleValidator.Rules.Gml");
+    settings.AddRuleAssembly("Reguleringsplanforslag.Rules");
 
     settings.MaxMessageCount = 500;
 });
 
 services.AddRuleValidators();
 
-services.AddXsdValidator(configuration);
+services.AddXsdValidator(configuration, options =>
+{
+    options.AddCodelistSelector(
+        GmlNs, 
+        "CodeType", 
+        element => element.Descendants(GmlNs + "defaultCodeSpace").SingleOrDefault()?.Value
+    );
+});
 
 services.AddHttpContextAccessor();
 
 services.AddTransient<IValidationService, ValidationService>();
 services.AddTransient<IXsdValidationService, XsdValidationService>();
 services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
-services.AddTransient<IXsdCodelistExtractor, XsdCodelistExtractor>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+services.AddTransient<INotificationService, NotificationService>();
 
 services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
@@ -91,7 +100,6 @@ if (!string.IsNullOrWhiteSpace(urlProxy))
     WebRequest.DefaultWebProxy = proxy;
     HttpClient.DefaultProxy = proxy;
 }
-
 
 var cultureInfo = new CultureInfo("nb-NO");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -120,9 +128,11 @@ app.UseSwaggerUI(options =>
 });
 
 app.UseCors(options => options
-    .AllowAnyMethod()
+    .AllowAnyOrigin()
     .AllowAnyHeader()
-    .AllowAnyOrigin());
+    .AllowCredentials()
+    .WithMethods("GET", "POST")
+    .WithOrigins("http://localhost:3000"));
 
 app.UseResponseCompression();
 
@@ -140,6 +150,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints => endpoints.MapControllers());
+
+app.MapHub<NotificationHub>("/hubs/notification");
 
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 

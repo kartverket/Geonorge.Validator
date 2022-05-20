@@ -1,10 +1,6 @@
 ﻿using Geonorge.Validator.Application.Exceptions;
 using Geonorge.XsdValidator.Exceptions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
 
 namespace Geonorge.Validator.Controllers
 {
@@ -24,7 +20,7 @@ namespace Geonorge.Validator.Controllers
 
             return exception switch
             {
-                ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest(),
+                ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest("Kunne ikke validere datasett"),
                 InvalidFileException _ or InvalidXsdException _ or XsdValidationException => BadRequest(exception.Message),
                 Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
                 _ => null,

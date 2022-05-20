@@ -1,6 +1,7 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models;
+using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Rules.Schema;
 using Geonorge.XsdValidator.Models;
 using Geonorge.XsdValidator.Validator;
@@ -25,29 +26,36 @@ namespace Geonorge.Validator.Application.Services.XsdValidation
             _logger = logger;
         }
 
-        public XsdRule Validate(DisposableList<InputData> inputData, XsdData xsdData)
+        public XsdValidationResult Validate(DisposableList<InputData> inputData, XsdData xsdData)
         {
             var xsdRule = GetXsdRule();
             var startTime = DateTime.Now;
+            var codelistUris = new Dictionary<string, Uri>();
 
             foreach (var data in inputData)
             {
-                var messages = _xsdValidator.Validate(data.Stream, xsdData);
+                var result = _xsdValidator.Validate(data.Stream, xsdData);
 
-                data.IsValid = !messages.Any();
+                data.IsValid = !result.Messages.Any();
                 data.Stream.Position = 0;
 
-                messages
+                result.Messages
                     .Select(message => new RuleMessage { Message = message, Properties = new Dictionary<string, object> { { "FileName", data.FileName } } })
                     .ToList()
                     .ForEach(xsdRule.AddMessage);
+
+                codelistUris.Append(result.CodelistUris);
             }
 
             xsdRule.Status = !xsdRule.Messages.Any() ? Status.PASSED : Status.FAILED;
 
             LogInformation(xsdRule, startTime);
 
-            return xsdRule;
+            return new XsdValidationResult
+            {
+                Rule = xsdRule,
+                CodelistUris = codelistUris
+            };
         }
 
         private void LogInformation(XsdRule xsdRule, DateTime startTime)
