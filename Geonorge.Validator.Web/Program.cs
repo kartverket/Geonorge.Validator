@@ -1,10 +1,13 @@
 using DiBK.RuleValidator.Config;
+using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.HttpClients.Xsd;
 using Geonorge.Validator.Application.Hubs;
+using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Cache;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.Notification;
+using Geonorge.Validator.Application.Services.RuleInfoService;
 using Geonorge.Validator.Application.Services.Validation;
 using Geonorge.Validator.Application.Services.XsdValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
@@ -15,6 +18,7 @@ using Geonorge.XsdValidator.Config;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
+using Reguleringsplanforslag.Rules;
 using Serilog;
 using System.Globalization;
 using System.IO.Compression;
@@ -67,6 +71,18 @@ services.AddRuleValidator(settings =>
 
 services.AddRuleValidators();
 
+services.ConfigureRuleInformation(options =>
+{
+    options.AddRuleInformation<IGenericGmlValidationData>("Generell GML");
+    options.AddRuleInformation<IGmlValidationData>("Generell geometri");
+    options.AddRuleInformation<IRpfValidationData>("Reguleringsplanforslag 5.0", options =>
+    {
+        options.SkipGroup("PlankartOgPlanbestemmelser");
+        options.SkipGroup("Planbestemmelser");
+        options.SkipGroup("Oversendelse");
+    });
+});
+
 services.AddXsdValidator(configuration, options =>
 {
     options.AddCodelistSelector(
@@ -83,6 +99,7 @@ services.AddTransient<IXsdValidationService, XsdValidationService>();
 services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 services.AddTransient<INotificationService, NotificationService>();
+services.AddTransient<IRuleInfoService, RuleInfoService>();
 
 services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
