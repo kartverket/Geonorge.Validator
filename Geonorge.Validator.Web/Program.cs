@@ -31,11 +31,6 @@ var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 var configuration = builder.Configuration;
 
-services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Optimal;
-});
-
 services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -100,14 +95,16 @@ services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 services.AddTransient<INotificationService, NotificationService>();
 services.AddTransient<IRuleInfoService, RuleInfoService>();
-
 services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
-
 services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
+services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Optimal;
+});
 
 var urlProxy = configuration.GetValue<string>("UrlProxy");
 
