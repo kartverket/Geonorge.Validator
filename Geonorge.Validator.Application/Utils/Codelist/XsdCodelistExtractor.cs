@@ -45,7 +45,7 @@ namespace Geonorge.Validator.Application.Utils.Codelist
 
         private XmlReaderSettings GetXmlReaderSettings(Stream xsdStream)
         {
-            var xsdData = new XsdData { Stream = xsdStream };
+            var xsdData = new XsdData { Streams = new() { xsdStream } };
             var xmlSchemaSet = CreateXmlSchemaSet(xsdData, _settings);
             var xmlReaderSettings = new XmlReaderSettings { ValidationType = ValidationType.Schema };
 

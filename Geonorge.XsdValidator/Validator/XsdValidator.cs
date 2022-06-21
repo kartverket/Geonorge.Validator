@@ -24,7 +24,7 @@ namespace Geonorge.XsdValidator.Validator
             {
                 var xmlSchemaSet = CreateXmlSchemaSet(xsdData, _settings);
 
-                return new Validation(_settings.MaxMessageCount).Validate(xmlStream, xmlSchemaSet, xsdData.Stream, _settings.CodelistSelectors);
+                return new Validation(_settings.MaxMessageCount).Validate(xmlStream, xmlSchemaSet, xsdData.Streams[0], _settings.CodelistSelectors);
             }
             catch (Exception exception)
             {

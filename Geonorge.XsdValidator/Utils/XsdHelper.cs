@@ -13,15 +13,18 @@ namespace Geonorge.XsdValidator.Utils
     {
         public static XmlSchemaSet CreateXmlSchemaSet(XsdData xsdData, XsdValidatorSettings settings)
         {
-            if (xsdData?.Stream == null)
+            if (xsdData == null || !xsdData.Streams.Any())
                 return null;
 
             var xmlResolver = new XmlFileCacheResolver(xsdData.BaseUri, settings);
             var xmlSchemaSet = new XmlSchemaSet { XmlResolver = xmlResolver };
-            var xmlSchema = XmlSchema.Read(xsdData.Stream, null);
 
-            xsdData.Stream.Position = 0;
-            xmlSchemaSet.Add(xmlSchema);
+            foreach (var stream in xsdData.Streams)
+            {
+                var xmlSchema = XmlSchema.Read(stream, null);
+                stream.Position = 0;
+                xmlSchemaSet.Add(xmlSchema);
+            }
 
             try
             {

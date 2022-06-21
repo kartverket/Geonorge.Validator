@@ -58,7 +58,7 @@ namespace Geonorge.Validator.Application.Services.Validation
             await _notificationService.SendAsync("Validerer mot applikasjonsskjema");
 
             var xsdValidationResult = _xsdValidationService.Validate(inputData, xsdData);
-            var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Stream, _xsdCacheFilesPath);
+            var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Streams[0], _xsdCacheFilesPath);
 
             var rules = new List<Rule> { xsdValidationResult.Rule };
             rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdValidationResult.CodelistUris));
@@ -99,7 +99,10 @@ namespace Geonorge.Validator.Application.Services.Validation
             if (xsdFile == null)
                 return await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
 
-            return new XsdData { Stream = xsdFile.OpenReadStream() };
+            var xsdData = new XsdData();
+            xsdData.Streams.Add(xsdFile.OpenReadStream());
+
+            return xsdData;
         }
 
         private static DisposableList<InputData> GetInputData(List<IFormFile> files)

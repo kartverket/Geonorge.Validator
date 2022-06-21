@@ -35,13 +35,17 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
 
         public async Task<XsdData> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles)
         {
-            var schemaUri = GetSchemaUriFromXmlFiles(xmlFiles);
+            var schemaUris = GetSchemaUriFromXmlFiles(xmlFiles);
             
-            return new XsdData
+            var xsdData = new XsdData
             {
-                Stream = await FetchXsdAsync(schemaUri),
-                BaseUri = GetBaseUri(schemaUri)
+                BaseUri = GetBaseUri(schemaUris[0])
             };
+
+            foreach (var schemaUri in schemaUris)
+                xsdData.Streams.Add(await FetchXsdAsync(schemaUri));
+
+            return xsdData;
         }
 
         public async Task<int> UpdateCacheAsync()
@@ -130,9 +134,9 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             return Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, uri.Host + uri.LocalPath));
         }
 
-        private static string GetSchemaUriFromXmlFiles(List<IFormFile> xmlFiles)
+        private static List<string> GetSchemaUriFromXmlFiles(List<IFormFile> xmlFiles)
         {
-            var schemaUris = xmlFiles
+            var schemaUrisList = xmlFiles
                 .Select(xmlFile =>
                 {
                     var xmlString = XmlHelper.ReadLines(xmlFile.OpenReadStream(), 50);
@@ -141,19 +145,25 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
                     if (!match.Success)
                         return null;
 
-                    return match.Groups["schema_loc"].Value.Split(" ").ElementAtOrDefault(1);
+                    var values = match.Groups["schema_loc"].Value.Split(" ");
+                    var uris = new List<string>();
+
+                    for (var i = 1; i < values.Length; i+=2)
+                        uris.Add(values[i]);
+
+                    return uris;
                 })
                 .ToList();
 
-            if (schemaUris.Count != xmlFiles.Count || schemaUris.Distinct().Count() > 1)
+            if (schemaUrisList.Count != xmlFiles.Count || !XmlFilesHaveSameSchemas(schemaUrisList))
                 throw new InvalidXsdException("Filene i datasettet har ulike applikasjonsskjemaer.");
 
-            var schemaUri = schemaUris.FirstOrDefault();
+            var schemaUris = schemaUrisList.FirstOrDefault();
 
-            if (schemaUri == null)
+            if (schemaUris == null)
                 throw new InvalidXsdException("Filene i datasettet mangler applikasjonsskjema.");
 
-            return schemaUri;
+            return schemaUris;
         }
 
         private static async Task SaveXsdToDiskAsync(string filePath, MemoryStream memoryStream)
@@ -169,6 +179,24 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             var baseUriString = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped) + string.Join("", uri.Segments.SkipLast(1));
 
             return new Uri(baseUriString);
+        }
+
+        private static bool XmlFilesHaveSameSchemas(List<List<string>> schemaUrisList)
+        {
+            for (var i = 0; i < schemaUrisList.Count - 1; i++)
+            {
+                var schemaUris = schemaUrisList[i];
+
+                for (int j = i + 1; j < schemaUrisList.Count; j++)
+                {
+                    var otherSchemaUris = schemaUrisList[j];
+
+                    if (!schemaUris.SequenceEqual(otherSchemaUris))
+                        return false;
+                }
+            }
+
+            return true;
         }
     }
 }
