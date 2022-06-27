@@ -10,7 +10,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             return RuleConfig
                 .Create<IGenericGmlValidationData>("Generell GML")
                 .AddGroup("GenerellGml", "Generell GML", group => group
-                    .AddRule<KodeverdiMåVæreIHenholdTilKodeliste>()
+                    .AddRule<KodeverdiMåVæreIHenholdTilEksternKodeliste>()
                 )
                 .Build();
         }

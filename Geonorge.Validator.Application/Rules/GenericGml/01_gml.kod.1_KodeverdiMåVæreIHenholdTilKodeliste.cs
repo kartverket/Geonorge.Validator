@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
-    public class KodeverdiMåVæreIHenholdTilKodeliste : Rule<IGenericGmlValidationData>
+    public class KodeverdiMåVæreIHenholdTilEksternKodeliste : Rule<IGenericGmlValidationData>
     {
         public override void Create()
         {
             Id = "gml.kod.1";
-            Name = "Kodeverdi må være i henhold til kodeliste";
+            Name = "Kodeverdi må være i henhold til ekstern kodeliste";
         }
 
         protected override void Validate(IGenericGmlValidationData data)
