@@ -145,7 +145,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
                     if (!match.Success)
                         return null;
 
-                    var values = match.Groups["schema_loc"].Value.Split(" ");
+                    var values = match.Groups["schema_loc"].Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                     var uris = new List<string>();
 
                     for (var i = 1; i < values.Length; i+=2)
