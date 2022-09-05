@@ -5,6 +5,6 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
 {
     public interface IMultipartRequestService
     {
-        Task<InputFiles> GetFilesFromMultipart();
+        Task<Submittal> GetFilesFromMultipart();
     }
 }

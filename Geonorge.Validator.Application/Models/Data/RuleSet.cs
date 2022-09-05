@@ -7,5 +7,6 @@ namespace Geonorge.Validator.Application.Models.Data
     {
         public string Name { get; set; }
         public List<RuleSetGroup> Groups { get; set; }
+        public bool Mandatory { get; set; }
     }
 }

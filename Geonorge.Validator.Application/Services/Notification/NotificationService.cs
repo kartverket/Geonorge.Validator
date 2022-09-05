@@ -20,7 +20,7 @@ namespace Geonorge.Validator.Application.Services.Notification
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task SendAsync(string message)
+        public async Task SendAsync(object message)
         {
             var connectionId = GetConnectionId();
 

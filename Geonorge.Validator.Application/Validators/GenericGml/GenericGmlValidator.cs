@@ -29,7 +29,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             _notificationService = notificationService;
         }
 
-        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Dictionary<string, Uri> codelistUris)
+        public async Task<List<Rule>> Validate(DisposableList<InputData> inputData, Dictionary<string, Uri> codelistUris, List<string> skipRules)
         {
             await _notificationService.SendAsync("Bearbeider data");
 
@@ -44,13 +44,19 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 
             await _notificationService.SendAsync("Validerer");
 
+            await _validator.Validate(genericGmlValidationData, options => 
+            {
+                skipRules.ForEach(options.SkipRule);
+                options.OnRuleExecuted = OnRuleExecuted;
+            });
+
             await _validator.Validate(gmlValidationData, options =>
             {
                 options.SkipRule<KoordinatreferansesystemForKart2D>();
                 options.SkipRule<KoordinatreferansesystemForKart3D>();
+                skipRules.ForEach(options.SkipRule);
+                options.OnRuleExecuted = OnRuleExecuted;
             });
-
-            await _validator.Validate(genericGmlValidationData);
 
             gmlValidationData.Dispose();
             genericGmlValidationData.Dispose();
@@ -58,6 +64,11 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             await _notificationService.SendAsync("Lager rapport");
 
             return _validator.GetAllRules();
+        }
+
+        private async Task OnRuleExecuted(RuleResult result)
+        {
+            await _notificationService.SendAsync($"{result} ({result.TimeUsed:0.##} sek.)");
         }
 
         private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)

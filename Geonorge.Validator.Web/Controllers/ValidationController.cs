@@ -27,12 +27,12 @@ namespace Geonorge.Validator.Controllers
         {
             try
             {
-                var inputFiles = await _multipartRequestService.GetFilesFromMultipart();
+                var sumbmittal = await _multipartRequestService.GetFilesFromMultipart();
 
-                if (inputFiles == null || !inputFiles.XmlFiles.Any())
+                if (sumbmittal == null || !sumbmittal.Files.Any())
                     return BadRequest();
 
-                var report = await _validationService.ValidateAsync(inputFiles.XmlFiles, inputFiles.XsdFile);
+                var report = await _validationService.ValidateAsync(sumbmittal);
 
                 return Ok(report);
             }

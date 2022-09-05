@@ -48,12 +48,12 @@ namespace Geonorge.Validator.Application.Services.Validation
             _logger = logger;
         }
 
-        public async Task<ValidationReport> ValidateAsync(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        public async Task<ValidationReport> ValidateAsync(Submittal submittal)
         {
             var startTime = DateTime.Now;
 
-            var xsdData = await GetXsdDataAsync(xmlFiles, xsdFile);
-            using var inputData = GetInputData(xmlFiles);
+            var xsdData = await GetXsdDataAsync(submittal.Files, submittal.Schema);
+            using var inputData = GetInputData(submittal.Files);
 
             await _notificationService.SendAsync("Validerer mot applikasjonsskjema");
 
@@ -61,12 +61,13 @@ namespace Geonorge.Validator.Application.Services.Validation
             var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Streams[0], _xsdCacheFilesPath);
 
             var rules = new List<Rule> { xsdValidationResult.Rule };
-            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdValidationResult.CodelistUris));
+            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdValidationResult.CodelistUris, submittal.SkipRules));
 
             return ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, xmlMetadata.Namespace, startTime);
         }
 
-        private async Task<List<Rule>> ValidateAsync(DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Dictionary<string, Uri> codelistUris)
+        private async Task<List<Rule>> ValidateAsync(
+            DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Dictionary<string, Uri> codelistUris, List<string> skipRules)
         {
             if (inputData.All(data => !data.IsValid))
                 return new();
@@ -74,14 +75,14 @@ namespace Geonorge.Validator.Application.Services.Validation
             var validator = GetValidator(xmlMetadata.Namespace, xmlMetadata.XsdVersion);
 
             if (validator != null)
-                return await validator.Validate(xmlMetadata.Namespace, inputData);
+                return await validator.Validate(xmlMetadata.Namespace, inputData, skipRules);
 
             if (!xmlMetadata.IsGml32)
                 return new();
 
             var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
 
-            return await genericGmlValidator.Validate(inputData, codelistUris);
+            return await genericGmlValidator.Validate(inputData, codelistUris, skipRules);
         }
 
         private IValidator GetValidator(string xmlNamespace, string xsdVersion)

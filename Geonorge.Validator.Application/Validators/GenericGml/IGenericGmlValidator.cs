@@ -8,6 +8,6 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 {
     public interface IGenericGmlValidator
     {
-        Task<List<Rule>> Validate(DisposableList<InputData> inputData, Dictionary<string, Uri> codelistUris);
+        Task<List<Rule>> Validate(DisposableList<InputData> inputData, Dictionary<string, Uri> codelistUris, List<string> skipRules);
     }
 }

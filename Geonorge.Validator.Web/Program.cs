@@ -7,7 +7,7 @@ using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Cache;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.Notification;
-using Geonorge.Validator.Application.Services.RuleInfoService;
+using Geonorge.Validator.Application.Services.RuleSetService;
 using Geonorge.Validator.Application.Services.Validation;
 using Geonorge.Validator.Application.Services.XsdValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
@@ -69,7 +69,13 @@ services.AddRuleValidators();
 services.ConfigureRuleInformation(options =>
 {
     options.AddRuleInformation<IGenericGmlValidationData>("Generell GML");
-    options.AddRuleInformation<IGmlValidationData>("Generell geometri");
+
+    options.AddRuleInformation<IGmlValidationData>("Generell geometri", options =>
+    {
+        options.SkipRule<KoordinatreferansesystemForKart2D>();
+        options.SkipRule<KoordinatreferansesystemForKart3D>();
+    });
+    
     options.AddRuleInformation<IRpfValidationData>("Reguleringsplanforslag 5.0", options =>
     {
         options.SkipGroup("PlankartOgPlanbestemmelser");
@@ -94,7 +100,7 @@ services.AddTransient<IXsdValidationService, XsdValidationService>();
 services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 services.AddTransient<INotificationService, NotificationService>();
-services.AddTransient<IRuleInfoService, RuleInfoService>();
+services.AddTransient<IRuleSetService, RuleSetService>();
 services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
 services.AddHostedService<CacheService>();

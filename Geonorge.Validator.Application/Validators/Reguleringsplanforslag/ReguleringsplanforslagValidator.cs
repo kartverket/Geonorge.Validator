@@ -12,6 +12,7 @@ using Reguleringsplanforslag.Rules.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Geonorge.Validator.Application.Utils.ValidationHelper;
 using GmlHelper = Geonorge.Validator.Application.Utils.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
@@ -38,18 +39,20 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
             _codelistSettings = codelistOptions.Value;
         }
 
-        public async Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData)
+        public async Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData, List<string> skipRules)
         {
             await _notificationService.SendAsync("Bearbeider data");
 
             var gmlValidationData = await GetGmlValidationData(inputData);
             var rpfValidationData = RpfValidationData.Create(gmlValidationData.Surfaces, gmlValidationData.Solids.FirstOrDefault(), await GetKodelister());
 
-            var options = _options.GetValidationOptions(xmlNamespace);
+            var optionsAction = _options.GetValidationOptions(xmlNamespace);
+            var options = CreateValidationOptions(optionsAction, skipRules);
+            options.OnRuleExecuted = OnRuleExecuted;
 
             await _notificationService.SendAsync("Validerer");
 
-            await _validator.Validate(gmlValidationData);
+            await _validator.Validate(gmlValidationData, options);
             await _validator.Validate(rpfValidationData, options);
 
             gmlValidationData.Dispose();
@@ -58,6 +61,11 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
             await _notificationService.SendAsync("Lager rapport");
 
             return _validator.GetAllRules();
+        }
+
+        private async Task OnRuleExecuted(RuleResult result)
+        {
+            await _notificationService.SendAsync($"{result} ({result.TimeUsed:0.##} sek.)");
         }
 
         private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)

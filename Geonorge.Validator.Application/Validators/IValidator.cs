@@ -7,6 +7,6 @@ namespace Geonorge.Validator.Application.Validators
 {
     public interface IValidator
     {
-        Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData);
+        Task<List<Rule>> Validate(string xmlNamespace, DisposableList<InputData> inputData, List<string> skipRules);
     }
 }
