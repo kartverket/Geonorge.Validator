@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geonorge.Validator.Applicat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geonorge.XsdValidator", "Geonorge.XsdValidator\Geonorge.XsdValidator.csproj", "{A060069C-FC14-43E5-AF13-7A6D2EE6F9A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geonorge.Validator.Rules.GeoJson", "Geonorge.Validator.Rules.GeoJson\Geonorge.Validator.Rules.GeoJson.csproj", "{899C4A13-8835-46B4-BAAE-BE374568A2A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geonorge.Validator.GeoJson", "Geonorge.Validator.GeoJson\Geonorge.Validator.GeoJson.csproj", "{D6129B14-62FD-41E0-A711-F07EF484D827}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{A060069C-FC14-43E5-AF13-7A6D2EE6F9A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A060069C-FC14-43E5-AF13-7A6D2EE6F9A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A060069C-FC14-43E5-AF13-7A6D2EE6F9A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{899C4A13-8835-46B4-BAAE-BE374568A2A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{899C4A13-8835-46B4-BAAE-BE374568A2A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{899C4A13-8835-46B4-BAAE-BE374568A2A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{899C4A13-8835-46B4-BAAE-BE374568A2A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6129B14-62FD-41E0-A711-F07EF484D827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6129B14-62FD-41E0-A711-F07EF484D827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6129B14-62FD-41E0-A711-F07EF484D827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6129B14-62FD-41E0-A711-F07EF484D827}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

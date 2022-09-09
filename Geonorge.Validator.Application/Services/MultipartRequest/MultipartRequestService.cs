@@ -26,8 +26,10 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
         {
             var request = _httpContextAccessor.HttpContext.Request;
             var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
-            var sumbittal = new Submittal();
             var formAccumulator = new KeyValueAccumulator();
+            var files = new List<IFormFile>();
+            IFormFile schema = null;
+            var fileTypes = new HashSet<FileType>();
             MultipartSection section;
 
             try
@@ -43,11 +45,13 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                     {
                         var fileType = await FileHelper.GetFileType(section);
 
-                        if (name == "files" && (fileType == FileType.XML || fileType == FileType.GML32))
-                            sumbittal.Files.Add(await CreateFormFile(contentDisposition, section));
-
-                        else if (name == "schema" && sumbittal.Schema == null && fileType == FileType.XSD)
-                            sumbittal.Schema = await CreateFormFile(contentDisposition, section);
+                        if (name == "files" && (fileType == FileType.XML || fileType == FileType.GML32 || fileType == FileType.JSON))
+                        {
+                            files.Add(await CreateFormFile(contentDisposition, section));
+                            fileTypes.Add(fileType);
+                        }
+                        else if (name == "schema" && schema == null && (fileType == FileType.XSD || fileType == FileType.JSON))
+                            schema = await CreateFormFile(contentDisposition, section);
                     }
                     else if (contentDisposition.IsFormDisposition() && name == "skipRules")
                     {
@@ -55,13 +59,16 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                     }
                 }
 
-                sumbittal.SkipRules = GetSkippedRules(formAccumulator);
-
-                return sumbittal;
+                return new Submittal(
+                    files, 
+                    schema, 
+                    GetSkippedRules(formAccumulator),
+                    fileTypes.Count == 1 ? fileTypes.Single() : FileType.Unknown
+                );
             }
             catch
             {
-                return null;
+                return new();
             }
         }
 

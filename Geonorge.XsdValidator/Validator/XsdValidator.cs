@@ -28,7 +28,7 @@ namespace Geonorge.XsdValidator.Validator
             }
             catch (Exception exception)
             {
-                throw new XsdValidationException("Kunne ikke utføre validering mot XML-skjema.", exception);
+                throw new XmlSchemaValidationException("Kunne ikke utføre validering mot XML-skjema.", exception);
             }
         }
     }

@@ -1,5 +1,8 @@
-﻿using Geonorge.Validator.Application.Services.MultipartRequest;
-using Geonorge.Validator.Application.Services.Validation;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Models.Data;
+using Geonorge.Validator.Application.Services.JsonValidation;
+using Geonorge.Validator.Application.Services.MultipartRequest;
+using Geonorge.Validator.Application.Services.XmlValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Geonorge.Validator.Controllers
@@ -8,16 +11,19 @@ namespace Geonorge.Validator.Controllers
     [Route("validering")]
     public class ValidationController : BaseController
     {
-        private readonly IValidationService _validationService;
+        private readonly IXmlValidationService _xmlValidationService;
+        private readonly IJsonValidationService _jsonValidationService;
         private readonly IMultipartRequestService _multipartRequestService;
 
         public ValidationController(
-            IValidationService validationService,
             IMultipartRequestService multipartRequestService,
+            IXmlValidationService validationService,
+            IJsonValidationService jsonValidationService,
             ILogger<ValidationController> logger) : base(logger)
         {
-            _validationService = validationService;
             _multipartRequestService = multipartRequestService;
+            _xmlValidationService = validationService;
+            _jsonValidationService = jsonValidationService;
         }
 
         [HttpPost]
@@ -27,12 +33,24 @@ namespace Geonorge.Validator.Controllers
         {
             try
             {
-                var sumbmittal = await _multipartRequestService.GetFilesFromMultipart();
-
-                if (sumbmittal == null || !sumbmittal.Files.Any())
+                var submittal = await _multipartRequestService.GetFilesFromMultipart();
+                
+                if (!submittal.IsValid)
                     return BadRequest();
 
-                var report = await _validationService.ValidateAsync(sumbmittal);
+                ValidationReport report = null;
+
+                switch (submittal.FileType)
+                {
+                    case FileType.XML or FileType.GML32:
+                        report = await _xmlValidationService.ValidateAsync(submittal);
+                        break;
+                    case FileType.JSON:
+                        report = await _jsonValidationService.ValidateAsync(submittal);
+                        break;
+                    default:
+                        return BadRequest();
+                }
 
                 return Ok(report);
             }

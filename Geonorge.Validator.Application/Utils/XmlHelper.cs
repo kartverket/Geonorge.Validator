@@ -22,23 +22,8 @@ namespace Geonorge.Validator.Application.Utils
             catch (Exception exception)
             {
                 Log.Logger.Error(exception, "Ugyldig XML-dokument");
-                throw new InvalidXsdException($"Ugyldig XML-dokument");
+                throw new InvalidXmlSchemaException($"Ugyldig XML-dokument");
             }
-        }
-
-        public static string ReadLines(Stream stream, int numberOfLines)
-        {
-            if (numberOfLines < 1)
-                throw new ArgumentException("numberOfLines må være større enn 0");
-
-            var counter = 0;
-            var stringBuilder = new StringBuilder(numberOfLines * 250);
-            using var streamReader = new StreamReader(stream);
-
-            while (counter++ < numberOfLines && !streamReader.EndOfStream)
-                stringBuilder.Append(streamReader.ReadLine());
-
-            return stringBuilder.ToString();
         }
     }
 }

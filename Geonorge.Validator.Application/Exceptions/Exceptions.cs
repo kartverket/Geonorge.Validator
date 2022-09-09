@@ -17,17 +17,32 @@ namespace Geonorge.Validator.Application.Exceptions
         }
     }
 
-    public class InvalidXsdException : Exception
+    public class InvalidXmlSchemaException : Exception
     {
-        public InvalidXsdException()
+        public InvalidXmlSchemaException()
         {
         }
 
-        public InvalidXsdException(string message) : base(message)
+        public InvalidXmlSchemaException(string message) : base(message)
         {
         }
 
-        public InvalidXsdException(string message, Exception innerException) : base(message, innerException)
+        public InvalidXmlSchemaException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
+    public class InvalidJsonSchemaException : Exception
+    {
+        public InvalidJsonSchemaException()
+        {
+        }
+
+        public InvalidJsonSchemaException(string message) : base(message)
+        {
+        }
+
+        public InvalidJsonSchemaException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

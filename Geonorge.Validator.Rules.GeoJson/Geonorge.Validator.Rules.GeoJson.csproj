@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Geonorge.Validator.GeoJson\Geonorge.Validator.GeoJson.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Translations\geojson.flate.1.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.flate.1.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Translations\geojson.flate.2.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.flate.2.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Translations\geojson.linje.1.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.linje.1.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Translations\geojson.linje.2.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.linje.2.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Translations\geojson.flate.1.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.flate.1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.flate.2.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.flate.2.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.linje.1.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.linje.1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.linje.2.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.linje.2.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

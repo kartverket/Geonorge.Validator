@@ -12,13 +12,13 @@ namespace Geonorge.Validator.Application.Services.Cache
     public class CacheService : BackgroundService
     {
         private readonly ICodelistHttpClient _codelistHttpClient;
-        private readonly IXsdHttpClient _xsdHttpClient;
+        private readonly IXmlSchemaHttpClient _xsdHttpClient;
         private readonly TimeOnly _timeOfUpdate;
         private readonly ILogger<CacheService> _logger;
 
         public CacheService(
             ICodelistHttpClient codelistHttpClient,
-            IXsdHttpClient xsdHttpClient,
+            IXmlSchemaHttpClient xsdHttpClient,
             IOptions<CacheSettings> options,
             ILogger<CacheService> logger)
         {

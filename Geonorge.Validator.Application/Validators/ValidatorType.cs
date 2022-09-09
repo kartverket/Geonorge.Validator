@@ -8,6 +8,8 @@ namespace Geonorge.Validator.Application.Validators
         Plangrense,
         [Description("Reguleringsplanforslag 5.0")]
         Reguleringsplanforslag,
+        [Description("Administrative enheter")]
+        AdministrativeEnheter,
         [Description("GML 3.2.1")]
         GML_321,
         Undefined

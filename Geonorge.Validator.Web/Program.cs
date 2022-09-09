@@ -1,16 +1,21 @@
 using DiBK.RuleValidator.Config;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
+using Geonorge.Validator.Application.HttpClients.JsonSchema;
 using Geonorge.Validator.Application.HttpClients.Xsd;
 using Geonorge.Validator.Application.Hubs;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Cache;
+using Geonorge.Validator.Application.Services.JsonSchemaValidation;
+using Geonorge.Validator.Application.Services.JsonValidation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.RuleSetService;
-using Geonorge.Validator.Application.Services.Validation;
+using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Application.Services.XsdValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
+using Geonorge.Validator.Application.Validators.GenericJson;
+using Geonorge.Validator.Rules.GeoJson;
 using Geonorge.Validator.Web;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
@@ -58,6 +63,7 @@ services.AddSwaggerGen(options =>
 services.AddRuleValidator(settings =>
 {
     settings.AddRuleAssembly("Geonorge.Validator.Application");
+    settings.AddRuleAssembly("Geonorge.Validator.Rules.GeoJson");
     settings.AddRuleAssembly("DiBK.RuleValidator.Rules.Gml");
     settings.AddRuleAssembly("Reguleringsplanforslag.Rules");
 
@@ -82,6 +88,8 @@ services.ConfigureRuleInformation(options =>
         options.SkipGroup("Planbestemmelser");
         options.SkipGroup("Oversendelse");
     });
+
+    options.AddRuleInformation<IGeoJsonValidationInput>("Generell GeoJSON");
 });
 
 services.AddXsdValidator(configuration, options =>
@@ -95,14 +103,21 @@ services.AddXsdValidator(configuration, options =>
 
 services.AddHttpContextAccessor();
 
-services.AddTransient<IValidationService, ValidationService>();
-services.AddTransient<IXsdValidationService, XsdValidationService>();
 services.AddTransient<IGenericGmlValidator, GenericGmlValidator>();
-services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+services.AddTransient<IGenericGeoJsonValidator, GenericGeoJsonValidator>();
+
+services.AddTransient<IXmlSchemaValidationService, XmlSchemaValidationService>();
+services.AddTransient<IJsonSchemaValidationService, JsonSchemaValidationService>();
+services.AddTransient<IXmlValidationService, XmlValidationService>();
+services.AddTransient<IJsonValidationService, JsonValidationService>();
 services.AddTransient<INotificationService, NotificationService>();
 services.AddTransient<IRuleSetService, RuleSetService>();
-services.AddHttpClient<IXsdHttpClient, XsdHttpClient>();
+services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+
+services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
+services.AddHttpClient<IJsonSchemaHttpClient, JsonSchemaHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
+
 services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));

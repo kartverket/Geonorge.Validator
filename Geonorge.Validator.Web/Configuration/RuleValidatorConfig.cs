@@ -1,10 +1,10 @@
 ﻿using DiBK.RuleValidator.Rules.Gml;
-using Geonorge.Validator.Application.Rules.Schema;
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.Reguleringsplanforslag;
 using Reguleringsplanforslag.Rules;
 using Reguleringsplanforslag.Rules.Constants;
+using Skjemavalidering = Geonorge.Validator.Application.Rules.XmlSchema.Skjemavalidering;
 
 namespace Geonorge.Validator.Web.Configuration
 {

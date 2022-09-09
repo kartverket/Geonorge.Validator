@@ -20,8 +20,8 @@ namespace Geonorge.Validator.Controllers
 
             return exception switch
             {
-                ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest("Kunne ikke validere datasett"),
-                InvalidFileException _ or InvalidXsdException _ or XsdValidationException => BadRequest(exception.Message),
+                ArgumentException or InvalidDataException or FormatException => BadRequest("Kunne ikke validere datasett"),
+                InvalidFileException or InvalidXmlSchemaException or InvalidJsonSchemaException or XmlSchemaValidationException => BadRequest(exception.Message),
                 Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
                 _ => null,
             };

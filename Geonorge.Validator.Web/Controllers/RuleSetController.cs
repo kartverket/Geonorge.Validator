@@ -40,11 +40,11 @@ namespace Geonorge.Validator.Controllers
         [HttpPost]
         [RequestFormLimits(MultipartBodyLengthLimit = 1_048_576_000)]
         [RequestSizeLimit(1_048_576_000)]
-        public async Task<IActionResult> GetRuleSetsForNamespace()
+        public async Task<IActionResult> GetRuleSetsForDataset()
         {
             try
             {
-                var ruleSets = await _ruleSetService.GetRuleSetsForNamespace();
+                var ruleSets = await _ruleSetService.GetRuleSetsForDataset();
 
                 if (ruleSets == null)
                     return BadRequest();

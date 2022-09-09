@@ -2,17 +2,17 @@
 
 namespace Geonorge.XsdValidator.Exceptions
 {
-    public class XsdValidationException : Exception
+    public class XmlSchemaValidationException : Exception
     {
-        public XsdValidationException()
+        public XmlSchemaValidationException()
         {
         }
 
-        public XsdValidationException(string message) : base(message)
+        public XmlSchemaValidationException(string message) : base(message)
         {
         }
 
-        public XsdValidationException(string message, Exception innerException) : base(message, innerException)
+        public XmlSchemaValidationException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }
