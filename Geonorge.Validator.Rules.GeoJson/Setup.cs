@@ -14,6 +14,9 @@ namespace Geonorge.Validator.Application.Rules.GeoJson
                     .AddRule<LinjerKanIkkeHaDobbeltpunkter>()
                     .AddRule<FlaterSkalHaGyldigGeometri>()
                     .AddRule<AvgrensningenTilEnFlateKanIkkeKrysseSegSelv>()
+                    .AddRule<AvgrensningeneTilEnFlateSkalNøstesRiktig>()
+                    .AddRule<HullMåLiggeInnenforFlatensYtreAvgrensning>()
+                    .AddRule<HullKanIkkeOverlappeAndreHullISammeFlate>()
                 )
                 .Build();
         }

@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
 using System.Collections.Concurrent;
 using System.Globalization;
+using GeometryHelper = DiBK.RuleValidator.Extensions.Gml.GeometryHelper;
 
 namespace Geonorge.Validator.Rules.GeoJson
 {

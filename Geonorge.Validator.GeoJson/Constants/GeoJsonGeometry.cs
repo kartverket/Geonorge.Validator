@@ -7,6 +7,6 @@
         public const string Polygon = "Polygon";
         public const string MultiPoint = "MultiPoint";
         public const string MultiLineString = "MultiLineString";
-        public const string MultiPolygon = "MultiLineString";
+        public const string MultiPolygon = "MultiPolygon";
     }
 }

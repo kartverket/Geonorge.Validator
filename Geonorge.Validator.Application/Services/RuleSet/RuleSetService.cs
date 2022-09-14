@@ -1,7 +1,9 @@
 ﻿using DiBK.RuleValidator;
+using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Rules.Gml;
+using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
-using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Config;
 using Geonorge.Validator.Application.Models.Data;
@@ -9,14 +11,16 @@ using Geonorge.Validator.Application.Models.Data.Json;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Validators.Config;
+using Geonorge.Validator.Common.Models;
 using Geonorge.Validator.GeoJson.Helpers;
 using Geonorge.Validator.Rules.GeoJson;
-using Geonorge.XsdValidator.Config;
-using Geonorge.XsdValidator.Models;
+using Geonorge.Validator.XmlSchema.Config;
+using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -76,19 +80,19 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             var submittal = await _multipartRequestService.GetFilesFromMultipart();
 
             if (!submittal.IsValid)
-                return null;
+                throw new MultipartRequestException("Datasettet inneholder ugyldige filer.");
 
             return submittal.FileType switch
             {
                 FileType.GML32 or FileType.XML => await GetRuleSetsForXml(submittal),
                 FileType.JSON => await GetRuleSetsForJson(submittal),
-                _ => null,
+                _ => throw new MultipartRequestException("Datasettet inneholder ukjente filtyper."),
             };
         }
 
         private async Task<List<RuleSet>> GetRuleSetsForXml(Submittal submittal)
         {
-            var xsdData = await GetXsdDataAsync(submittal.Files, submittal.Schema);
+            var xsdData = await GetXsdDataAsync(submittal.InputData, submittal.Schema);
             var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Streams[0], _xsdCacheFilesPath);
             var validator = _validatorOptions.Value.GetValidator(xmlMetadata.Namespace);
             var ruleSets = new List<RuleSet>();
@@ -128,7 +132,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
         private async Task<List<RuleSet>> GetRuleSetsForJson(Submittal submittal)
         {
             var ruleSets = new List<RuleSet>();
-            var schema = await _jsonSchemaHttpClient.GetJsonSchemaAsync(submittal.Files, submittal.Schema);
+            var schema = await _jsonSchemaHttpClient.GetJsonSchemaAsync(submittal.InputData, submittal.Schema);
 
             if (GeoJsonHelper.HasGeoJson(schema))
             {
@@ -145,13 +149,13 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             return ruleSets;
         }
 
-        private async Task<XsdData> GetXsdDataAsync(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        private async Task<XmlSchemaData> GetXsdDataAsync(DisposableList<InputData> inputData, Stream schema)
         {
-            if (xsdFile == null)
-                return await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
+            if (schema == null)
+                return await _xsdHttpClient.GetXmlSchemaFromInputDataAsync(inputData);
 
-            var xsdData = new XsdData();
-            xsdData.Streams.Add(xsdFile.OpenReadStream());
+            var xsdData = new XmlSchemaData();
+            xsdData.Streams.Add(schema);
 
             return xsdData;
         }

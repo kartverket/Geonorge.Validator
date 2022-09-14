@@ -22,9 +22,9 @@ namespace Geonorge.Validator.Application.Rules.JsonSchema
                 foreach (var error in validationErrors)
                 {
                     this.AddMessage(
-                        $"Linje {error.LineNumber}, posisjon {error.LinePosition}: {error.Message}",
+                        error.Message,
                         inputData.FileName,
-                        error.Path,
+                        error.JsonPath,
                         error.LineNumber,
                         error.LinePosition
                     );

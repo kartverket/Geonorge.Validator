@@ -2,7 +2,7 @@ using DiBK.RuleValidator.Config;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
-using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Geonorge.Validator.Application.Hubs;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Cache;
@@ -19,7 +19,7 @@ using Geonorge.Validator.Rules.GeoJson;
 using Geonorge.Validator.Web;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
-using Geonorge.XsdValidator.Config;
+using Geonorge.Validator.XmlSchema.Config;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
@@ -92,7 +92,7 @@ services.ConfigureRuleInformation(options =>
     options.AddRuleInformation<IGeoJsonValidationInput>("Generell GeoJSON");
 });
 
-services.AddXsdValidator(configuration, options =>
+services.AddXmlSchemaValidator(configuration, options =>
 {
     options.AddCodelistSelector(
         GmlNs, 

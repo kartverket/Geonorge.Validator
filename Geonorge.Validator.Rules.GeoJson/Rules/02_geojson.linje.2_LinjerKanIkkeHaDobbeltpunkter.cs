@@ -6,6 +6,7 @@ using Geonorge.Validator.GeoJson.Helpers;
 using Geonorge.Validator.GeoJson.Models;
 using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
+using GeometryHelper = DiBK.RuleValidator.Extensions.Gml.GeometryHelper;
 
 namespace Geonorge.Validator.Rules.GeoJson
 {

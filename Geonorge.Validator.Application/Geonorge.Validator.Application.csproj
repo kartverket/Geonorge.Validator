@@ -21,8 +21,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Geonorge.Validator.Common\Geonorge.Validator.Common.csproj" />
 		<ProjectReference Include="..\Geonorge.Validator.Rules.GeoJson\Geonorge.Validator.Rules.GeoJson.csproj" />
-		<ProjectReference Include="..\Geonorge.XsdValidator\Geonorge.XsdValidator.csproj" />
+		<ProjectReference Include="..\Geonorge.Validator.XmlSchema\Geonorge.Validator.XmlSchema.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

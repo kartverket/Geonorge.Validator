@@ -20,6 +20,21 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>geojson.flate.2.resx</DependentUpon>
     </Compile>
+    <Compile Update="Translations\geojson.flate.3.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.flate.3.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Translations\geojson.flate.4.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.flate.4.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Translations\geojson.flate.5.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>geojson.flate.5.resx</DependentUpon>
+    </Compile>
     <Compile Update="Translations\geojson.linje.1.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -40,6 +55,18 @@
     <EmbeddedResource Update="Translations\geojson.flate.2.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>geojson.flate.2.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.flate.3.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.flate.3.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.flate.4.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.flate.4.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\geojson.flate.5.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>geojson.flate.5.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Translations\geojson.linje.1.resx">
       <Generator>ResXFileCodeGenerator</Generator>

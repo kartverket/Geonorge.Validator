@@ -1,5 +1,8 @@
-﻿using Geonorge.Validator.Application.Models.Data;
-using Geonorge.Validator.Application.Utils;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Exceptions;
+using Geonorge.Validator.Application.Models.Data;
+using Geonorge.Validator.Common.Helpers;
+using Geonorge.Validator.Common.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
@@ -27,8 +30,8 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             var request = _httpContextAccessor.HttpContext.Request;
             var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
             var formAccumulator = new KeyValueAccumulator();
-            var files = new List<IFormFile>();
-            IFormFile schema = null;
+            var files = new List<InputData>();
+            Stream schema = null;
             var fileTypes = new HashSet<FileType>();
             MultipartSection section;
 
@@ -47,11 +50,11 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
 
                         if (name == "files" && (fileType == FileType.XML || fileType == FileType.GML32 || fileType == FileType.JSON))
                         {
-                            files.Add(await CreateFormFile(contentDisposition, section));
+                            files.Add(await CreateInputDataAsync(contentDisposition, section));
                             fileTypes.Add(fileType);
                         }
                         else if (name == "schema" && schema == null && (fileType == FileType.XSD || fileType == FileType.JSON))
-                            schema = await CreateFormFile(contentDisposition, section);
+                            schema = await CreateStreamAsync(contentDisposition, section);
                     }
                     else if (contentDisposition.IsFormDisposition() && name == "skipRules")
                     {
@@ -59,11 +62,14 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                     }
                 }
 
+                if (fileTypes.Count > 1)
+                    throw new MultipartRequestException("Datasettet inneholder ulike filtyper.");
+
                 return new Submittal(
-                    files, 
+                    files.ToDisposableList(), 
                     schema, 
                     GetSkippedRules(formAccumulator),
-                    fileTypes.Count == 1 ? fileTypes.Single() : FileType.Unknown
+                    fileTypes.Single()
                 );
             }
             catch
@@ -72,18 +78,21 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             }
         }
 
-        private static async Task<IFormFile> CreateFormFile(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        private static async Task<InputData> CreateInputDataAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        {
+            var memoryStream = await CreateStreamAsync(contentDisposition, section);
+
+            return new InputData(memoryStream, contentDisposition.FileName.ToString(), contentDisposition.Name.ToString());
+        }
+
+        private static async Task<MemoryStream> CreateStreamAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
         {
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
             await section.Body.DisposeAsync();
             memoryStream.Position = 0;
 
-            return new FormFile(memoryStream, 0, memoryStream.Length, contentDisposition.Name.ToString(), contentDisposition.FileName.ToString())
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = section.ContentType
-            };
+            return memoryStream;
         }
 
         private static async Task<KeyValueAccumulator> AccumulateForm(

@@ -1,6 +1,6 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.XsdValidation;
@@ -8,8 +8,8 @@ using Geonorge.Validator.Application.Utils;
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.GenericGml;
-using Geonorge.XsdValidator.Config;
-using Geonorge.XsdValidator.Models;
+using Geonorge.Validator.XmlSchema.Config;
+using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -52,19 +52,20 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
         public async Task<ValidationReport> ValidateAsync(Submittal submittal)
         {
             var startTime = DateTime.Now;
-
-            var xsdData = await GetXsdDataAsync(submittal.Files, submittal.Schema);
-            using var inputData = GetInputData(submittal.Files);
-
+            var xmlSchemaData = await GetXmlSchemaDataAsync(submittal.InputData, submittal.Schema);
+            
             await _notificationService.SendAsync("Validerer mot applikasjonsskjema");
 
-            var xsdValidationResult = _xsdValidationService.Validate(inputData, xsdData);
-            var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Streams[0], _xsdCacheFilesPath);
+            var xsdValidationResult = await _xsdValidationService.ValidateAsync(submittal.InputData, xmlSchemaData);
+            var xmlMetadata = await XmlMetadata.CreateAsync(xmlSchemaData.Streams[0], _xsdCacheFilesPath);
 
             var rules = new List<Rule> { xsdValidationResult.Rule };
-            rules.AddRange(await ValidateAsync(inputData, xmlMetadata, xsdValidationResult.CodelistUris, submittal.SkipRules));
+            rules.AddRange(await ValidateAsync(submittal.InputData, xmlMetadata, xsdValidationResult.CodelistUris, submittal.SkipRules));
 
-            return ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, xmlMetadata.Namespace, startTime);
+            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, xmlMetadata.Namespace, startTime);
+            submittal.InputData.Dispose();
+
+            return report;
         }
 
         private async Task<List<Rule>> ValidateAsync(
@@ -96,29 +97,15 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
             return _serviceProvider.GetService(validator.ServiceType) as IXmlValidator;
         }
 
-        private async Task<XsdData> GetXsdDataAsync(List<IFormFile> xmlFiles, IFormFile xsdFile)
+        private async Task<XmlSchemaData> GetXmlSchemaDataAsync(DisposableList<InputData> files, Stream schema)
         {
-            if (xsdFile == null)
-                return await _xsdHttpClient.GetXsdFromXmlFilesAsync(xmlFiles);
+            if (schema == null)
+                return await _xsdHttpClient.GetXmlSchemaFromInputDataAsync(files);
 
-            var xsdData = new XsdData();
-            xsdData.Streams.Add(xsdFile.OpenReadStream());
+            var xsdData = new XmlSchemaData();
+            xsdData.Streams.Add(schema);
 
             return xsdData;
-        }
-
-        private static DisposableList<InputData> GetInputData(List<IFormFile> files)
-        {
-            return files
-                .Select(file =>
-                {
-                    var ms = new MemoryStream();
-                    file.OpenReadStream().CopyTo(ms);
-                    ms.Position = 0;
-
-                    return new InputData(ms, file.FileName, null);
-                })
-                .ToDisposableList();
         }
     }
 }

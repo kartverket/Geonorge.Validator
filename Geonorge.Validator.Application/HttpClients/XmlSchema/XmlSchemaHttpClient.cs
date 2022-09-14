@@ -10,10 +10,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Geonorge.Validator.Application.Utils;
 using Microsoft.Extensions.Options;
-using Geonorge.XsdValidator.Config;
-using Geonorge.XsdValidator.Models;
+using Geonorge.Validator.XmlSchema.Config;
+using Geonorge.Validator.XmlSchema.Models;
+using Geonorge.Validator.Common.Helpers;
+using DiBK.RuleValidator.Extensions;
 
-namespace Geonorge.Validator.Application.HttpClients.Xsd
+namespace Geonorge.Validator.Application.HttpClients.XmlSchema
 {
     public class XmlSchemaHttpClient : IXmlSchemaHttpClient
     {
@@ -33,11 +35,11 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             _logger = logger;
         }
 
-        public async Task<XsdData> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles)
+        public async Task<XmlSchemaData> GetXmlSchemaFromInputDataAsync(DisposableList<InputData> inputData)
         {
-            var schemaUris = GetSchemaUriFromXmlFiles(xmlFiles);
+            var schemaUris = GetSchemaUriFromXmlFiles(inputData);
             
-            var xsdData = new XsdData
+            var xsdData = new XmlSchemaData
             {
                 BaseUri = GetBaseUri(schemaUris[0])
             };
@@ -134,12 +136,12 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             return Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, uri.Host + uri.LocalPath));
         }
 
-        private static List<string> GetSchemaUriFromXmlFiles(List<IFormFile> xmlFiles)
+        private static List<string> GetSchemaUriFromXmlFiles(DisposableList<InputData> inputData)
         {
-            var schemaUrisList = xmlFiles
-                .Select(xmlFile =>
+            var schemaUrisList = inputData
+                .Select(data =>
                 {
-                    var xmlString = FileHelper.ReadLines(xmlFile.OpenReadStream(), 50);
+                    var xmlString = FileHelper.ReadLines(data.Stream, 50);
                     var match = _schemaLocationRegex.Match(xmlString);
 
                     if (!match.Success)
@@ -158,7 +160,7 @@ namespace Geonorge.Validator.Application.HttpClients.Xsd
             if (!schemaUrisList.Any())
                 throw new InvalidXmlSchemaException("Filene i datasettet mangler applikasjonsskjema.");
 
-            if (schemaUrisList.Count != xmlFiles.Count || !XmlFilesHaveSameSchemas(schemaUrisList))
+            if (schemaUrisList.Count != inputData.Count || !XmlFilesHaveSameSchemas(schemaUrisList))
                 throw new InvalidXmlSchemaException("Filene i datasettet har ulike applikasjonsskjemaer.");
 
             return schemaUrisList.First();

@@ -46,4 +46,19 @@ namespace Geonorge.Validator.Application.Exceptions
         {
         }
     }
+
+    public class MultipartRequestException : Exception
+    {
+        public MultipartRequestException()
+        {
+        }
+
+        public MultipartRequestException(string message) : base(message)
+        {
+        }
+
+        public MultipartRequestException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }

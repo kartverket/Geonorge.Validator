@@ -9,7 +9,7 @@ using Geonorge.Validator.Application.Services.Notification;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using GmlHelper = Geonorge.Validator.Application.Utils.GmlHelper;
+using static Geonorge.Validator.Common.Helpers.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.GenericGml
 {
@@ -82,7 +82,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
                     continue;
 
                 var document = GmlDocument.Create(data);
-                var dimensions = await GmlHelper.GetDimensionsAsync(data.Stream);
+                var dimensions = await GetDimensionsAsync(data.Stream);
 
                 if (dimensions == 2)
                     gmlDocuments2D.Add(document);

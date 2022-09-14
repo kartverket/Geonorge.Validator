@@ -1,5 +1,5 @@
 ﻿using Geonorge.Validator.Application.HttpClients.Codelist;
-using Geonorge.Validator.Application.HttpClients.Xsd;
+using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

@@ -53,12 +53,10 @@ namespace Geonorge.Validator.Application.Services.JsonValidation
         public async Task<ValidationReport> ValidateAsync(Submittal submittal)
         {
             var startTime = DateTime.Now;
-
-            using var inputData = GetInputData(submittal.Files);
-            var schema = await _jsonSchemaHttpClient.GetJsonSchemaAsync(submittal.Files, submittal.Schema);
+            var schema = await _jsonSchemaHttpClient.GetJsonSchemaAsync(submittal.InputData, submittal.Schema);
 
             var schemaValidationInput = JsonSchemaValidationInput.Create(
-                inputData,
+                submittal.InputData,
                 inputData => _jsonSchemaValidationService.Validate(inputData, schema)
             );
 
@@ -66,9 +64,12 @@ namespace Geonorge.Validator.Application.Services.JsonValidation
             await _validator.Validate(schemaValidationInput, options => { });
 
             var rules = _validator.GetAllRules();
-            rules.AddRange(await ValidateAsync(schema, inputData, submittal.SkipRules));
+            rules.AddRange(await ValidateAsync(schema, submittal.InputData, submittal.SkipRules));
 
-            return ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, inputData, null, startTime);
+            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, null, startTime);
+            submittal.InputData.Dispose();
+
+            return report;
         }
 
         private async Task<List<Rule>> ValidateAsync(JSchema schema, DisposableList<InputData> inputData, List<string> skipRules)
@@ -98,20 +99,6 @@ namespace Geonorge.Validator.Application.Services.JsonValidation
                 return null;
 
             return _serviceProvider.GetService(validator.ServiceType) as IJsonValidator;
-        }
-
-        private static DisposableList<InputData> GetInputData(List<IFormFile> files)
-        {
-            return files
-                .Select(file =>
-                {
-                    var ms = new MemoryStream();
-                    file.OpenReadStream().CopyTo(ms);
-                    ms.Position = 0;
-
-                    return new InputData(ms, file.FileName, null);
-                })
-                .ToDisposableList();
         }
     }
 }

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Geonorge.Validator.Common.Helpers;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Wmhelp.XPath2;
-using Geonorge.Validator.Application.Utils;
 
 namespace Geonorge.Validator.Application.Models.Data
 {

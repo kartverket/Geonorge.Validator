@@ -13,7 +13,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Wmhelp.XPath2;
-using static Geonorge.Validator.Application.Utils.XmlHelper;
+using static Geonorge.Validator.Common.Helpers.XmlHelper;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Geonorge.Validator.Application.HttpClients.Codelist

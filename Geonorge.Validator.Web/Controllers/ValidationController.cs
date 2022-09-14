@@ -1,8 +1,8 @@
 ﻿using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Services.JsonValidation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.XmlValidation;
+using Geonorge.Validator.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Geonorge.Validator.Controllers

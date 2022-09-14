@@ -12,8 +12,8 @@ using Reguleringsplanforslag.Rules.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.ValidationHelper;
-using GmlHelper = Geonorge.Validator.Application.Utils.GmlHelper;
+using static Geonorge.Validator.Common.Helpers.ValidationHelper;
+using static Geonorge.Validator.Common.Helpers.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
 {
@@ -79,7 +79,7 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
                     continue;
 
                 var document = GmlDocument.Create(data);
-                var dimensions = await GmlHelper.GetDimensionsAsync(data.Stream);
+                var dimensions = await GetDimensionsAsync(data.Stream);
 
                 if (dimensions == 2)
                     gmlDocuments2D.Add(document);

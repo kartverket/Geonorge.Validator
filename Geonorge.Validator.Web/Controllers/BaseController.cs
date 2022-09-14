@@ -1,5 +1,5 @@
 ﻿using Geonorge.Validator.Application.Exceptions;
-using Geonorge.XsdValidator.Exceptions;
+using Geonorge.Validator.XmlSchema.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Geonorge.Validator.Controllers

@@ -1,13 +1,12 @@
-﻿using Geonorge.XsdValidator.Models;
-using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.XmlSchema.Models;
 using System.Threading.Tasks;
 
-namespace Geonorge.Validator.Application.HttpClients.Xsd
+namespace Geonorge.Validator.Application.HttpClients.XmlSchema
 {
     public interface IXmlSchemaHttpClient
     {
-        Task<XsdData> GetXsdFromXmlFilesAsync(List<IFormFile> xmlFiles);
+        Task<XmlSchemaData> GetXmlSchemaFromInputDataAsync(DisposableList<InputData> inputData);
         Task<int> UpdateCacheAsync();
     }
 }

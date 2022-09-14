@@ -1,4 +1,5 @@
-﻿using Geonorge.Validator.Application.Exceptions;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -10,7 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Geonorge.Validator.Application.Utils.FileHelper;
+using static Geonorge.Validator.Common.Helpers.FileHelper;
 
 namespace Geonorge.Validator.Application.HttpClients.JsonSchema
 {
@@ -29,21 +30,15 @@ namespace Geonorge.Validator.Application.HttpClients.JsonSchema
             _logger = logger;
         }
 
-        public async Task<JSchema> GetJsonSchemaAsync(List<IFormFile> jsonFiles, IFormFile schemaFile)
+        public async Task<JSchema> GetJsonSchemaAsync(DisposableList<InputData> inputData, Stream schema)
         {
-            Stream stream;
-
-            if (schemaFile == null)
+            if (schema == null)
             {
-                var schemaUri = GetSchemaUriFromJsonFiles(jsonFiles);
-                stream = await FetchJsonSchemaAsync(schemaUri);
-            }
-            else
-            {
-                stream = schemaFile.OpenReadStream();
+                var schemaUri = GetSchemaUriFromJsonFiles(inputData);
+                schema = await FetchJsonSchemaAsync(schemaUri);
             }
 
-            using var jsonReader = new JsonTextReader(new StreamReader(stream));
+            using var jsonReader = new JsonTextReader(new StreamReader(schema));
 
             return JSchema.Load(jsonReader, new JSchemaUrlResolver());
         }
@@ -69,13 +64,13 @@ namespace Geonorge.Validator.Application.HttpClients.JsonSchema
             }
         }
 
-        private static string GetSchemaUriFromJsonFiles(List<IFormFile> jsonFiles)
+        private static string GetSchemaUriFromJsonFiles(DisposableList<InputData> inputData)
         {
             var schemaUris = new List<string>();
 
-            foreach (var jsonFile in jsonFiles)
+            foreach (var data in inputData)
             {
-                var json = ReadLines(jsonFile.OpenReadStream(), 50);
+                var json = ReadLines(data.Stream, 50);
                 var match = _jsonSchemaRegex.Match(json);
 
                 if (!match.Success)
@@ -87,7 +82,7 @@ namespace Geonorge.Validator.Application.HttpClients.JsonSchema
             if (!schemaUris.Any())
                 throw new InvalidJsonSchemaException("Filene i datasettet mangler applikasjonsskjema.");
 
-            if (schemaUris.Count != jsonFiles.Count || schemaUris.Distinct().Count() != 1)
+            if (schemaUris.Count != inputData.Count || schemaUris.Distinct().Count() != 1)
                 throw new InvalidJsonSchemaException("Filene i datasettet har ulike applikasjonsskjemaer.");
 
             return schemaUris.First();
