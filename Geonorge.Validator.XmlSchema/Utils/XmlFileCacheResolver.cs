@@ -11,12 +11,12 @@ namespace Geonorge.Validator.XmlSchema.Utils
     public class XmlFileCacheResolver : XmlUrlResolver
     {
         private readonly Uri _baseUri;
-        private readonly XsdValidatorSettings _settings;
+        private readonly XmlSchemaValidatorSettings _settings;
         private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
             Uri baseUri,
-            XsdValidatorSettings settings)
+            XmlSchemaValidatorSettings settings)
         {
             _baseUri = baseUri;
             _settings = settings;

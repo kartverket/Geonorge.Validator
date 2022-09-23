@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace Geonorge.Validator.XmlSchema.Validator
 {
-    public interface IXsdValidator
+    public interface IXmlSchemaValidator
     {
-        Task<XsdValidatorResult> ValidateAsync(InputData inputData, XmlSchemaData xsdData);
+        Task<XmlSchemaValidatorResult> ValidateAsync(InputData inputData, XmlSchemaData xmlSchemaData, string xmlNamespace);
     }
 }

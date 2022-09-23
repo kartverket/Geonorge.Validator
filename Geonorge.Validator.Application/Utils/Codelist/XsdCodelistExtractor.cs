@@ -11,16 +11,16 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using static Geonorge.Validator.Common.Helpers.XmlHelper;
-using static Geonorge.Validator.XmlSchema.Utils.XsdHelper;
+using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
 
 namespace Geonorge.Validator.Application.Utils.Codelist
 {
     public class XsdCodelistExtractor : IXsdCodelistExtractor
     {
-        private readonly XsdValidatorSettings _settings;
+        private readonly XmlSchemaValidatorSettings _settings;
 
         public XsdCodelistExtractor(
-            IOptions<XsdValidatorSettings> options)
+            IOptions<XmlSchemaValidatorSettings> options)
         {
             _settings = options.Value;
         }

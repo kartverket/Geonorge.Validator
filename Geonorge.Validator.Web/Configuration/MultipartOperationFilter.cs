@@ -17,7 +17,7 @@ namespace Geonorge.Validator.Web
                     Type = "object",
                     Properties =
                     {
-                        ["xmlFiles"] = new OpenApiSchema
+                        ["files"] = new OpenApiSchema
                         {
                             Type = "array",
                             Items = new OpenApiSchema
@@ -26,13 +26,13 @@ namespace Geonorge.Validator.Web
                                 Format = "binary"
                             }
                         },
-                        ["xsdFile"] = new OpenApiSchema
+                        ["schema"] = new OpenApiSchema
                         {
                             Type = "file",
                             Format = "binary"
                         }
                     },
-                    Required = new HashSet<string>() { "xmlFiles" }
+                    Required = new HashSet<string>() { "files" }
                 }
             };
             operation.RequestBody = new OpenApiRequestBody

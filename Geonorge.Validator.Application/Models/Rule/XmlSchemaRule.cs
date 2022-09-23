@@ -2,7 +2,7 @@
 
 namespace Geonorge.Validator.Application.Models
 {
-    public abstract class XsdRule : Rule
+    public abstract class XmlSchemaRule : Rule
     {
     }
 }

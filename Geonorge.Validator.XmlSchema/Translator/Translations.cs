@@ -37,9 +37,14 @@
             " Verdien '{value}' er ugyldig i henhold til dens datatype '{datatype}'."
         );
 
-        public static Translation InvalidCharacter = new(
+        public static Translation InvalidCharacter1 = new(
             @" - The '(?<character>.*?)' character, hexadecimal value (?<hexValue>.*), cannot be included in a name.",
             " Tegnet '{character}', heksadesimalverdi {hexValue}, kan ikke brukes som navn."
+        );
+        
+        public static Translation InvalidCharacter2 = new(
+            @"^Name cannot begin with the '(?<character>.*?)' character, hexadecimal value (?<hexValue>.*?)\.",
+            "Et navn kan ikke begynne med tegnet '{character}', heksadesimalverdi {hexValue}."
         );
 
         public static Translation RequiredAttributeMissing = new(

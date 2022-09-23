@@ -11,30 +11,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Geonorge.Validator.Application.Services.XsdValidation
+namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 {
     public class XmlSchemaValidationService : IXmlSchemaValidationService
     {
-        private readonly IXsdValidator _xsdValidator;
+        private readonly IXmlSchemaValidator _xmlSchemaValidator;
         private readonly ILogger<XmlSchemaValidationService> _logger;
 
         public XmlSchemaValidationService(
-            IXsdValidator xsdValidator,
+            IXmlSchemaValidator xmlSchemaValidator,
             ILogger<XmlSchemaValidationService> logger)
         {
-            _xsdValidator = xsdValidator;
+            _xmlSchemaValidator = xmlSchemaValidator;
             _logger = logger;
         }
 
-        public async Task<XsdValidationResult> ValidateAsync(DisposableList<InputData> inputData, XmlSchemaData xsdData)
+        public async Task<XmlSchemaValidationResult> ValidateAsync(
+            DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, string xmlNamespace)
         {
-            var xsdRule = GetXsdRule();
+            var xmlSchemaRule = GetXmlSchemaRule();
             var startTime = DateTime.Now;
             var codelistUris = new Dictionary<string, Uri>();
 
             foreach (var data in inputData)
             {
-                var result = await _xsdValidator.ValidateAsync(data, xsdData);
+                var result = await _xmlSchemaValidator.ValidateAsync(data, xmlSchemaData, xmlNamespace);
 
                 data.IsValid = !result.Messages.Any();
                 data.Stream.Position = 0;
@@ -59,38 +60,38 @@ namespace Geonorge.Validator.Application.Services.XsdValidation
                         };
                     })
                     .ToList()
-                    .ForEach(xsdRule.AddMessage);
+                    .ForEach(xmlSchemaRule.AddMessage);
 
                 codelistUris.Append(result.CodelistUris);
             }
 
-            xsdRule.Status = !xsdRule.Messages.Any() ? Status.PASSED : Status.FAILED;
+            xmlSchemaRule.Status = !xmlSchemaRule.Messages.Any() ? Status.PASSED : Status.FAILED;
 
-            LogInformation(xsdRule, startTime);
+            LogInformation(xmlSchemaRule, startTime);
 
-            return new XsdValidationResult
+            return new XmlSchemaValidationResult
             {
-                Rule = xsdRule,
+                Rule = xmlSchemaRule,
                 CodelistUris = codelistUris
             };
         }
 
-        private void LogInformation(XsdRule xsdRule, DateTime startTime)
+        private void LogInformation(XmlSchemaRule xmlSchemaRule, DateTime startTime)
         {
             _logger.LogInformation("{@Rule}", new
             {
-                xsdRule.Id,
-                xsdRule.Name,
-                FullName = xsdRule.ToString(),
-                xsdRule.Status,
+                xmlSchemaRule.Id,
+                xmlSchemaRule.Name,
+                FullName = xmlSchemaRule.ToString(),
+                xmlSchemaRule.Status,
                 TimeUsed = DateTime.Now.Subtract(startTime).TotalSeconds,
-                MessageCount = xsdRule.Messages.Count
+                MessageCount = xmlSchemaRule.Messages.Count
             });
         }
 
-        private static XsdRule GetXsdRule()
+        private static XmlSchemaRule GetXmlSchemaRule()
         {
-            var rule = Activator.CreateInstance(typeof(Skjemavalidering)) as XsdRule;
+            var rule = Activator.CreateInstance(typeof(Skjemavalidering)) as XmlSchemaRule;
             rule.Create();
 
             return rule;

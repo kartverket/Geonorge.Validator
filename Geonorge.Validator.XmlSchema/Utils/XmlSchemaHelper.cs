@@ -10,9 +10,9 @@ using _XmlSchema = System.Xml.Schema.XmlSchema;
 
 namespace Geonorge.Validator.XmlSchema.Utils
 {
-    public class XsdHelper
+    public class XmlSchemaHelper
     {
-        public static XmlSchemaSet CreateXmlSchemaSet(XmlSchemaData xsdData, XsdValidatorSettings settings)
+        public static XmlSchemaSet CreateXmlSchemaSet(XmlSchemaData xsdData, XmlSchemaValidatorSettings settings)
         {
             if (xsdData == null || !xsdData.Streams.Any())
                 return null;
@@ -41,7 +41,7 @@ namespace Geonorge.Validator.XmlSchema.Utils
             }
         }
 
-        private static void SaveCachedXsdUris(List<string> cachedUris, XsdValidatorSettings settings)
+        private static void SaveCachedXsdUris(List<string> cachedUris, XmlSchemaValidatorSettings settings)
         {
             if (!cachedUris.Any())
                 return;

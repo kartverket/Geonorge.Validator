@@ -1,6 +1,10 @@
-﻿using Geonorge.Validator.Application.Exceptions;
-using Microsoft.AspNetCore.Http;
+﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Exceptions;
+using Geonorge.Validator.Common.Helpers;
+using Geonorge.Validator.XmlSchema.Config;
+using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,12 +12,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Geonorge.Validator.Application.Utils;
-using Microsoft.Extensions.Options;
-using Geonorge.Validator.XmlSchema.Config;
-using Geonorge.Validator.XmlSchema.Models;
-using Geonorge.Validator.Common.Helpers;
-using DiBK.RuleValidator.Extensions;
 
 namespace Geonorge.Validator.Application.HttpClients.XmlSchema
 {
@@ -22,12 +20,12 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
         private static readonly Regex _schemaLocationRegex = new(@"xsi:schemaLocation=""(?<schema_loc>(.*?))""", RegexOptions.Compiled);
 
         private readonly HttpClient _httpClient;
-        private readonly XsdValidatorSettings _settings;
+        private readonly XmlSchemaValidatorSettings _settings;
         private readonly ILogger<XmlSchemaHttpClient> _logger;
 
         public XmlSchemaHttpClient(
             HttpClient client,
-            IOptions<XsdValidatorSettings> options,
+            IOptions<XmlSchemaValidatorSettings> options,
             ILogger<XmlSchemaHttpClient> logger)
         {
             _httpClient = client;
@@ -45,9 +43,30 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
             };
 
             foreach (var schemaUri in schemaUris)
-                xsdData.Streams.Add(await FetchXsdAsync(schemaUri));
+                xsdData.Streams.Add(await FetchXmlSchemaAsync(schemaUri));
 
             return xsdData;
+        }
+
+        public async Task<MemoryStream> FetchXmlSchemaAsync(string schemaUri)
+        {
+            try
+            {
+                using var response = await _httpClient.GetAsync(schemaUri);
+                response.EnsureSuccessStatusCode();
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                return memoryStream;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.", schemaUri);
+                throw new InvalidXmlSchemaException($"Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.");
+            }
         }
 
         public async Task<int> UpdateCacheAsync()
@@ -69,7 +88,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
                     continue;
 
                 var filePath = GetFilePath(uri);
-                var task = FetchXsdAsync(uri.AbsoluteUri);
+                var task = FetchXmlSchemaAsync(uri.AbsoluteUri);
 
                 tasks.Add((task, uri, filePath));
             }
@@ -92,27 +111,6 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
             await SaveCachedXsdUrisAsync(cachedUris);
 
             return cachedUris.Count;
-        }
-
-        private async Task<MemoryStream> FetchXsdAsync(string schemaUri)
-        {
-            try
-            {
-                using var response = await _httpClient.GetAsync(schemaUri);
-                response.EnsureSuccessStatusCode();
-
-                using var stream = await response.Content.ReadAsStreamAsync();
-                var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-                memoryStream.Position = 0;
-
-                return memoryStream;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.", schemaUri);
-                throw new InvalidXmlSchemaException($"Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.");
-            }
         }
 
         private async Task SaveCachedXsdUrisAsync(List<string> cachedUris)

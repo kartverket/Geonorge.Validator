@@ -56,7 +56,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                         else if (name == "schema" && schema == null && (fileType == FileType.XSD || fileType == FileType.JSON))
                             schema = await CreateStreamAsync(contentDisposition, section);
                     }
-                    else if (contentDisposition.IsFormDisposition() && name == "skipRules")
+                    else if (contentDisposition.IsFormDisposition() && (name == "skipRules" || name == "schemaUri"))
                     {
                         formAccumulator = await AccumulateForm(formAccumulator, section, contentDisposition);
                     }
@@ -68,6 +68,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                 return new Submittal(
                     files.ToDisposableList(), 
                     schema, 
+                    GetSchemaUri(formAccumulator),
                     GetSkippedRules(formAccumulator),
                     fileTypes.Single()
                 );
@@ -126,6 +127,20 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             #pragma warning restore SYSLIB0001
 
             return mediaType.Encoding;
+        }
+
+        private static Uri GetSchemaUri(KeyValueAccumulator formAccumulator)
+        {
+            var accumulatedValues = formAccumulator.GetResults();
+            accumulatedValues.TryGetValue("schemaUri", out var value);
+            var uriString = value.ToString();
+
+            if (string.IsNullOrWhiteSpace(uriString))
+                return null;
+
+            return Uri.TryCreate(uriString, UriKind.Absolute, out var schemaUri) ?
+                schemaUri :
+                null;
         }
 
         private static List<string> GetSkippedRules(KeyValueAccumulator formAccumulator)

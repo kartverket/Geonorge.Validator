@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace Geonorge.Validator.XmlSchema.Models
 {
-    public class XsdValidatorResult
+    public class XmlSchemaValidatorResult
     {
-        public XsdValidatorResult(List<XmlSchemaValidationError> messages)
+        public XmlSchemaValidatorResult(List<XmlSchemaValidationError> messages)
         {
             Messages = messages;
         }
 
-        public XsdValidatorResult(List<XmlSchemaValidationError> messages, Dictionary<string, Uri> codelistUris)
+        public XmlSchemaValidatorResult(List<XmlSchemaValidationError> messages, Dictionary<string, Uri> codelistUris)
         {
             Messages = messages;
             CodelistUris = codelistUris;

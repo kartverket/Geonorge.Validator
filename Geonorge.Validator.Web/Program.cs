@@ -12,7 +12,7 @@ using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.RuleSetService;
 using Geonorge.Validator.Application.Services.XmlValidation;
-using Geonorge.Validator.Application.Services.XsdValidation;
+using Geonorge.Validator.Application.Services.XmlSchemaValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Application.Validators.GenericJson;
 using Geonorge.Validator.Rules.GeoJson;
@@ -31,6 +31,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
+using Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistry;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -95,8 +96,7 @@ services.ConfigureRuleInformation(options =>
 services.AddXmlSchemaValidator(configuration, options =>
 {
     options.AddCodelistSelector(
-        GmlNs, 
-        "CodeType", 
+        GmlNs + "CodeType",       
         element => element.Descendants(GmlNs + "defaultCodeSpace").SingleOrDefault()?.Value
     );
 });
@@ -117,15 +117,14 @@ services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
 services.AddHttpClient<IJsonSchemaHttpClient, JsonSchemaHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
+services.AddHttpClient<IGmlApplicationSchemaRegistryHttpClient, GmlApplicationSchemaRegistryHttpClient>();
 
 services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
-services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Optimal;
-});
+services.Configure<GmlApplicationSchemaRegistrySettings>(configuration.GetSection(GmlApplicationSchemaRegistrySettings.SectionName));
+services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
 
 var urlProxy = configuration.GetValue<string>("UrlProxy");
 

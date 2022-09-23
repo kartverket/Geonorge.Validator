@@ -47,7 +47,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             IMultipartRequestService multipartRequestService,
             IXmlSchemaHttpClient xsdHttpClient,
             IJsonSchemaHttpClient jsonSchemaHttpClient,
-            IOptions<XsdValidatorSettings> xsdValidatorOptions,
+            IOptions<XmlSchemaValidatorSettings> xsdValidatorOptions,
             IOptions<ValidatorOptions> validatorOptions,
             RuleInfoOptions ruleInfoOptions)
         {
@@ -207,14 +207,14 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 .FirstOrDefault();
         }
 
-        private static XsdRule GetXsdRule()
+        private static XmlSchemaRule GetXsdRule()
         {
             return _schemaRuleAssembly.GetTypes()
-                .Where(type => type.IsSubclassOf(typeof(XsdRule)) &&
+                .Where(type => type.IsSubclassOf(typeof(XmlSchemaRule)) &&
                     type.GetConstructor(Type.EmptyTypes) != null)
                 .Select(type =>
                 {
-                    var rule = Activator.CreateInstance(type) as XsdRule;
+                    var rule = Activator.CreateInstance(type) as XmlSchemaRule;
                     rule.Create();
 
                     return rule;

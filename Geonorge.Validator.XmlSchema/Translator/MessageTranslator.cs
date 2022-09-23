@@ -20,7 +20,13 @@ namespace Geonorge.Validator.XmlSchema.Translator
                 return $"{translation}{AddTranslation(message, Translations.InvalidValue)}";
 
             if (Translate(message, Translations.InvalidAttribute, out translation))
-                return $"{translation}{AddTranslation(message, Translations.InvalidValue)}{AddTranslation(message, Translations.InvalidCharacter)}";
+                return $"{translation}{AddTranslation(message, Translations.InvalidValue)}{AddTranslation(message, Translations.InvalidCharacter1)}";
+
+            if (Translate(message, Translations.InvalidCharacter2, out translation))
+                return translation;
+
+            if (Translate(message, Translations.InvalidChildWithoutNamesapce, out translation))
+                return translation;
 
             if (Translate(message, Translations.InvalidChildWithoutNamesapce, out translation))
                 return translation;

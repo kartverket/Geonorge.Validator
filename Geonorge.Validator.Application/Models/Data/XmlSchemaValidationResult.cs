@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Models.Data
 {
-    public class XsdValidationResult
+    public class XmlSchemaValidationResult
     {
-        public XsdRule Rule { get; set; }
+        public XmlSchemaRule Rule { get; set; }
         public Dictionary<string, Uri> CodelistUris { get; set; } = new();
     }
 }

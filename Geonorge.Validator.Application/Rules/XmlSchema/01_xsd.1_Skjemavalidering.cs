@@ -2,7 +2,7 @@
 
 namespace Geonorge.Validator.Application.Rules.XmlSchema
 {
-    public class Skjemavalidering : XsdRule
+    public class Skjemavalidering : XmlSchemaRule
     {
         public override void Create()
         {

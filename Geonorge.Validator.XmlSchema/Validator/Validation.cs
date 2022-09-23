@@ -26,11 +26,11 @@ namespace Geonorge.Validator.XmlSchema.Validator
             _messages = new(maxMessageCount);
         }
 
-        public async Task<XsdValidatorResult> Validate(
-            InputData inputData, XmlSchemaSet xmlSchemaSet, Stream xsdStream, IEnumerable<XsdCodelistSelector> codelistSelectors)
+        public async Task<XmlSchemaValidatorResult> Validate(
+            InputData inputData, XmlSchemaSet xmlSchemaSet, Stream xmlSchemaStream, IEnumerable<XmlSchemaCodelistSelector> codelistSelectors)
         {
             var xmlReaderSettings = GetXmlReaderSettings(xmlSchemaSet);
-            var xsdDocument = await LoadXDocumentAsync(xsdStream, LoadOptions.SetLineInfo);
+            var xsdDocument = await LoadXDocumentAsync(xmlSchemaStream, LoadOptions.SetLineInfo);
             var relevantCodelistSelectors = GetRelevantCodelistSelectors(xsdDocument, codelistSelectors);
 
             if (relevantCodelistSelectors.Any())
@@ -39,7 +39,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
             return await Validate(inputData, xmlReaderSettings);
         }
 
-        private async Task<XsdValidatorResult> Validate(InputData inputData, XmlReaderSettings xmlReaderSettings)
+        private async Task<XmlSchemaValidatorResult> Validate(InputData inputData, XmlReaderSettings xmlReaderSettings)
         {
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
@@ -68,11 +68,11 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             await EnrichValidationErrors(inputData);
 
-            return new XsdValidatorResult(_messages);
+            return new XmlSchemaValidatorResult(_messages);
         }
 
-        private async Task<XsdValidatorResult> ValidateAndExtractCodelistUris(
-            InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument xsdDocument, List<XsdCodelistSelector> codelistSelectors)
+        private async Task<XmlSchemaValidatorResult> ValidateAndExtractCodelistUris(
+            InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument xsdDocument, List<XmlSchemaCodelistSelector> codelistSelectors)
         {
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
@@ -126,7 +126,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             await EnrichValidationErrors(inputData);
 
-            return new XsdValidatorResult(_messages, codeListUris);
+            return new XmlSchemaValidatorResult(_messages, codeListUris);
         }
 
         private XmlReaderSettings GetXmlReaderSettings(XmlSchemaSet xmlSchemaSet)
@@ -166,17 +166,23 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
         private async Task EnrichValidationErrors(InputData inputData)
         {
-            if (_readingFailed || !_messages.Any())
+            if (!_messages.Any())
                 return;
 
-            var document = await LoadXDocumentAsync(inputData.Stream, LoadOptions.SetLineInfo);
+            XDocument document = null;
+
+            if (!_readingFailed)
+                document = await LoadXDocumentAsync(inputData.Stream, LoadOptions.SetLineInfo);
 
             foreach (var message in _messages)
             {
-                var element = GetElementAtLine(document, message.LineNumber);
+                if (document != null)
+                {
+                    var element = GetElementAtLine(document, message.LineNumber);
 
-                if (element != null)
-                    message.XPath = element.GetXPath();
+                    if (element != null)
+                        message.XPath = element.GetXPath();
+                }
 
                 message.FileName = inputData.FileName;
             }
@@ -188,7 +194,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
                 .SingleOrDefault(element => ((IXmlLineInfo)element).LineNumber == lineNumber);
         }
 
-        private static List<XsdCodelistSelector> GetRelevantCodelistSelectors(XDocument xsdDocument, IEnumerable<XsdCodelistSelector> codelistSelectors)
+        private static List<XmlSchemaCodelistSelector> GetRelevantCodelistSelectors(XDocument xsdDocument, IEnumerable<XmlSchemaCodelistSelector> codelistSelectors)
         {
             var documentElements = xsdDocument.Descendants();
 
