@@ -8,9 +8,10 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
         public RuleConfig CreateConfig()
         {
             return RuleConfig
-                .Create<IGenericGmlValidationData>("Generell GML")
-                .AddGroup("GenerellGml", "Generell GML", group => group
+                .Create<IGmlValidationInputV2>("Generell GML v2")
+                .AddGroup("GenerellGmlV2", "Generell GML v2", group => group
                     .AddRule<KodeverdiMåVæreIHenholdTilEksternKodeliste>()
+                    .AddRule<FungerendeReferanser>()
                 )
                 .Build();
         }

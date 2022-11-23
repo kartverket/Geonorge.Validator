@@ -16,7 +16,6 @@ using Geonorge.Validator.GeoJson.Helpers;
 using Geonorge.Validator.Rules.GeoJson;
 using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using _Validator = Geonorge.Validator.Application.Validators.Config.Validator;
 using RuleInfo = DiBK.RuleValidator.RuleInfo;
 using RuleInformation = Geonorge.Validator.Application.Models.Config.RuleInfo;
 using RuleSet = Geonorge.Validator.Application.Models.Data.RuleSet;
@@ -93,32 +93,35 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
         private async Task<List<RuleSet>> GetRuleSetsForXml(Submittal submittal)
         {
             var xsdData = await GetXsdDataAsync(submittal.InputData, submittal.Schema);
-            var xmlMetadata = await XmlMetadata.CreateAsync(xsdData.Streams[0], _xsdCacheFilesPath);
-            var validator = _validatorOptions.Value.GetValidator(xmlMetadata.Namespace);
+            var xmlMetadata = await XmlMetadata.CreateAsync(submittal.InputData.First().Stream, xsdData.Streams);
+            var validators = GetValidators(xmlMetadata);
             var ruleSets = new List<RuleSet>();
 
-            if (validator != null && validator.XsdVersions.Contains(xmlMetadata.XsdVersion))
+            if (validators.Any())
             {
-                foreach (var ruleType in validator.RuleTypes)
+                foreach (var validator in validators)
                 {
-                    var ruleInfo = _ruleInfoOptions.RuleInfo
-                        .SingleOrDefault(ruleInfo => ruleInfo.RuleType == ruleType);
+                    foreach (var ruleType in validator.RuleTypes)
+                    {
+                        var ruleInfo = _ruleInfoOptions.RuleInfo
+                            .SingleOrDefault(ruleInfo => ruleInfo.RuleType == ruleType);
 
-                    if (ruleInfo != null)
-                        ruleSets.Add(CreateRuleSet(ruleInfo));
+                        if (ruleInfo != null)
+                            ruleSets.Add(CreateRuleSet(ruleInfo));
+                    }
                 }
             }
             else if (xmlMetadata.IsGml32)
             {
-                var genericRuleInfo = _ruleInfoOptions.RuleInfo
-                    .SingleOrDefault(ruleInfo => ruleInfo.RuleType == typeof(IGenericGmlValidationData));
+                var gmlV1RuleInfo = _ruleInfoOptions.RuleInfo
+                    .SingleOrDefault(ruleInfo => ruleInfo.RuleType == typeof(IGmlValidationInputV1));
 
-                ruleSets.Add(CreateRuleSet(genericRuleInfo));
+                ruleSets.Add(CreateRuleSet(gmlV1RuleInfo));
 
-                var gmlRuleInfo = _ruleInfoOptions.RuleInfo
-                    .SingleOrDefault(ruleInfo => ruleInfo.RuleType == typeof(IGmlValidationData));
+                var gmlV2RuleInfo = _ruleInfoOptions.RuleInfo
+                    .SingleOrDefault(ruleInfo => ruleInfo.RuleType == typeof(IGmlValidationInputV2));
 
-                ruleSets.Add(CreateRuleSet(gmlRuleInfo));
+                ruleSets.Add(CreateRuleSet(gmlV2RuleInfo));
             }
 
             var xsdRuleSet = CreateRuleSetForSchemaRules(new[] { GetXsdRule() });
@@ -173,6 +176,19 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 Name = name,
                 Groups = groups
             };
+        }
+
+        private List<_Validator> GetValidators(XmlMetadata xmlMetadata)
+        {
+            return xmlMetadata.Namespaces
+                .Select(@namespace => (Namespace: @namespace, Validator: _validatorOptions.Value.GetValidator(@namespace.Namespace)))
+                .Where(tuple => tuple.Validator != null &&
+                    tuple.Validator.XsdVersions
+                        .Any(xsdVersion => xmlMetadata.Namespaces
+                            .Any(@namespace => @namespace.XsdVersion.Equals(xsdVersion)))
+                )
+                .Select(tuple => tuple.Validator)
+                .ToList();
         }
 
         private static RuleSet CreateRuleSetForSchemaRules(IEnumerable<Rule> rules)

@@ -9,7 +9,6 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
     public interface IXmlSchemaHttpClient
     {
         Task<XmlSchemaData> GetXmlSchemaFromInputDataAsync(DisposableList<InputData> inputData);
-        Task<MemoryStream> FetchXmlSchemaAsync(string schemaUri);
-        Task<int> UpdateCacheAsync();
+        Task<MemoryStream> FetchXmlSchemaAsync(Uri uri);
     }
 }

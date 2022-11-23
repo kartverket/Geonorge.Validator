@@ -3,39 +3,47 @@ using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Rules.XmlSchema;
+using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
 using Geonorge.Validator.XmlSchema.Validator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
 
 namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 {
     public class XmlSchemaValidationService : IXmlSchemaValidationService
     {
         private readonly IXmlSchemaValidator _xmlSchemaValidator;
+        private readonly XmlSchemaValidatorSettings _settings;
         private readonly ILogger<XmlSchemaValidationService> _logger;
 
         public XmlSchemaValidationService(
             IXmlSchemaValidator xmlSchemaValidator,
+            IOptions<XmlSchemaValidatorSettings> options,
             ILogger<XmlSchemaValidationService> logger)
         {
             _xmlSchemaValidator = xmlSchemaValidator;
+            _settings = options.Value;
             _logger = logger;
         }
 
         public async Task<XmlSchemaValidationResult> ValidateAsync(
-            DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, string xmlNamespace)
+            DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
         {
             var xmlSchemaRule = GetXmlSchemaRule();
+            var xmlSchemaSet = CreateXmlSchemaSet(xmlSchemaData, _settings);
             var startTime = DateTime.Now;
             var codelistUris = new Dictionary<string, Uri>();
+            var xLinkElements = new Dictionary<string, List<XLinkElement>>();
 
             foreach (var data in inputData)
             {
-                var result = await _xmlSchemaValidator.ValidateAsync(data, xmlSchemaData, xmlNamespace);
+                var result = await _xmlSchemaValidator.ValidateAsync(data, xmlSchemaSet, xmlSchemaData, xmlNamespaces);
 
                 data.IsValid = !result.Messages.Any();
                 data.Stream.Position = 0;
@@ -63,17 +71,14 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
                     .ForEach(xmlSchemaRule.AddMessage);
 
                 codelistUris.Append(result.CodelistUris);
+                xLinkElements.Add(data.FileName, result.XLinkElements);
             }
 
             xmlSchemaRule.Status = !xmlSchemaRule.Messages.Any() ? Status.PASSED : Status.FAILED;
 
             LogInformation(xmlSchemaRule, startTime);
 
-            return new XmlSchemaValidationResult
-            {
-                Rule = xmlSchemaRule,
-                CodelistUris = codelistUris
-            };
+            return new XmlSchemaValidationResult(xmlSchemaRule, codelistUris, xLinkElements, xmlSchemaSet);
         }
 
         private void LogInformation(XmlSchemaRule xmlSchemaRule, DateTime startTime)

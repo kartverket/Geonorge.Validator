@@ -4,8 +4,11 @@ using Geonorge.Validator.XmlSchema.Exceptions;
 using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
+using System.Xml.Schema;
+using XmlSchemaValidationException = Geonorge.Validator.XmlSchema.Exceptions.XmlSchemaValidationException;
 
 namespace Geonorge.Validator.XmlSchema.Validator
 {
@@ -19,13 +22,13 @@ namespace Geonorge.Validator.XmlSchema.Validator
             _settings = options.Value;
         }
 
-        public async Task<XmlSchemaValidatorResult> ValidateAsync(InputData inputData, XmlSchemaData xmlSchemaData, string xmlNamespace)
+        public async Task<XmlSchemaValidatorResult> ValidateAsync(
+            InputData inputData, XmlSchemaSet xmlSchemaSet, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
         {
             try
             {
-                var xmlSchemaSet = CreateXmlSchemaSet(xmlSchemaData, _settings);
                 var validation = new Validation(_settings.MaxMessageCount);
-                var codelistSelectors = !_settings.IgnoredNamespaces.Contains(xmlNamespace) ?
+                var codelistSelectors = !_settings.IgnoredNamespaces.Any(ignoredNs => xmlNamespaces.Contains(ignoredNs)) ?
                     _settings.CodelistSelectors :
                     new();
 

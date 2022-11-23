@@ -1,5 +1,6 @@
 ﻿using Geonorge.Validator.Common.Exceptions;
 using Serilog;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Geonorge.Validator.Common.Helpers
@@ -20,6 +21,22 @@ namespace Geonorge.Validator.Common.Helpers
                 Log.Logger.Error(exception, "Ugyldig XML-dokument");
                 throw new InvalidXmlSchemaException($"Ugyldig XML-dokument");
             }
+        }
+
+        public static XElement GetElementAtLine(XDocument document, int lineNumber)
+        {
+            return document.Descendants()
+                .SingleOrDefault(element => ((IXmlLineInfo)element).LineNumber == lineNumber);
+        }
+
+        public static XElement GetElementAtLine(XDocument document, int lineNumber, int linePosition)
+        {
+            return document.Descendants()
+                .SingleOrDefault(element =>
+                {
+                    var lineInfo = (IXmlLineInfo)element;
+                    return lineInfo.LineNumber == lineNumber && lineInfo.LinePosition == linePosition;
+                });
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.HttpClients.XmlSchema;
+using Geonorge.Validator.Application.HttpClients.XmlSchemaCacher;
 using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.XmlSchemaValidation;
@@ -8,7 +9,6 @@ using Geonorge.Validator.Application.Utils;
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.GenericGml;
-using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -24,26 +24,26 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
     {
         private readonly IXmlSchemaValidationService _xmlSchemaValidationService;
         private readonly IXmlSchemaHttpClient _xmlSchemaHttpClient;
+        private readonly IXmlSchemaCacherHttpClient _xmlSchemaCacherHttpClient;
         private readonly IServiceProvider _serviceProvider;
         private readonly ValidatorOptions _validatorOptions;
         private readonly INotificationService _notificationService;
         private readonly ILogger<XmlValidationService> _logger;
-        private readonly string _xmlSchemaCacheFilesPath;
 
         public XmlValidationService(
             IXmlSchemaValidationService xmlSchemaValidationService,
             IXmlSchemaHttpClient xmlSchemaHttpClient,
+            IXmlSchemaCacherHttpClient xmlSchemaCacherHttpClient,
             IHttpContextAccessor httpContextAccessor,
             INotificationService notificationService,
             IOptions<ValidatorOptions> validatorOptions,
-            IOptions<XmlSchemaValidatorSettings> xmlSchemaValidatorSettings,
             ILogger<XmlValidationService> logger)
         {
             _xmlSchemaValidationService = xmlSchemaValidationService;
             _xmlSchemaHttpClient = xmlSchemaHttpClient;
+            _xmlSchemaCacherHttpClient = xmlSchemaCacherHttpClient;
             _serviceProvider = httpContextAccessor.HttpContext.RequestServices;
             _validatorOptions = validatorOptions.Value;
-            _xmlSchemaCacheFilesPath = xmlSchemaValidatorSettings.Value.CacheFilesPath;
             _notificationService = notificationService;
             _logger = logger;
         }
@@ -53,38 +53,57 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
             var startTime = DateTime.Now;
 
             var xmlSchemaData = await GetXmlSchemaDataAsync(submittal);
-            var xmlMetadata = await XmlMetadata.CreateAsync(xmlSchemaData.Streams[0], _xmlSchemaCacheFilesPath);
-
+            await CacheXmlSchemasAsync(xmlSchemaData.SchemaUris);
+            var xmlMetadata = await XmlMetadata.CreateAsync(submittal.InputData.First().Stream, xmlSchemaData.Streams);
+            
             await _notificationService.SendAsync("Validerer mot applikasjonsskjema");
 
-            var xsdValidationResult = await _xmlSchemaValidationService.ValidateAsync(submittal.InputData, xmlSchemaData, xmlMetadata.Namespace);
-            var rules = new List<Rule> { xsdValidationResult.Rule };
+            var namespaces = xmlMetadata.Namespaces.Select(tuple => tuple.Namespace).ToList();
+            var xmlSchemaValidationResult = await _xmlSchemaValidationService.ValidateAsync(submittal.InputData, xmlSchemaData, namespaces);
+            
+            var rules = new List<Rule> { xmlSchemaValidationResult.Rule };
 
-            rules.AddRange(await ValidateAsync(submittal.InputData, xmlMetadata, xsdValidationResult.CodelistUris, submittal.SkipRules));
+            rules.AddRange(await ValidateAsync(submittal.InputData, xmlMetadata, xmlSchemaValidationResult, submittal.SkipRules));
 
-            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, xmlMetadata.Namespace, startTime);
+            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, namespaces, startTime);
             submittal.InputData.Dispose();
 
             return report;
         }
 
         private async Task<List<Rule>> ValidateAsync(
-            DisposableList<InputData> inputData, XmlMetadata xmlMetadata, Dictionary<string, Uri> codelistUris, List<string> skipRules)
+            DisposableList<InputData> inputData, XmlMetadata xmlMetadata, XmlSchemaValidationResult xmlSchemaValidationResult, List<string> skipRules)
         {
             if (inputData.All(data => !data.IsValid))
                 return new();
-            
-            var validator = GetValidator(xmlMetadata.Namespace, xmlMetadata.XsdVersion);
 
-            if (validator != null)
-                return await validator.Validate(xmlMetadata.Namespace, inputData, skipRules);
+            var validators = xmlMetadata.Namespaces
+                .Select(@namespace => (@namespace.Namespace, Validator: GetValidator(@namespace.Namespace, @namespace.XsdVersion)))
+                .Where(tuple => tuple.Validator != null)
+                .ToList();
+
+            if (validators.Any())
+            {
+                var rules = new List<Rule>();
+
+                foreach (var (@namespace, validator) in validators)
+                    rules.AddRange(await validator.Validate(@namespace, inputData, skipRules));
+
+                return rules;
+            }
 
             if (!xmlMetadata.IsGml32)
                 return new();
 
             var genericGmlValidator = _serviceProvider.GetService(typeof(IGenericGmlValidator)) as IGenericGmlValidator;
 
-            return await genericGmlValidator.Validate(inputData, codelistUris, skipRules);
+            return await genericGmlValidator.Validate(
+                inputData, 
+                xmlSchemaValidationResult.CodelistUris, 
+                xmlSchemaValidationResult.XLinkElements, 
+                xmlSchemaValidationResult.XmlSchemaSet, 
+                skipRules
+            );
         }
 
         private IXmlValidator GetValidator(string xmlNamespace, string xsdVersion)
@@ -101,9 +120,10 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
         {
             if (submittal.SchemaUri != null)
             {
-                var stream = await _xmlSchemaHttpClient.FetchXmlSchemaAsync(submittal.SchemaUri.AbsoluteUri);
+                var stream = await _xmlSchemaHttpClient.FetchXmlSchemaAsync(submittal.SchemaUri);
                 var xmlSchemaData = new XmlSchemaData();
                 xmlSchemaData.Streams.Add(stream);
+                xmlSchemaData.SchemaUris.Add(submittal.SchemaUri);
 
                 return xmlSchemaData;
             }
@@ -118,6 +138,12 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
             {
                 return await _xmlSchemaHttpClient.GetXmlSchemaFromInputDataAsync(submittal.InputData);
             }
+        }
+
+        private async Task CacheXmlSchemasAsync(List<Uri> schemaUris)
+        {
+            foreach (var schemaUri in schemaUris)
+                await _xmlSchemaCacherHttpClient.CacheSchemasAsync(schemaUri);
         }
     }
 }

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Geonorge.JsonSchemaValidator.Resources {
+namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace Geonorge.JsonSchemaValidator.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ValidationErrors {
+    internal class gml_kod_1 {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ValidationErrors() {
+        internal gml_kod_1() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Geonorge.JsonSchemaValidator.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Geonorge.JsonSchemaValidator.Resources.ValidationErrors", typeof(ValidationErrors).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Geonorge.Validator.Application.Rules.GenericGml.Translations.gml.kod.1", typeof(gml_kod_1).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,11 +61,20 @@ namespace Geonorge.JsonSchemaValidator.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to sdfsd.
+        ///   Looks up a localized string similar to Kodeverdien &apos;{0}&apos; er ikke i henhold til kodelisten &apos;{1}&apos;..
         /// </summary>
-        internal static string Required {
+        internal static string Message {
             get {
-                return ResourceManager.GetString("Required", resourceCulture);
+                return ResourceManager.GetString("Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kodeverdi må være i henhold til ekstern kodeliste.
+        /// </summary>
+        internal static string Name {
+            get {
+                return ResourceManager.GetString("Name", resourceCulture);
             }
         }
     }

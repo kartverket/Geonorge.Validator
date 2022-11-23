@@ -9,15 +9,14 @@ using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
-    public class KodeverdiMåVæreIHenholdTilEksternKodeliste : Rule<IGenericGmlValidationData>
+    public class KodeverdiMåVæreIHenholdTilEksternKodeliste : Rule<IGmlValidationInputV2>
     {
         public override void Create()
         {
             Id = "gml.kod.1";
-            Name = "Kodeverdi må være i henhold til ekstern kodeliste";
         }
 
-        protected override void Validate(IGenericGmlValidationData data)
+        protected override void Validate(IGmlValidationInputV2 data)
         {
             if (!data.CodeSpaces.Any() || !data.Surfaces.Any() && !data.Solids.Any())
                 SkipRule();
@@ -45,7 +44,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                         if (!codeSpace.Codelist.Any(codelistValue => codelistValue.Value == code))
                         {
                             this.AddMessage(
-                                $"Kodeverdien '{code}' er ikke i henhold til kodelisten '{codeSpace.Url}'.",
+                                Translate("Message", code, codeSpace.Url),
                                 document.FileName,
                                 new[] { codeElement.GetXPath() },
                                 new[] { element.GetAttribute("gml:id") }

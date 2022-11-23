@@ -132,7 +132,7 @@ namespace Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistr
         private bool ShouldCreateGmlApplicationSchemaRegistry()
         {
             return !File.Exists(_settings.CacheFilePath) || 
-                DateTime.Now.Subtract(File.GetCreationTime(_settings.CacheFilePath)).TotalDays > _settings.CacheDurationDays;
+                DateTime.Now.Subtract(File.GetLastWriteTime(_settings.CacheFilePath)).TotalDays > _settings.CacheDurationDays;
         }
 
         private static ApplicationSchemaVersion CreateApplicationSchemaVersion(JToken token)

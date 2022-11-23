@@ -4,8 +4,9 @@ using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Models.Data.Validation
 {
-    public interface IGenericGmlValidationData : IGmlValidationData
+    public interface IGmlValidationInputV2 : IGmlValidationInputV1
     {
         List<GmlCodeSpace> CodeSpaces { get; }
+        XLinkResolver XLinkResolver { get; }
     }
 }

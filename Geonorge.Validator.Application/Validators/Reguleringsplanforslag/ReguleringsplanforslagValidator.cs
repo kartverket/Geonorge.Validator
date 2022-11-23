@@ -43,8 +43,8 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
         {
             await _notificationService.SendAsync("Bearbeider data");
 
-            var gmlValidationData = await GetGmlValidationData(inputData);
-            var rpfValidationData = RpfValidationData.Create(gmlValidationData.Surfaces, gmlValidationData.Solids.FirstOrDefault(), await GetKodelister());
+            var gmlValidationInputV1 = await GetGmlValidationInputV1(inputData);
+            var rpfValidationInput = RpfValidationInput.Create(gmlValidationInputV1.Surfaces, gmlValidationInputV1.Solids.FirstOrDefault(), await GetKodelister());
 
             var optionsAction = _options.GetValidationOptions(xmlNamespace);
             var options = CreateValidationOptions(optionsAction, skipRules);
@@ -52,11 +52,11 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
 
             await _notificationService.SendAsync("Validerer");
 
-            await _validator.Validate(gmlValidationData, options);
-            await _validator.Validate(rpfValidationData, options);
+            await _validator.Validate(gmlValidationInputV1, options);
+            await _validator.Validate(rpfValidationInput, options);
 
-            gmlValidationData.Dispose();
-            rpfValidationData.Dispose();
+            gmlValidationInputV1.Dispose();
+            rpfValidationInput.Dispose();
 
             await _notificationService.SendAsync("Lager rapport");
 
@@ -68,7 +68,7 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
             await _notificationService.SendAsync($"{result} ({result.TimeUsed:0.##} sek.)");
         }
 
-        private static async Task<IGmlValidationData> GetGmlValidationData(DisposableList<InputData> inputData)
+        private static async Task<IGmlValidationInputV1> GetGmlValidationInputV1(DisposableList<InputData> inputData)
         {
             var gmlDocuments2D = new List<GmlDocument>();
             var gmlDocuments3D = new List<GmlDocument>();
@@ -87,7 +87,7 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
                     gmlDocuments3D.Add(document);
             }
 
-            return GmlValidationData.Create(
+            return GmlValidationInput.Create(
                 gmlDocuments2D, 
                 gmlDocuments3D
             );

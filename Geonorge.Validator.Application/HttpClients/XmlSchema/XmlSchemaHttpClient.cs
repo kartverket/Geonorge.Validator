@@ -35,24 +35,25 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
 
         public async Task<XmlSchemaData> GetXmlSchemaFromInputDataAsync(DisposableList<InputData> inputData)
         {
-            var schemaUris = GetSchemaUriFromXmlFiles(inputData);
-            
             var xsdData = new XmlSchemaData
             {
-                BaseUri = GetBaseUri(schemaUris[0])
+                SchemaUris = GetSchemaUriFromXmlFiles(inputData)
             };
 
-            foreach (var schemaUri in schemaUris)
+            foreach (var schemaUri in xsdData.SchemaUris)
                 xsdData.Streams.Add(await FetchXmlSchemaAsync(schemaUri));
 
             return xsdData;
         }
 
-        public async Task<MemoryStream> FetchXmlSchemaAsync(string schemaUri)
+        public async Task<MemoryStream> FetchXmlSchemaAsync(Uri uri)
         {
+            if (uri.IsFile)
+                return await LoadXmlSchemaFromDiskAsync(uri);
+
             try
             {
-                using var response = await _httpClient.GetAsync(schemaUri);
+                using var response = await _httpClient.GetAsync(uri);
                 response.EnsureSuccessStatusCode();
 
                 using var stream = await response.Content.ReadAsStreamAsync();
@@ -64,77 +65,25 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.", schemaUri);
-                throw new InvalidXmlSchemaException($"Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.");
+                _logger.LogError(exception, "Kunne ikke hente applikasjonsskjemaet '{schemaUri}'.", uri);
+                throw new InvalidXmlSchemaException($"Kunne ikke hente applikasjonsskjemaet '{uri}'.");
             }
         }
 
-        public async Task<int> UpdateCacheAsync()
+        private static async Task<MemoryStream> LoadXmlSchemaFromDiskAsync(Uri uri)
         {
-            var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
+            if (!File.Exists(uri.AbsolutePath))
+                throw new InvalidXmlSchemaException($"Kunne ikke hente applikasjonsskjemaet '{uri}'. Filen finnes ikke.");
 
-            if (!File.Exists(cacheListFilePath))
-                return 0;
+            using var stream = File.OpenRead(uri.AbsolutePath);
+            var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
 
-            var lines = await File.ReadAllLinesAsync(cacheListFilePath);
-            var tasks = new List<(Task<MemoryStream> Request, Uri uri, string FilePath)>();
-
-            foreach (var line in lines)
-            {
-                var lineSplit = line.Split(",");
-                var lastCached = DateTime.Parse(lineSplit[1]);
-
-                if ((DateTime.Now - lastCached).TotalHours < 24 || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
-                    continue;
-
-                var filePath = GetFilePath(uri);
-                var task = FetchXmlSchemaAsync(uri.AbsoluteUri);
-
-                tasks.Add((task, uri, filePath));
-            }
-
-            await Task.WhenAll(tasks.Select(task => task.Request));
-            var cachedUris = new List<string>();
-
-            foreach (var (request, uri, filePath) in tasks)
-            {
-                var data = await request;
-
-                if (data == null)
-                    continue;
-
-                await SaveXsdToDiskAsync(filePath, data);
-
-                cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
-            }
-
-            await SaveCachedXsdUrisAsync(cachedUris);
-
-            return cachedUris.Count;
+            return memoryStream;
         }
 
-        private async Task SaveCachedXsdUrisAsync(List<string> cachedUris)
-        {
-            if (!cachedUris.Any())
-                return;
-
-            var filePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
-            var existingCachedUris = Array.Empty<string>();
-
-            if (File.Exists(filePath))
-                existingCachedUris = await File.ReadAllLinesAsync(filePath);
-
-            var union = cachedUris.UnionBy(existingCachedUris, uri => uri.Split(',')[0]);
-
-            await File.WriteAllLinesAsync(filePath, union);
-        }
-
-        private string GetFilePath(Uri uri)
-        {
-            return Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, uri.Host + uri.LocalPath));
-        }
-
-        private static List<string> GetSchemaUriFromXmlFiles(DisposableList<InputData> inputData)
+        private static List<Uri> GetSchemaUriFromXmlFiles(DisposableList<InputData> inputData)
         {
             var schemaUrisList = inputData
                 .Select(data =>
@@ -145,10 +94,10 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
                     if (!match.Success)
                         return null;
 
-                    var values = match.Groups["schema_loc"].Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                    var values = match.Groups["schema_loc"].Value.Split(" ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     var uris = new List<string>();
 
-                    for (var i = 1; i < values.Length; i+=2)
+                    for (var i = 1; i < values.Length; i += 2)
                         uris.Add(values[i]);
 
                     return uris;
@@ -161,22 +110,16 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchema
             if (schemaUrisList.Count != inputData.Count || !XmlFilesHaveSameSchemas(schemaUrisList))
                 throw new InvalidXmlSchemaException("Filene i datasettet har ulike applikasjonsskjemaer.");
 
-            return schemaUrisList.First();
-        }
+            return schemaUrisList
+                .First()
+                .Select(uriString =>
+                {
+                    if (!Uri.TryCreate(uriString, new UriCreationOptions(), out var uri))
+                        throw new InvalidXmlSchemaException($"Applikasjonsskjemaet '{uriString}' er en ugyldig URI.");
 
-        private static async Task SaveXsdToDiskAsync(string filePath, MemoryStream memoryStream)
-        {
-            var bytes = memoryStream.ToArray();
-            using var fileStream = File.Open(filePath, FileMode.Create);
-            await fileStream.WriteAsync(bytes);
-        }
-
-        private static Uri GetBaseUri(string schemaUriString)
-        {
-            var uri = new Uri(schemaUriString);
-            var baseUriString = uri.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped) + string.Join("", uri.Segments.SkipLast(1));
-
-            return new Uri(baseUriString);
+                    return uri;
+                })
+                .ToList();
         }
 
         private static bool XmlFilesHaveSameSchemas(List<List<string>> schemaUrisList)

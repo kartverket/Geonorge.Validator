@@ -10,15 +10,12 @@ namespace Geonorge.Validator.XmlSchema.Utils
 {
     public class XmlFileCacheResolver : XmlUrlResolver
     {
-        private readonly Uri _baseUri;
         private readonly XmlSchemaValidatorSettings _settings;
         private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
-            Uri baseUri,
             XmlSchemaValidatorSettings settings)
         {
-            _baseUri = baseUri;
             _settings = settings;
             _client = new();
         }
@@ -30,28 +27,26 @@ namespace Geonorge.Validator.XmlSchema.Utils
             if (absoluteUri == null)
                 throw new ArgumentNullException(nameof(absoluteUri));
 
-            var uri = ResolveUri(absoluteUri);
-
-            if (uri.Scheme == "http" && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
+            if (absoluteUri.Scheme == "http" && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
             {
-                var filePath = GetFilePath(uri);
+                var filePath = GetFilePath(absoluteUri);
 
                 if (File.Exists(filePath))
                     return File.OpenRead(filePath);                   
 
-                using var response = _client.GetAsync(uri).Result;
+                using var response = _client.GetAsync(absoluteUri).Result;
                 var stream = response.Content.ReadAsStream();
 
                 var memoryStream = new MemoryStream();
                 stream.CopyTo(memoryStream);
                 memoryStream.Position = 0;
 
-                if (ShouldCache(uri) && memoryStream.Length > 0)
+                if (ShouldCache(absoluteUri) && memoryStream.Length > 0)
                 {
                     using var fileStream = CreateFile(filePath);
                     memoryStream.CopyTo(fileStream);
                     memoryStream.Position = 0;
-                    CacheUri(uri.AbsoluteUri);
+                    CacheUri(absoluteUri.AbsoluteUri);
                 }
 
                 stream.Dispose();
@@ -59,16 +54,8 @@ namespace Geonorge.Validator.XmlSchema.Utils
             }
             else
             {
-                return base.GetEntity(uri, role, ofObjectToReturn);
+                return base.GetEntity(absoluteUri, role, ofObjectToReturn);
             }
-        }
-
-        private Uri ResolveUri(Uri absoluteUri)
-        {
-            if (absoluteUri.Scheme == "file" && _baseUri != null)
-                return new Uri(_baseUri, absoluteUri.Segments.Last());
-
-            return absoluteUri;
         }
 
         private bool ShouldCache(Uri uri)

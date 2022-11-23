@@ -1,5 +1,5 @@
 ﻿using Geonorge.Validator.Application.HttpClients.Codelist;
-using Geonorge.Validator.Application.HttpClients.XmlSchema;
+using Geonorge.Validator.Application.HttpClients.XmlSchemaCacher;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,18 +12,18 @@ namespace Geonorge.Validator.Application.Services.Cache
     public class CacheService : BackgroundService
     {
         private readonly ICodelistHttpClient _codelistHttpClient;
-        private readonly IXmlSchemaHttpClient _xsdHttpClient;
+        private readonly IXmlSchemaCacherHttpClient _xmlSchemaCacherHttpClient;
         private readonly TimeOnly _timeOfUpdate;
         private readonly ILogger<CacheService> _logger;
 
         public CacheService(
             ICodelistHttpClient codelistHttpClient,
-            IXmlSchemaHttpClient xsdHttpClient,
+            IXmlSchemaCacherHttpClient xmlSchemaCacherHttpClient,
             IOptions<CacheSettings> options,
             ILogger<CacheService> logger)
         {
             _codelistHttpClient = codelistHttpClient;
-            _xsdHttpClient = xsdHttpClient;
+            _xmlSchemaCacherHttpClient = xmlSchemaCacherHttpClient;
             _timeOfUpdate = TimeOnly.Parse(options.Value.TimeOfUpdate);
             _logger = logger;
         }
@@ -37,7 +37,7 @@ namespace Geonorge.Validator.Application.Services.Cache
                 var count1 = await _codelistHttpClient.UpdateCacheAsync();
                 _logger.LogInformation("Oppdaterer cache for kodelister: {count} filer ble oppdatert", count1);
 
-                var count2 = await _xsdHttpClient.UpdateCacheAsync();
+                var count2 = await _xmlSchemaCacherHttpClient.UpdateCacheAsync();
                 _logger.LogInformation("Oppdaterer cache for XML-skjemaer: {count} filer ble oppdatert", count2);
             }
             while (!stoppingToken.IsCancellationRequested);

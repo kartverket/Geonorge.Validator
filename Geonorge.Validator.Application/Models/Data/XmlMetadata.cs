@@ -1,65 +1,42 @@
 ﻿using Geonorge.Validator.Common.Helpers;
-using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using Wmhelp.XPath2;
 
 namespace Geonorge.Validator.Application.Models.Data
 {
     public class XmlMetadata
     {
-        public string Namespace { get; private set; }
-        public string XsdVersion { get; private set; }
-        public string GmlVersion { get; private set; }
-        public bool IsGml32 => GmlVersion?.StartsWith("3.2") ?? false;
+        private static readonly Regex _gml32NsRegex = new(@"xmlns:gml=""http:\/\/www\.opengis\.net\/gml\/3\.2""", RegexOptions.Compiled);
 
-        private XmlMetadata(string @namespace, string xsdVersion, string gmlVersion)
+        public List<(string Namespace, string XsdVersion)> Namespaces { get; private set; }
+        public bool IsGml32 { get; private set; }
+
+        private XmlMetadata(List<(string Namespace, string XsdVersion)> namespaces, bool isGml32)
         {
-            Namespace = @namespace;
-            XsdVersion = xsdVersion;
-            GmlVersion = gmlVersion;
+            Namespaces = namespaces;
+            IsGml32 = isGml32;
         }
 
-        public static async Task<XmlMetadata> CreateAsync(Stream xsdStream, string xsdCacheFilesPath)
+        public static async Task<XmlMetadata> CreateAsync(Stream xmlStream, List<Stream> xsdStreams)
         {
-            var document = await XmlHelper.LoadXDocumentAsync(xsdStream);
+            var namespaces = new List<(string Namespace, string XsdVersion)>();
 
-            return new XmlMetadata(
-                document.Root.Attribute("targetNamespace")?.Value,
-                document.Root.Attribute("version")?.Value,
-                await GetGmlVersionAsync(document, xsdCacheFilesPath)
-            );
+            foreach (var stream in xsdStreams)
+            {
+                var document = await XmlHelper.LoadXDocumentAsync(stream);
+                namespaces.Add((document.Root.Attribute("targetNamespace")?.Value, document.Root.Attribute("version")?.Value));
+            }
+
+            return new XmlMetadata(namespaces, HasGml32Namespace(xmlStream));
         }
 
-        private static async Task<string> GetGmlVersionAsync(XDocument document, string xsdCacheFilesPath)
+        private static bool HasGml32Namespace(Stream xmlStream)
         {
-            var ns = document.Root.GetNamespaceOfPrefix("gml");
+            var contents = FileHelper.ReadLines(xmlStream, 50);
 
-            if (ns == null)
-                return null;
-
-            var uriString = document.Root.XPath2SelectOne<XAttribute>($"//*:import[@namespace = '{ns.NamespaceName}']/@schemaLocation")?.Value ?? "";
-
-            if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
-                return null;
-
-            try
-            {
-                var filePath = Path.GetFullPath(Path.Combine(xsdCacheFilesPath, uri.Host + uri.LocalPath));
-
-                if (!File.Exists(filePath))
-                    return null;
-
-                using var stream = File.OpenRead(filePath);
-                var gmlXsdDocument = await XmlHelper.LoadXDocumentAsync(stream);
-
-                return gmlXsdDocument.Root.Attribute("version")?.Value;
-            }
-            catch
-            {
-                return null;
-            }
+            return _gml32NsRegex.IsMatch(contents);
         }
     }
 }

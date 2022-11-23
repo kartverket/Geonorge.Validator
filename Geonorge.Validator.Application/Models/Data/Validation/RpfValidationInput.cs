@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace Geonorge.Validator.Application.Models.Data.Validation
 {
-    public class RpfValidationData : IRpfValidationData
+    public class RpfValidationInput : IRpfValidationInput
     {
         private bool _disposed = false;
         public List<GmlDocument> Plankart2D { get; } = new();
@@ -19,16 +19,16 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
         public ValidationDataElement<OversendelseReguleringsplanforslagType> Oversendelse { get; }
         public List<Attachment> Attachments { get; } = new();
 
-        private RpfValidationData(IEnumerable<GmlDocument> plankart2d, GmlDocument plankart3d, Kodelister kodelister)
+        private RpfValidationInput(IEnumerable<GmlDocument> plankart2d, GmlDocument plankart3d, Kodelister kodelister)
         {
             Plankart2D.AddRange(plankart2d ?? new List<GmlDocument>());
             Plankart3D = plankart3d;
             Kodelister = kodelister;
         }
 
-        public static IRpfValidationData Create(IEnumerable<GmlDocument> plankart2d, GmlDocument plankart3d, Kodelister kodelister)
+        public static IRpfValidationInput Create(IEnumerable<GmlDocument> plankart2d, GmlDocument plankart3d, Kodelister kodelister)
         {
-            return new RpfValidationData(plankart2d, plankart3d, kodelister);
+            return new RpfValidationInput(plankart2d, plankart3d, kodelister);
         }
 
         public void Dispose()

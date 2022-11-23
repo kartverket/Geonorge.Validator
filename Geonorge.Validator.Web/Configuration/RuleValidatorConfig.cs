@@ -19,7 +19,7 @@ namespace Geonorge.Validator.Web.Configuration
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
                     new[] { "5.0_rev20210827", "5.0_rev20211104" },
                     typeof(Skjemavalidering),
-                    new[] { typeof(IGmlValidationData), typeof(IRpfValidationData) },
+                    new[] { typeof(IGmlValidationInputV1), typeof(IRpfValidationInput) },
                     options =>
                     {
                         options.SkipGroup(RuleGroupId.PlankartOgPlanbestemmelser);

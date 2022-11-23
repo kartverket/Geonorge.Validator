@@ -12,20 +12,15 @@ namespace Geonorge.Validator.XmlSchema.Utils
 {
     public class XmlSchemaHelper
     {
-        public static XmlSchemaSet CreateXmlSchemaSet(XmlSchemaData xsdData, XmlSchemaValidatorSettings settings)
+        public static XmlSchemaSet CreateXmlSchemaSet(XmlSchemaData xmlSchemaData, XmlSchemaValidatorSettings settings)
         {
-            if (xsdData == null || !xsdData.Streams.Any())
+            if (xmlSchemaData == null || !xmlSchemaData.Streams.Any())
                 return null;
 
-            var xmlResolver = new XmlFileCacheResolver(xsdData.BaseUri, settings);
+            var xmlResolver = new XmlFileCacheResolver(settings);
             var xmlSchemaSet = new XmlSchemaSet { XmlResolver = xmlResolver };
 
-            foreach (var stream in xsdData.Streams)
-            {
-                var xmlSchema = _XmlSchema.Read(stream, null);
-                stream.Position = 0;
-                xmlSchemaSet.Add(xmlSchema);
-            }
+            AddXmlSchemas(xmlSchemaSet, xmlSchemaData, settings);
 
             try
             {
@@ -38,6 +33,29 @@ namespace Geonorge.Validator.XmlSchema.Utils
             {
                 Log.Logger.Error(exception, "Kunne ikke kompilere XmlSchemaSet!");
                 throw;
+            }
+        }
+
+        private static void AddXmlSchemas(XmlSchemaSet xmlSchemaSet, XmlSchemaData xmlSchemaData, XmlSchemaValidatorSettings settings)
+        {
+            if (xmlSchemaData.SchemaUris.Any())
+            {
+                foreach (var schemaUri in xmlSchemaData.SchemaUris)
+                {
+                    var filePath = Path.GetFullPath(Path.Combine(settings.CacheFilesPath, schemaUri.Host + schemaUri.LocalPath));
+                    using var stream = File.OpenRead(filePath);
+                    var xmlSchema = _XmlSchema.Read(stream, null);
+                    xmlSchemaSet.Add(xmlSchema);
+                }
+            }
+            else
+            {
+                foreach (var stream in xmlSchemaData.Streams)
+                {
+                    var xmlSchema = _XmlSchema.Read(stream, null);
+                    stream.Position = 0;
+                    xmlSchemaSet.Add(xmlSchema);
+                }
             }
         }
 

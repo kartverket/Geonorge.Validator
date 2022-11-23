@@ -1,8 +1,11 @@
 using DiBK.RuleValidator.Config;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
+using Geonorge.Validator.Application.HttpClients.CodelistResolver;
+using Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistry;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
 using Geonorge.Validator.Application.HttpClients.XmlSchema;
+using Geonorge.Validator.Application.HttpClients.XmlSchemaCacher;
 using Geonorge.Validator.Application.Hubs;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Cache;
@@ -11,8 +14,8 @@ using Geonorge.Validator.Application.Services.JsonValidation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.Application.Services.RuleSetService;
-using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Application.Services.XmlSchemaValidation;
+using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Application.Validators.GenericJson;
 using Geonorge.Validator.Rules.GeoJson;
@@ -31,7 +34,6 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
-using Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistry;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -75,15 +77,11 @@ services.AddRuleValidators();
 
 services.ConfigureRuleInformation(options =>
 {
-    options.AddRuleInformation<IGenericGmlValidationData>("Generell GML");
+    options.AddRuleInformation<IGmlValidationInputV1>("Generell GML v1");
 
-    options.AddRuleInformation<IGmlValidationData>("Generell geometri", options =>
-    {
-        options.SkipRule<KoordinatreferansesystemForKart2D>();
-        options.SkipRule<KoordinatreferansesystemForKart3D>();
-    });
-    
-    options.AddRuleInformation<IRpfValidationData>("Reguleringsplanforslag 5.0", options =>
+    options.AddRuleInformation<IGmlValidationInputV2>("Generell GML v2");
+
+    options.AddRuleInformation<IRpfValidationInput>("Reguleringsplanforslag 5.0", options =>
     {
         options.SkipGroup("PlankartOgPlanbestemmelser");
         options.SkipGroup("Planbestemmelser");
@@ -115,8 +113,10 @@ services.AddTransient<IRuleSetService, RuleSetService>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
 
 services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
+services.AddHttpClient<IXmlSchemaCacherHttpClient, XmlSchemaCacherHttpClient>();
 services.AddHttpClient<IJsonSchemaHttpClient, JsonSchemaHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
+services.AddHttpClient<ICodelistResolverHttpClient, CodelistResolverHttpClient>();
 services.AddHttpClient<IGmlApplicationSchemaRegistryHttpClient, GmlApplicationSchemaRegistryHttpClient>();
 
 services.AddHostedService<CacheService>();

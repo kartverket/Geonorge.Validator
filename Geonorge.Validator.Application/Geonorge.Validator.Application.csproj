@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.8" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.0.9" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
@@ -40,6 +40,30 @@
 	  <None Update="Rules\Assemblies\Reguleringsplanforslag.Rules.dll">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Rules\GenericGml\Translations\gml.kod.1.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>gml.kod.1.resx</DependentUpon>
+	  </Compile>
+	  <Compile Update="Rules\GenericGml\Translations\gml.xlink.1.Designer.cs">
+	    <DependentUpon>gml.xlink.1.resx</DependentUpon>
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Rules\GenericGml\Translations\gml.kod.1.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>gml.kod.1.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Rules\GenericGml\Translations\gml.xlink.1.resx">
+	    <LastGenOutput>gml.xlink.1.Designer.cs</LastGenOutput>
+	    <Generator>ResXFileCodeGenerator</Generator>
+	  </EmbeddedResource>
 	</ItemGroup>
 	
 </Project>

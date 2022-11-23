@@ -43,6 +43,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
         {
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
+            var xLinkElements = new List<XLinkElement>();
 
             try
             {
@@ -50,6 +51,19 @@ namespace Geonorge.Validator.XmlSchema.Validator
                 {
                     if (_messages.Count >= _maxMessageCount)
                         break;
+
+                    var schemaElement = reader.SchemaInfo.SchemaElement;
+
+                    if (reader.NodeType != XmlNodeType.Element || schemaElement == null)
+                        continue;
+
+                    if (HasXLink(reader))
+                    {
+                        var lineInfo = (IXmlLineInfo)reader;                        
+
+                        if (lineInfo.HasLineInfo())
+                            xLinkElements.Add(XLinkElement.Create(lineInfo.LineNumber, lineInfo.LinePosition, schemaElement));
+                    }
                 }
             }
             catch (XmlException exception)
@@ -68,7 +82,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             await EnrichValidationErrors(inputData);
 
-            return new XmlSchemaValidatorResult(_messages);
+            return new XmlSchemaValidatorResult(_messages, xLinkElements);
         }
 
         private async Task<XmlSchemaValidatorResult> ValidateAndExtractCodelistUris(
@@ -79,6 +93,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
             using var wrapper = new XmlReaderPathWrapper(reader);
 
             var codeListUris = new Dictionary<string, Uri>();
+            var xLinkElements = new List<XLinkElement>();
 
             try
             {
@@ -89,7 +104,18 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
                     var schemaElement = reader.SchemaInfo.SchemaElement;
 
-                    if (schemaElement == null || reader.NodeType != XmlNodeType.Element || codeListUris.ContainsKey(wrapper.Path))
+                    if (reader.NodeType != XmlNodeType.Element || schemaElement == null)
+                        continue;
+
+                    if (HasXLink(reader))
+                    {
+                        var lineInfo = (IXmlLineInfo)reader;
+
+                        if (lineInfo.HasLineInfo())
+                            xLinkElements.Add(XLinkElement.Create(lineInfo.LineNumber, lineInfo.LinePosition, schemaElement));
+                    }
+
+                    if (codeListUris.ContainsKey(wrapper.Path))
                         continue;
 
                     var selector = codelistSelectors.SingleOrDefault(selector => selector.QualifiedName == schemaElement.SchemaTypeName);
@@ -126,7 +152,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             await EnrichValidationErrors(inputData);
 
-            return new XmlSchemaValidatorResult(_messages, codeListUris);
+            return new XmlSchemaValidatorResult(_messages, codeListUris, xLinkElements);
         }
 
         private XmlReaderSettings GetXmlReaderSettings(XmlSchemaSet xmlSchemaSet)
@@ -188,12 +214,6 @@ namespace Geonorge.Validator.XmlSchema.Validator
             }
         }
 
-        private static XElement GetElementAtLine(XDocument document, int lineNumber)
-        {
-            return document.Descendants()
-                .SingleOrDefault(element => ((IXmlLineInfo)element).LineNumber == lineNumber);
-        }
-
         private static List<XmlSchemaCodelistSelector> GetRelevantCodelistSelectors(XDocument xsdDocument, IEnumerable<XmlSchemaCodelistSelector> codelistSelectors)
         {
             var documentElements = xsdDocument.Descendants();
@@ -209,6 +229,26 @@ namespace Geonorge.Validator.XmlSchema.Validator
                         .Any(element => element.Attribute("type")?.Value == type);
                 })
                 .ToList();
+        }
+
+        private static bool HasXLink(XmlReader reader)
+        {
+            if (!reader.HasAttributes)
+                return false;
+
+            for (var i = 0; i < reader.AttributeCount; i++)
+            {
+                reader.MoveToAttribute(i);
+
+                if (reader.Name == "xlink:href")
+                {
+                    reader.MoveToElement();
+                    return true;
+                }
+            }
+
+            reader.MoveToElement();
+            return false;
         }
     }
 }
