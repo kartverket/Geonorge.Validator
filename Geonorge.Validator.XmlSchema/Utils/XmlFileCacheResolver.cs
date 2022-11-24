@@ -27,7 +27,7 @@ namespace Geonorge.Validator.XmlSchema.Utils
             if (absoluteUri == null)
                 throw new ArgumentNullException(nameof(absoluteUri));
 
-            if (absoluteUri.Scheme == "http" && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
+            if ((absoluteUri.Scheme == "http" || absoluteUri.Scheme == "https") && (ofObjectToReturn == null || ofObjectToReturn == typeof(Stream)))
             {
                 var filePath = GetFilePath(absoluteUri);
 
