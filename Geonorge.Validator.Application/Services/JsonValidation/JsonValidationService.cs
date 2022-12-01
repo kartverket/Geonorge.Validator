@@ -66,7 +66,7 @@ namespace Geonorge.Validator.Application.Services.JsonValidation
             var rules = _validator.GetAllRules();
             rules.AddRange(await ValidateAsync(schema, submittal.InputData, submittal.SkipRules));
 
-            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, null, startTime);
+            var report = ValidationReport.Create(ContextCorrelator.GetValue("CorrelationId"), rules, submittal.InputData, new List<string>(), startTime);
             submittal.InputData.Dispose();
 
             return report;

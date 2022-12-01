@@ -16,12 +16,14 @@ namespace Geonorge.Validator.XmlSchema.Validator
 {
     internal class Validation
     {
+        private readonly string _cacheFilesPath;
         private readonly int _maxMessageCount;
         private readonly List<XmlSchemaValidationError> _messages;
         private bool _readingFailed = false;
 
-        public Validation(int maxMessageCount = 1000)
+        public Validation(string cacheFilesPath, int maxMessageCount = 1000)
         {
+            _cacheFilesPath = cacheFilesPath;
             _maxMessageCount = maxMessageCount;
             _messages = new(maxMessageCount);
         }
@@ -30,11 +32,11 @@ namespace Geonorge.Validator.XmlSchema.Validator
             InputData inputData, XmlSchemaSet xmlSchemaSet, Stream xmlSchemaStream, IEnumerable<XmlSchemaCodelistSelector> codelistSelectors)
         {
             var xmlReaderSettings = GetXmlReaderSettings(xmlSchemaSet);
-            var xsdDocument = await LoadXDocumentAsync(xmlSchemaStream, LoadOptions.SetLineInfo);
-            var relevantCodelistSelectors = GetRelevantCodelistSelectors(xsdDocument, codelistSelectors);
+            var mainXsdDocument = await LoadXDocumentAsync(xmlSchemaStream, LoadOptions.SetLineInfo);
+            var relevantCodelistSelectors = GetRelevantCodelistSelectors(mainXsdDocument, codelistSelectors);
 
             if (relevantCodelistSelectors.Any())
-                return await ValidateAndExtractCodelistUris(inputData, xmlReaderSettings, xsdDocument, relevantCodelistSelectors);
+                return await ValidateAndExtractCodelistUris(inputData, xmlReaderSettings, mainXsdDocument, relevantCodelistSelectors);
 
             return await Validate(inputData, xmlReaderSettings);
         }
@@ -86,7 +88,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
         }
 
         private async Task<XmlSchemaValidatorResult> ValidateAndExtractCodelistUris(
-            InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument xsdDocument, List<XmlSchemaCodelistSelector> codelistSelectors)
+            InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument mainXsdDocument, List<XmlSchemaCodelistSelector> codelistSelectors)
         {
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
@@ -94,6 +96,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             var codeListUris = new Dictionary<string, Uri>();
             var xLinkElements = new List<XLinkElement>();
+            var xsdDocuments = new Dictionary<string, XDocument>();
 
             try
             {
@@ -123,6 +126,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
                     if (selector == null)
                         continue;
 
+                    var xsdDocument = await GetXsdDocument(schemaElement, xsdDocuments) ?? mainXsdDocument;
                     var element = GetElementAtLine(xsdDocument, schemaElement.LineNumber);
 
                     if (element == null)
@@ -249,6 +253,41 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             reader.MoveToElement();
             return false;
+        }
+
+        private async Task<XDocument> GetXsdDocument(
+            XmlSchemaElement schemaElement, Dictionary<string, XDocument> xsdDocuments)
+        {
+            if (schemaElement.SourceUri == "")
+                return null;
+
+            if (xsdDocuments.ContainsKey(schemaElement.SourceUri))
+                return xsdDocuments[schemaElement.SourceUri];
+
+            if (!Uri.TryCreate(schemaElement.SourceUri, UriKind.Absolute, out var uri))
+                return null;
+
+            var filePath = GetFilePath(uri);
+
+            if (!File.Exists(filePath))
+                return null;
+
+            try
+            {
+                var xsdDocument = await LoadXDocumentAsync(File.OpenRead(filePath), LoadOptions.SetLineInfo);
+                xsdDocuments.Add(schemaElement.SourceUri, xsdDocument);
+
+                return xsdDocument;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private string GetFilePath(Uri uri)
+        {
+            return Path.GetFullPath(Path.Combine(_cacheFilesPath, uri.Host + uri.LocalPath));
         }
     }
 }

@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Wmhelp.XPath2;
@@ -25,6 +26,9 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             Formatting = Formatting.Indented,
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
+
+        private static readonly Regex _xPathRegex =
+            new(@"^\*\:FeatureCollection\/\*\:(featureMember|featureMembers|member)\/(?<rest_path>.*)$", RegexOptions.Compiled);
 
         private readonly HttpClient _httpClient;
         private readonly CodelistSettings _settings;
@@ -93,6 +97,9 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 foreach (var fullXPath in uriAndXPaths)
                 {
                     var (featureMemberName, xPath) = GetFeatureMemberNameWithXPathFromXPath(fullXPath);
+
+                    if (featureMemberName == default)
+                        continue;
 
                     var gmlCodeSpace = gmlCodeSpaces
                         .SingleOrDefault(gmlCodeSpace => gmlCodeSpace.FeatureMemberName == featureMemberName);
@@ -296,9 +303,12 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
 
         private static (string FeatureMemberName, string XPath) GetFeatureMemberNameWithXPathFromXPath(string xPath)
         {
-            const string featureMemberPath = "*:FeatureCollection/*:featureMember/";
+            var match = _xPathRegex.Match(xPath);
 
-            var restPath = xPath[featureMemberPath.Length..];
+            if (!match.Success)
+                return default;
+
+            var restPath = match.Groups["rest_path"].Value;
             var elementNames = restPath.Split("/");
             var featureMemberName = elementNames[0].TrimStart("*:".ToCharArray());
             var elementPath = string.Join("/", elementNames.Skip(1));

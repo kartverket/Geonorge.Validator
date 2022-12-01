@@ -1,6 +1,5 @@
 ﻿using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.XmlSchema.Config;
-using Geonorge.Validator.XmlSchema.Exceptions;
 using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
 using System;
@@ -27,7 +26,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
         {
             try
             {
-                var validation = new Validation(_settings.MaxMessageCount);
+                var validation = new Validation(_settings.CacheFilesPath, _settings.MaxMessageCount);
                 var codelistSelectors = !_settings.IgnoredNamespaces.Any(ignoredNs => xmlNamespaces.Contains(ignoredNs)) ?
                     _settings.CodelistSelectors :
                     new();
