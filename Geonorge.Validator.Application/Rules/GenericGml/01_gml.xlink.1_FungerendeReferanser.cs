@@ -35,14 +35,16 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             if (!xLinkResolver.XLinkElements.TryGetValue(document.FileName, out var xLinkElements))
                 return;
 
-            foreach (var xLinkElement in xLinkElements)
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+
+            await Parallel.ForEachAsync(xLinkElements, parallelOptions, async (xLinkElement, token) =>
             {
                 if (xLinkElement.Type == XLinkType.Object)
                 {
                     var element = GetElementAtLine(document.Document, xLinkElement.LineNumber, xLinkElement.LinePosition);
 
                     if (element == null)
-                        continue;
+                        return;
 
                     var xLink = element.Attribute(Namespace.XLinkNs + "href")?.Value.Split("#");
 
@@ -55,7 +57,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                             new[] { GmlHelper.GetFeatureGmlId(element) }
                         );
 
-                        continue;
+                        return;
                     }
 
                     var fileName = string.IsNullOrWhiteSpace(xLink[0]) ? document.FileName : xLink[0];
@@ -71,7 +73,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                             new[] { GmlHelper.GetFeatureGmlId(element) }
                         );
 
-                        continue;
+                        return;
                     }
 
                     var validationResult = xLinkResolver.Validate(xLinkElement, element, refElement);
@@ -91,13 +93,13 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                     var element = GetElementAtLine(document.Document, xLinkElement.LineNumber, xLinkElement.LinePosition);
 
                     if (element == null)
-                        continue;
+                        return;
 
                     var uri = element.Attribute(Namespace.XLinkNs + "href").Value;
                     var resolverResult = await xLinkResolver.CodelistResolver(uri);
 
                     if (resolverResult.ResolverStatus == CodelistResolverStatus.ValueFound)
-                        continue;
+                        return;
 
                     this.AddMessage(
                         GetCodelistErrorMessage(resolverResult),
@@ -106,7 +108,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                         new[] { GmlHelper.GetFeatureGmlId(element) }
                     );
                 }
-            }
+            });
         }
 
         private string GetCodelistErrorMessage(CodelistResolverResult resolverResult)

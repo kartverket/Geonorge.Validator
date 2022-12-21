@@ -33,7 +33,7 @@ namespace Geonorge.Validator.Controllers
         {
             try
             {
-                var submittal = await _multipartRequestService.GetFilesFromMultipart();
+                var submittal = await _multipartRequestService.GetFilesFromMultipartAsync();
                 
                 if (!submittal.IsValid)
                     return BadRequest();

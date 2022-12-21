@@ -1,5 +1,4 @@
 ﻿using DiBK.RuleValidator;
-using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
@@ -19,7 +18,6 @@ using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -36,7 +34,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
 
         private readonly IRuleValidator _ruleValidator;
         private readonly IMultipartRequestService _multipartRequestService;
-        private readonly IXmlSchemaHttpClient _xsdHttpClient;
+        private readonly IXmlSchemaHttpClient _xmlSchemaHttpClient;
         private readonly IJsonSchemaHttpClient _jsonSchemaHttpClient;
         private readonly IOptions<ValidatorOptions> _validatorOptions;
         private readonly RuleInfoOptions _ruleInfoOptions;
@@ -53,7 +51,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
         {
             _ruleValidator = ruleValidator;
             _multipartRequestService = multipartRequestService;
-            _xsdHttpClient = xsdHttpClient;
+            _xmlSchemaHttpClient = xsdHttpClient;
             _jsonSchemaHttpClient = jsonSchemaHttpClient;
             _xsdCacheFilesPath = xsdValidatorOptions.Value.CacheFilesPath;
             _validatorOptions = validatorOptions;
@@ -67,7 +65,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 .ToList();
 
             var jsonSchemaRule = GetJsonSchemaRule();
-            var xsdRuleSet = CreateRuleSetForSchemaRules(new Rule[] { GetXsdRule(), GetJsonSchemaRule() });
+            var xsdRuleSet = CreateRuleSetForSchemaRules(new Rule[] { GetXmlSchemaRule(), GetJsonSchemaRule() });
 
             if (xsdRuleSet != null)
                 ruleSets.Insert(0, xsdRuleSet);
@@ -77,7 +75,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
 
         public async Task<List<RuleSet>> GetRuleSetsForDataset()
         {
-            var submittal = await _multipartRequestService.GetFilesFromMultipart();
+            var submittal = await _multipartRequestService.GetFilesFromMultipartAsync();
 
             if (!submittal.IsValid)
                 throw new MultipartRequestException("Datasettet inneholder ugyldige filer.");
@@ -92,8 +90,8 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
 
         private async Task<List<RuleSet>> GetRuleSetsForXml(Submittal submittal)
         {
-            var xsdData = await GetXsdDataAsync(submittal.InputData, submittal.Schema);
-            var xmlMetadata = await XmlMetadata.CreateAsync(submittal.InputData.First().Stream, xsdData.Streams);
+            var xmlSchemaData = await GetXmlSchemaDataAsync(submittal);
+            var xmlMetadata = await XmlMetadata.CreateAsync(submittal.InputData.First().Stream, xmlSchemaData.Streams);
             var validators = GetValidators(xmlMetadata);
             var ruleSets = new List<RuleSet>();
 
@@ -124,10 +122,10 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 ruleSets.Add(CreateRuleSet(gmlV2RuleInfo));
             }
 
-            var xsdRuleSet = CreateRuleSetForSchemaRules(new[] { GetXsdRule() });
+            var xmlSchemaRuleSet = CreateRuleSetForSchemaRules(new[] { GetXmlSchemaRule() });
 
-            if (xsdRuleSet != null)
-                ruleSets.Insert(0, xsdRuleSet);
+            if (xmlSchemaRuleSet != null)
+                ruleSets.Insert(0, xmlSchemaRuleSet);
 
             return ruleSets;
         }
@@ -152,15 +150,27 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             return ruleSets;
         }
 
-        private async Task<XmlSchemaData> GetXsdDataAsync(DisposableList<InputData> inputData, Stream schema)
+        private async Task<XmlSchemaData> GetXmlSchemaDataAsync(Submittal submittal)
         {
-            if (schema == null)
-                return await _xsdHttpClient.GetXmlSchemaFromInputDataAsync(inputData);
+            if (submittal.SchemaUri != null)
+            {
+                var stream = await _xmlSchemaHttpClient.FetchXmlSchemaAsync(submittal.SchemaUri);
+                var xmlSchemaData = new XmlSchemaData();
+                xmlSchemaData.Streams.Add(stream);
 
-            var xsdData = new XmlSchemaData();
-            xsdData.Streams.Add(schema);
+                return xmlSchemaData;
+            }
+            else if (submittal.Schema != null)
+            {
+                var xmlSchemaData = new XmlSchemaData();
+                xmlSchemaData.Streams.Add(submittal.Schema);
 
-            return xsdData;
+                return xmlSchemaData;
+            }
+            else
+            {
+                return await _xmlSchemaHttpClient.GetXmlSchemaFromInputDataAsync(submittal.InputData);
+            }
         }
 
         private RuleSet CreateRuleSet(RuleInformation ruleInfo)
@@ -223,7 +233,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 .FirstOrDefault();
         }
 
-        private static XmlSchemaRule GetXsdRule()
+        private static XmlSchemaRule GetXmlSchemaRule()
         {
             return _schemaRuleAssembly.GetTypes()
                 .Where(type => type.IsSubclassOf(typeof(XmlSchemaRule)) &&

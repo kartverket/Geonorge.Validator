@@ -25,7 +25,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<Submittal> GetFilesFromMultipart()
+        public async Task<Submittal> GetFilesFromMultipartAsync()
         {
             var request = _httpContextAccessor.HttpContext.Request;
             var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
