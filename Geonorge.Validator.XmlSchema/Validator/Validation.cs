@@ -3,6 +3,7 @@ using Geonorge.Validator.XmlSchema.Models;
 using Geonorge.Validator.XmlSchema.Translator;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using static Geonorge.Validator.Common.Helpers.FileHelper;
 using static Geonorge.Validator.Common.Helpers.XmlHelper;
+using Wmhelp.XPath2;
 
 namespace Geonorge.Validator.XmlSchema.Validator
 {
@@ -87,9 +89,32 @@ namespace Geonorge.Validator.XmlSchema.Validator
             return new XmlSchemaValidatorResult(_messages, xLinkElements);
         }
 
-        private async Task<XmlSchemaValidatorResult> ValidateAndExtractCodelistUris(
-            InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument mainXsdDocument, List<XmlSchemaCodelistSelector> codelistSelectors)
+        public class SameXmlSchemaElement : EqualityComparer<XmlSchemaElement>
         {
+            public override bool Equals(XmlSchemaElement x, XmlSchemaElement y)
+            {
+                if (x == null && y == null)
+                    return true;
+                else if (x == null || y == null)
+                    return false;
+
+                return x.LineNumber == y.LineNumber &&
+                    x.LinePosition == y.LinePosition &&
+                    x.SourceUri == y.SourceUri;
+            }
+
+            public override int GetHashCode([DisallowNull] XmlSchemaElement obj)
+            {
+                var b = $"{obj.LineNumber}-{obj.LinePosition}-{obj.SourceUri}";
+                return b.GetHashCode();
+            }
+        }
+
+        private async Task<XmlSchemaValidatorResult> ValidateAndExtractCodelistUris(
+             InputData inputData, XmlReaderSettings xmlReaderSettings, XDocument mainXsdDocument, List<XmlSchemaCodelistSelector> codelistSelectors)
+        {
+            var s = DateTime.Now;
+
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
             using var wrapper = new XmlReaderPathWrapper(reader);
@@ -97,6 +122,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
             var codeListUris = new Dictionary<string, Uri>();
             var xLinkElements = new List<XLinkElement>();
             var xsdDocuments = new Dictionary<string, XDocument>();
+            var schemaElements = new HashSet<XmlSchemaElement>();
 
             try
             {
@@ -110,7 +136,9 @@ namespace Geonorge.Validator.XmlSchema.Validator
                     if (reader.NodeType != XmlNodeType.Element || schemaElement == null)
                         continue;
 
-                    if (HasXLink(reader))
+                    schemaElements.Add(schemaElement);
+
+                    /*if (HasXLink(reader))
                     {
                         var lineInfo = (IXmlLineInfo)reader;
 
@@ -137,7 +165,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
                     if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
                         continue;
 
-                    codeListUris.Add(wrapper.Path, uri);
+                    codeListUris.Add(wrapper.Path, uri);*/
                 }
             }
             catch (XmlException exception)
@@ -153,6 +181,95 @@ namespace Geonorge.Validator.XmlSchema.Validator
                 _messages.Add(message);
                 _readingFailed = true;
             }
+
+            /*memoryStream.Position = 0;
+            var doc = XDocument.Load(memoryStream, LoadOptions.SetLineInfo);
+
+            var featureMembers = doc.XPath2SelectElements("//*:member/*").ToList();*/
+            var qName = new XmlQualifiedName("CodeType", "http://www.opengis.net/gml/3.2");
+
+            var info = new List<(XName, Uri)>();
+            var codeElements = schemaElements
+                .Where(ele => ele.SchemaTypeName.Equals(qName))
+                .GroupBy(el => el.QualifiedName)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.ToList());
+
+            var selector = codelistSelectors.SingleOrDefault(selector => selector.QualifiedName.Equals(qName));
+
+            foreach (var (qualName, elements) in codeElements)
+            {
+                XNamespace xNs = qualName.Namespace;
+                XName xName = xNs + qualName.Name;
+
+                var uriStrings = new HashSet<string>();
+
+                foreach (var element in elements)
+                {
+                    var xsdDocument = await GetXsdDocument(element, xsdDocuments) ?? mainXsdDocument;
+                    var el = GetElementAtLine(xsdDocument, element.LineNumber);
+
+                    if (el == null)
+                        continue;
+
+                    var uriString = selector.UriResolver.Invoke(el);
+
+                    uriStrings.Add(uriString);
+                }
+
+                var uri = uriStrings
+                    .Where(uriString => uriString != null)
+                    .FirstOrDefault();
+
+                if (uri != null && Uri.TryCreate(uri, UriKind.Absolute, out var uri2))
+                    info.Add((xName, uri2));
+
+            }
+
+            /*foreach (var element in codeElements)
+            {
+                var qn = element.QualifiedName;
+                XNamespace xNs = qn.Namespace;
+                XName xName = xNs + qn.Name;
+
+                var xsdDocument = await GetXsdDocument(element, xsdDocuments) ?? mainXsdDocument;
+                var el = GetElementAtLine(xsdDocument, element.LineNumber);
+
+                if (el == null)
+                    continue;
+
+                
+                var uriString = selector.UriResolver.Invoke(el);
+
+                info.Add((xName, uriString));
+            }
+            /*
+            var codes = schemaElements.Where(ele => ele.SchemaTypeName == qName)
+                .Select(ele =>
+                {
+                    var qn = ele.QualifiedName;
+                    XNamespace xNs = qn.Namespace;
+                    XName xName = xNs + qn.Name;
+
+
+                    return xName;
+                })
+                .ToList();
+
+            var a = featureMembers.Descendants().Where(element => codes.Any(name => name.Equals(element.Name))).ToList();
+            */
+
+            var e = DateTime.Now.Subtract(s).TotalSeconds;
+
+            memoryStream.Position = 0;
+            var doc = XDocument.Load(memoryStream, LoadOptions.SetLineInfo);
+
+            var s1 = DateTime.Now;
+
+            var featureMembers = doc.Root.Descendants()
+                .Where(element => info.Any(kvp => kvp.Item1.Equals(element.Name)))
+                .ToList();
+
+            var e1 = DateTime.Now.Subtract(s1).TotalSeconds;
 
             await EnrichValidationErrors(inputData);
 
