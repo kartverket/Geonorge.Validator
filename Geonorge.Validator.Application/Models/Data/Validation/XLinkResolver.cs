@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Schema;
+using CodeList = Geonorge.Validator.Application.Models.Data.Codelist.Codelist;
 
 namespace Geonorge.Validator.Application.Models.Data.Validation
 {
@@ -16,19 +17,23 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
             new(@"^.*?invalid child element '(?<childElement>[^ ]*)' in namespace '(?<childNs>[^ ]*)'.( List of possible elements expected: '(?<posElements>.*?)' in namespace '(?<posNs>.*?)')*( as well as '(?<otherElements>.*?)' in namespace '(?<otherNs>.*?)')*", RegexOptions.Compiled);
 
         public XLinkResolver(
-            Dictionary<string, List<XLinkElement>> xLinkElements, 
-            XmlSchemaSet xmlSchemaSet, 
-            Func<string, Task<CodelistResolverResult>> codelistResolver)
+            //Dictionary<string, List<XLinkElement>> xLinkElements,
+            HashSet<XmlSchemaElement> xmlSchemaElements,
+            XmlSchemaSet xmlSchemaSet,
+            Func<Uri, Task<CodeList>> resolveCodelist)
         {
-            XLinkElements = xLinkElements;
+            //XLinkElements = xLinkElements;
+            XmlSchemaElements = xmlSchemaElements;
             XmlSchemaSet = xmlSchemaSet;
-            CodelistResolver = codelistResolver;
+            ResolveCodelist = resolveCodelist;
         }
 
-        public Dictionary<string, List<XLinkElement>> XLinkElements { get; } = new();
+        //public Dictionary<string, List<XLinkElement>> XLinkElements { get; } = new();
+        public HashSet<XmlSchemaElement> XmlSchemaElements { get; } = new();
         public XmlSchemaSet XmlSchemaSet { get; }
-        public Func<string, Task<CodelistResolverResult>> CodelistResolver { get; }
-        public bool HasXLinks => XLinkElements.Any();
+        //public Func<string, Task<CodelistResolverResult>> CodelistResolver { get; }
+        public Func<Uri, Task<CodeList>> ResolveCodelist { get; }
+        //public bool HasXLinks => XLinkElements.Any();
 
         public (string RefElement, string ValidElements) Validate(XLinkElement xLinkElement, XElement element, XElement refElement)
         {

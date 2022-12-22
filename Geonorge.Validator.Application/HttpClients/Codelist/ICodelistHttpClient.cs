@@ -3,6 +3,7 @@ using Geonorge.Validator.Application.Models.Data.Codelist;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CodeList = Geonorge.Validator.Application.Models.Data.Codelist.Codelist;
 
 namespace Geonorge.Validator.Application.HttpClients.Codelist
 {
@@ -10,7 +11,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
     {
         Task<List<CodeSpace>> GetCodeSpacesAsync(Dictionary<string, Uri> codelistUris);
         Task<List<GmlCodeSpace>> GetGmlCodeSpacesAsync(Dictionary<string, Uri> codelistUris);
-        Task<List<CodelistItem>> GetCodelistAsync(Uri uri);
+        Task<CodeList> GetCodelistAsync(Uri uri);
         Task<int> UpdateCacheAsync();
     }
 }

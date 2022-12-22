@@ -85,7 +85,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
                 gmlValidationInputV1.Surfaces, 
                 gmlValidationInputV1.Solids,
                 null,
-                null
+                new XLinkResolver(xmlSchemaElements, xmlSchemaSet, uri => _codelistHttpClient.GetCodelistAsync(uri))
             );
 
             await _notificationService.SendAsync("Validerer");

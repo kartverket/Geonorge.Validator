@@ -56,6 +56,8 @@ services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
+services.AddMemoryCache();
+
 services.AddSignalR();
 
 services.AddSwaggerGen(options =>
@@ -105,6 +107,9 @@ services.AddXmlSchemaValidator(configuration, options =>
                 .Markup
                 .SingleOrDefault(node => node.LocalName == "defaultCodeSpace")?
                 .InnerText;
+
+            if (uriString == null)
+                return null;
 
             return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
         }

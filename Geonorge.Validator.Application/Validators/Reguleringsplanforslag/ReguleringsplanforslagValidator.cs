@@ -97,9 +97,9 @@ namespace Geonorge.Validator.Application.Validators.Reguleringsplanforslag
         {
             return new Kodelister
             {
-                Arealformål = await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Arealformål),
-                Feltnavn = await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Feltnavn),
-                Hensynskategori = await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Hensynskategori)
+                Arealformål = null, //await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Arealformål),
+                Feltnavn = null, //await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Feltnavn),
+                Hensynskategori = null // await _codelistHttpClient.GetCodelistAsync(_codelistSettings.Static.Hensynskategori)
             };
         }
     }
