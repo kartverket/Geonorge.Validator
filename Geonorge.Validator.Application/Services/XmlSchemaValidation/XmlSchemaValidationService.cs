@@ -9,10 +9,15 @@ using Geonorge.Validator.XmlSchema.Validator;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
 using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
+using Xsd = System.Xml.Schema.XmlSchema;
 
 namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 {
@@ -34,16 +39,15 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 
         public async Task<XmlSchemaValidationResult> ValidateAsync(
             DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
-        {
+        {            
             var xmlSchemaRule = GetXmlSchemaRule();
             var xmlSchemaSet = CreateXmlSchemaSet(xmlSchemaData, _settings);
+            var xmlSchemaElements = new HashSet<XmlSchemaElement>();
             var startTime = DateTime.Now;
-            var codelistUris = new Dictionary<string, Uri>();
-            var xLinkElements = new Dictionary<string, List<XLinkElement>>();
 
             foreach (var data in inputData)
             {
-                var result = await _xmlSchemaValidator.ValidateAsync(data, xmlSchemaSet, xmlSchemaData, xmlNamespaces);
+                var result = await _xmlSchemaValidator.ValidateAsync(data, xmlSchemaSet);
 
                 data.IsValid = !result.Messages.Any();
                 data.Stream.Position = 0;
@@ -70,15 +74,14 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
                     .ToList()
                     .ForEach(xmlSchemaRule.AddMessage);
 
-                codelistUris.Append(result.CodelistUris);
-                xLinkElements.Add(data.FileName, result.XLinkElements);
+                xmlSchemaElements.UnionWith(result.SchemaElements);
             }
 
             xmlSchemaRule.Status = !xmlSchemaRule.Messages.Any() ? Status.PASSED : Status.FAILED;
 
             LogInformation(xmlSchemaRule, startTime);
 
-            return new XmlSchemaValidationResult(xmlSchemaRule, codelistUris, xLinkElements, xmlSchemaSet);
+            return new XmlSchemaValidationResult(xmlSchemaRule, xmlSchemaElements, xmlSchemaSet);
         }
 
         private void LogInformation(XmlSchemaRule xmlSchemaRule, DateTime startTime)

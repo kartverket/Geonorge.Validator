@@ -99,8 +99,7 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
 
             return await genericGmlValidator.Validate(
                 inputData, 
-                xmlSchemaValidationResult.CodelistUris, 
-                xmlSchemaValidationResult.XLinkElements, 
+                xmlSchemaValidationResult.XmlSchemaElements,
                 xmlSchemaValidationResult.XmlSchemaSet, 
                 skipRules
             );

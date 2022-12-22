@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Xml.Schema;
 
 namespace Geonorge.Validator.XmlSchema.Config
 {
@@ -15,7 +16,7 @@ namespace Geonorge.Validator.XmlSchema.Config
         public List<XmlSchemaCodelistSelector> CodelistSelectors { get; } = new();
         public HashSet<string> IgnoredNamespaces { get; } = new();
 
-        public void AddCodelistSelector(XName elementName, Func<XElement, string> uriResolver)
+        public void AddCodelistSelector(XName elementName, Func<XmlSchemaElement, Uri> uriResolver)
         {
             CodelistSelectors.Add(new XmlSchemaCodelistSelector(elementName, uriResolver));
         }

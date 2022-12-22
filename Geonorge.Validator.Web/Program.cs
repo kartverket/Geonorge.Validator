@@ -33,6 +33,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Schema;
 using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -95,7 +96,18 @@ services.AddXmlSchemaValidator(configuration, options =>
 {
     options.AddCodelistSelector(
         GmlNs + "CodeType",       
-        element => element.Descendants(GmlNs + "defaultCodeSpace").SingleOrDefault()?.Value
+        element =>
+        {
+            var uriString = element.Annotation?
+                .Items
+                .OfType<XmlSchemaAppInfo>()
+                .SingleOrDefault()?
+                .Markup
+                .SingleOrDefault(node => node.LocalName == "defaultCodeSpace")?
+                .InnerText;
+
+            return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
+        }
     );
 });
 

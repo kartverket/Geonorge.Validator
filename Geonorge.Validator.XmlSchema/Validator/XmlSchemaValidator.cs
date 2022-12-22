@@ -4,7 +4,6 @@ using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using XmlSchemaValidationException = Geonorge.Validator.XmlSchema.Exceptions.XmlSchemaValidationException;
@@ -22,16 +21,13 @@ namespace Geonorge.Validator.XmlSchema.Validator
         }
 
         public async Task<XmlSchemaValidatorResult> ValidateAsync(
-            InputData inputData, XmlSchemaSet xmlSchemaSet, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
+            InputData inputData, XmlSchemaSet xmlSchemaSet)
         {
             try
             {
                 var validation = new Validation(_settings.CacheFilesPath, _settings.MaxMessageCount);
-                var codelistSelectors = !_settings.IgnoredNamespaces.Any(ignoredNs => xmlNamespaces.Contains(ignoredNs)) ?
-                    _settings.CodelistSelectors :
-                    new();
 
-                return await validation.Validate(inputData, xmlSchemaSet, xmlSchemaData.Streams[0], codelistSelectors);
+                return await validation.Validate(inputData, xmlSchemaSet);
             }
             catch (Exception exception)
             {

@@ -31,6 +31,8 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
             await DownloadSchemasAsync(uri, downloaded);
 
             UpdateSchemaLocations(downloaded);
+
+
         }
 
         public async Task<int> UpdateCacheAsync()
