@@ -50,7 +50,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             var gmlValidationInputV1 = await GetGmlValidationInputV1(inputData);
             //var codeSpaces = await _codelistHttpClient.GetGmlCodeSpacesAsync(codelistUris);
 
-            var codeElements = xmlSchemaElements
+            /*var codeElements = xmlSchemaElements
                 .Where(element => _settings.CodelistSelectors.Any(selector => selector.QualifiedName.Equals(element.SchemaTypeName)))
                 .GroupBy(element => element.QualifiedName)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.ToList());
@@ -78,7 +78,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
 
                 if (uri != null)
                     codeListDict.Add(name, uri);
-            }
+            }*/
 
 
             var gmlValidationInputV2 = GmlValidationInputV2.Create(

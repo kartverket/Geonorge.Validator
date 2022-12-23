@@ -3,9 +3,14 @@ using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Extensions.Gml;
 using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
+using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
@@ -16,43 +21,105 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             Id = "gml.kod.1";
         }
 
-        protected override void Validate(IGmlValidationInputV2 data)
+        protected override async Task ValidateAsync(IGmlValidationInputV2 data)
         {
-            if (!data.CodeSpaces.Any() || !data.Surfaces.Any() && !data.Solids.Any())
+            var s = DateTime.Now;
+
+            if (!data.Surfaces.Any() && !data.Solids.Any())
                 SkipRule();
 
-            data.Surfaces.Concat(data.Solids).ToList().ForEach(document => Validate(document, data.CodeSpaces));
+            var codelists = await GetCodelist(data.XLinkResolver.XmlSchemaElements, data.XLinkResolver.ResolveCodelist);
+
+            if (!codelists.Any())
+                SkipRule();
+
+            var documents = data.Surfaces.Concat(data.Solids);
+
+            foreach (var document in documents)
+                Validate(document, codelists);
         }
 
-        private void Validate(GmlDocument document, List<GmlCodeSpace> gmlCodeSpaces)
+        private void Validate(GmlDocument document, Dictionary<XName, Codelist> codelists)
         {
-            foreach (var gmlCodeSpace in gmlCodeSpaces)
+            var codelistElements = document.Document.Descendants()
+                .Where(element => codelists.ContainsKey(element.Name))
+                .ToList();
+
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+
+            Parallel.ForEach(codelistElements, parallelOptions, element =>
             {
-                var featureElements = document.GetFeatureElements(gmlCodeSpace.FeatureMemberName);
-
-                Parallel.ForEach(featureElements, element =>
+                var code = element.Value;
+                
+                if (codelists.TryGetValue(element.Name, out var codelist) && !codelist.Items.Any(codelistValue => codelistValue.Value == code))
                 {
-                    foreach (var codeSpace in gmlCodeSpace.CodeSpaces)
-                    {
-                        var codeElement = element.GetElement(codeSpace.XPath);
-
-                        if (codeElement == null)
-                            continue;
-
-                        var code = codeElement.Value;
-
-                        if (!codeSpace.Codelist.Any(codelistValue => codelistValue.Value == code))
-                        {
-                            this.AddMessage(
-                                Translate("Message", code, codeSpace.Url),
-                                document.FileName,
-                                new[] { codeElement.GetXPath() },
-                                new[] { element.GetAttribute("gml:id") }
-                            );
-                        }
-                    }
-                });
-            }
+                    this.AddMessage(
+                        Translate("Message", code, codelist.Uri.AbsoluteUri),
+                        document.FileName,
+                        new[] { element.GetXPath() },
+                        new[] { GmlHelper.GetFeatureGmlId(element) }
+                    );
+                }
+            });
         }
+
+        private static async Task<Dictionary<XName, Codelist>> GetCodelist(
+            HashSet<XmlSchemaElement> xmlSchemaElements, Func<Uri, Task<Codelist>> resolveCodelist)
+        {
+            var codeElements = xmlSchemaElements
+                .Where(element => _codelistSelectors.ContainsKey(element.SchemaTypeName))
+                .GroupBy(element => element.QualifiedName)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.ToList());
+
+            var codeListDict = new Dictionary<XName, Codelist>();
+
+            foreach (var (qualifiedName, elements) in codeElements)
+            {
+                XNamespace ns = qualifiedName.Namespace;
+                XName name = ns + qualifiedName.Name;
+
+                var uris = new HashSet<Uri>();
+
+                foreach (var element in elements)
+                {
+                    if (_codelistSelectors.TryGetValue(element.SchemaTypeName, out var resolveUri))
+                        uris.Add(resolveUri(element));
+                }
+
+                var uri = uris
+                    .Where(uri => uri != null)
+                    .FirstOrDefault();                
+
+                if (uri != null)
+                {
+                    var codelist = await resolveCodelist(uri);
+                    codeListDict.Add(name, codelist);
+                }
+            }
+
+            return codeListDict;
+        }
+
+        private static readonly Dictionary<XmlQualifiedName, Func<XmlSchemaElement, Uri>> _codelistSelectors = new()
+        {
+            {
+                new XmlQualifiedName("CodeType", GmlNs.NamespaceName),
+                element =>
+                {
+                    var uriString = element.Annotation?
+                        .Items
+                        .OfType<XmlSchemaAppInfo>()
+                        .SingleOrDefault()?
+                        .Markup
+                        .SingleOrDefault(node => node.LocalName == "defaultCodeSpace")?
+                        .InnerText;
+
+                    if (uriString == null)
+                        return null;
+
+                    return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
+                }
+            }
+        };
     }
 }
