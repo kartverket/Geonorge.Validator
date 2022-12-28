@@ -48,15 +48,45 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             Parallel.ForEach(codelistElements, parallelOptions, element =>
             {
                 var code = element.Value;
-                
-                if (codelists.TryGetValue(element.Name, out var codelist) && !codelist.Items.Any(codelistValue => codelistValue.Value == code))
+
+                if (codelists.TryGetValue(element.Name, out var codelist))
                 {
-                    this.AddMessage(
-                        Translate("Message", code, codelist.Uri.AbsoluteUri),
-                        document.FileName,
-                        new[] { element.GetXPath() },
-                        new[] { GmlHelper.GetFeatureGmlId(element) }
-                    );
+                    if (codelist.Status == CodelistStatus.CodelistNotFound)
+                    {
+                        this.AddMessage(
+                            Translate("Message1", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
+                    else if (codelist.Status == CodelistStatus.CodelistUnavailable)
+                    {
+                        this.AddMessage(
+                            Translate("Message2", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
+                    else if (codelist.Status == CodelistStatus.InvalidCodelist)
+                    {
+                        this.AddMessage(
+                            Translate("Message3", codelist.Uri.AbsoluteUri),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
+                    else if (!codelist.Items.Any(codelistValue => codelistValue.Value == code))
+                    {
+                        this.AddMessage(
+                            Translate("Message4", code, codelist.Uri.AbsoluteUri),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
                 }
             });
         }
@@ -86,7 +116,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
 
                 var uri = uris
                     .Where(uri => uri != null)
-                    .FirstOrDefault();                
+                    .FirstOrDefault();
 
                 if (uri != null)
                 {

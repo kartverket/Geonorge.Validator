@@ -61,11 +61,38 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Kunne ikke finne kodelisten &apos;{0}&apos; ({1})..
+        /// </summary>
+        internal static string Message1 {
+            get {
+                return ResourceManager.GetString("Message1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kodelisten &apos;{0}&apos; er utilgjengelig ({1})..
+        /// </summary>
+        internal static string Message2 {
+            get {
+                return ResourceManager.GetString("Message2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ressursen &apos;{0}&apos; er en ugyldig kodeliste..
+        /// </summary>
+        internal static string Message3 {
+            get {
+                return ResourceManager.GetString("Message3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Kodeverdien &apos;{0}&apos; er ikke i henhold til kodelisten &apos;{1}&apos;..
         /// </summary>
-        internal static string Message {
+        internal static string Message4 {
             get {
-                return ResourceManager.GetString("Message", resourceCulture);
+                return ResourceManager.GetString("Message4", resourceCulture);
             }
         }
         
