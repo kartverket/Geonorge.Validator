@@ -14,14 +14,12 @@ namespace Geonorge.Validator.XmlSchema.Validator
 {
     internal class Validation
     {
-        private readonly string _cacheFilesPath;
         private readonly int _maxMessageCount;
         private readonly List<XmlSchemaValidationError> _messages;
         private bool _readingFailed = false;
 
-        public Validation(string cacheFilesPath, int maxMessageCount = 1000)
+        public Validation(int maxMessageCount = 1000)
         {
-            _cacheFilesPath = cacheFilesPath;
             _maxMessageCount = maxMessageCount;
             _messages = new(maxMessageCount);
         }

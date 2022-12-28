@@ -3,7 +3,6 @@ using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Schema;
 using XmlSchemaValidationException = Geonorge.Validator.XmlSchema.Exceptions.XmlSchemaValidationException;
@@ -25,7 +24,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
         {
             try
             {
-                var validation = new Validation(_settings.CacheFilesPath, _settings.MaxMessageCount);
+                var validation = new Validation(_settings.MaxMessageCount);
 
                 return await validation.Validate(inputData, xmlSchemaSet);
             }
