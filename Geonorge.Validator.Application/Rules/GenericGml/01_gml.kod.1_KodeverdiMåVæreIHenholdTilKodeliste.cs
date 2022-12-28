@@ -23,12 +23,10 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
 
         protected override async Task ValidateAsync(IGmlValidationInputV2 data)
         {
-            var s = DateTime.Now;
-
             if (!data.Surfaces.Any() && !data.Solids.Any())
                 SkipRule();
 
-            var codelists = await GetCodelist(data.XLinkResolver.XmlSchemaElements, data.XLinkResolver.ResolveCodelist);
+            var codelists = await GetCodelists(data.XLinkValidator.XmlSchemaElements, data.XLinkValidator.FetchCodelist);
 
             if (!codelists.Any())
                 SkipRule();
@@ -63,8 +61,8 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             });
         }
 
-        private static async Task<Dictionary<XName, Codelist>> GetCodelist(
-            HashSet<XmlSchemaElement> xmlSchemaElements, Func<Uri, Task<Codelist>> resolveCodelist)
+        private static async Task<Dictionary<XName, Codelist>> GetCodelists(
+            HashSet<XmlSchemaElement> xmlSchemaElements, Func<Uri, Task<Codelist>> fetchCodelist)
         {
             var codeElements = xmlSchemaElements
                 .Where(element => _codelistSelectors.ContainsKey(element.SchemaTypeName))
@@ -92,7 +90,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
 
                 if (uri != null)
                 {
-                    var codelist = await resolveCodelist(uri);
+                    var codelist = await fetchCodelist(uri);
                     codeListDict.Add(name, codelist);
                 }
             }

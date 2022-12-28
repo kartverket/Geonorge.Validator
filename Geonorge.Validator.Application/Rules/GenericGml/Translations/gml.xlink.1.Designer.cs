@@ -61,7 +61,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fungerende og gyldige referanser mellom objekter til eksterne kodelisteverdier..
+        ///   Looks up a localized string similar to Fungerende og gyldige referanser mellom objekter og til eksterne kodelisteverdier..
         /// </summary>
         internal static string Description {
             get {
@@ -70,7 +70,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; har ugyldig format..
+        ///   Looks up a localized string similar to {0}: Elementet mangler referanse..
         /// </summary>
         internal static string Message1 {
             get {
@@ -79,7 +79,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; fungerer ikke..
+        ///   Looks up a localized string similar to Referansen til kodelisten &apos;{0}&apos; mangler fragment..
         /// </summary>
         internal static string Message2 {
             get {
@@ -88,7 +88,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; er ugyldig. Gyldige objekttyper er: {3}..
+        ///   Looks up a localized string similar to Kunne ikke finne kodelisten &apos;{0}&apos; ({1})..
         /// </summary>
         internal static string Message3 {
             get {
@@ -97,7 +97,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Referansen til kodelisten &apos;{0}&apos; mangler fragment..
+        ///   Looks up a localized string similar to Kodelisten &apos;{0}&apos; er utilgjengelig ({1})..
         /// </summary>
         internal static string Message4 {
             get {
@@ -106,7 +106,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Verdien &apos;{0}&apos; finnes ikke i kodelisten &apos;{1}&apos;..
+        ///   Looks up a localized string similar to Ressursen &apos;{0}&apos; er en ugyldig kodeliste..
         /// </summary>
         internal static string Message5 {
             get {
@@ -115,7 +115,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Kunne ikke finne kodelisten &apos;{0}&apos; ({1})..
+        ///   Looks up a localized string similar to Verdien &apos;{0}&apos; finnes ikke i kodelisten &apos;{1}&apos;..
         /// </summary>
         internal static string Message6 {
             get {
@@ -124,7 +124,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Kodelisten &apos;{0}&apos; er utilgjengelig ({1})..
+        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; har ugyldig format..
         /// </summary>
         internal static string Message7 {
             get {
@@ -133,11 +133,20 @@ namespace Geonorge.Validator.Application.Rules.GenericGml.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ressursen &apos;{0}&apos; er en ugyldig kodeliste..
+        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; fungerer ikke..
         /// </summary>
         internal static string Message8 {
             get {
                 return ResourceManager.GetString("Message8", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Referansen fra {0} til {1} &apos;{2}&apos; er ugyldig. Gyldige objekttyper er: {3}..
+        /// </summary>
+        internal static string Message9 {
+            get {
+                return ResourceManager.GetString("Message9", resourceCulture);
             }
         }
         

@@ -60,7 +60,7 @@ namespace Geonorge.Validator.Application.Services.XmlValidation
 
             var namespaces = xmlMetadata.Namespaces.Select(tuple => tuple.Namespace).ToList();
             var xmlSchemaValidationResult = await _xmlSchemaValidationService.ValidateAsync(submittal.InputData, xmlSchemaData, namespaces);
-            
+
             var rules = new List<Rule> { xmlSchemaValidationResult.Rule };
 
             rules.AddRange(await ValidateAsync(submittal.InputData, xmlMetadata, xmlSchemaValidationResult, submittal.SkipRules));

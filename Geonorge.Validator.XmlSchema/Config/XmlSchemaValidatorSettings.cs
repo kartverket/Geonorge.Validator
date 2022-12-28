@@ -13,17 +13,5 @@ namespace Geonorge.Validator.XmlSchema.Config
         public string CachedUrisFileName { get; set; }
         public string[] CacheableHosts { get; set; }
         public int MaxMessageCount { get; set; }
-        public List<XmlSchemaCodelistSelector> CodelistSelectors { get; } = new();
-        public HashSet<string> IgnoredNamespaces { get; } = new();
-
-        public void AddCodelistSelector(XName elementName, Func<XmlSchemaElement, Uri> uriResolver)
-        {
-            CodelistSelectors.Add(new XmlSchemaCodelistSelector(elementName, uriResolver));
-        }
-
-        public void IgnoreNamespace(string xmlNamespace)
-        {
-            IgnoredNamespaces.Add(xmlNamespace);
-        }
     }
 }

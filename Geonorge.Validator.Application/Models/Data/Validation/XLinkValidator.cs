@@ -1,6 +1,4 @@
-﻿using Geonorge.Validator.Application.Models.Data.Codelist;
-using Geonorge.Validator.XmlSchema.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,31 +9,26 @@ using CodeList = Geonorge.Validator.Application.Models.Data.Codelist.Codelist;
 
 namespace Geonorge.Validator.Application.Models.Data.Validation
 {
-    public class XLinkResolver
+    public class XLinkValidator
     {
         private static readonly Regex _xmlSchemaErrorRegex =
             new(@"^.*?invalid child element '(?<childElement>[^ ]*)' in namespace '(?<childNs>[^ ]*)'.( List of possible elements expected: '(?<posElements>.*?)' in namespace '(?<posNs>.*?)')*( as well as '(?<otherElements>.*?)' in namespace '(?<otherNs>.*?)')*", RegexOptions.Compiled);
 
-        public XLinkResolver(
-            //Dictionary<string, List<XLinkElement>> xLinkElements,
-            HashSet<XmlSchemaElement> xmlSchemaElements,
+        public XLinkValidator(
             XmlSchemaSet xmlSchemaSet,
-            Func<Uri, Task<CodeList>> resolveCodelist)
+            HashSet<XmlSchemaElement> xmlSchemaElements,
+            Func<Uri, Task<CodeList>> fetchCodelist)
         {
-            //XLinkElements = xLinkElements;
-            XmlSchemaElements = xmlSchemaElements;
             XmlSchemaSet = xmlSchemaSet;
-            ResolveCodelist = resolveCodelist;
+            XmlSchemaElements = xmlSchemaElements;
+            FetchCodelist = fetchCodelist;
         }
 
-        //public Dictionary<string, List<XLinkElement>> XLinkElements { get; } = new();
-        public HashSet<XmlSchemaElement> XmlSchemaElements { get; } = new();
         public XmlSchemaSet XmlSchemaSet { get; }
-        //public Func<string, Task<CodelistResolverResult>> CodelistResolver { get; }
-        public Func<Uri, Task<CodeList>> ResolveCodelist { get; }
-        //public bool HasXLinks => XLinkElements.Any();
+        public HashSet<XmlSchemaElement> XmlSchemaElements { get; } = new();
+        public Func<Uri, Task<CodeList>> FetchCodelist { get; }
 
-        public (string RefElement, string ValidElements) Validate(XLinkElement xLinkElement, XElement element, XElement refElement)
+        public (string RefElement, string ValidElements) Validate(XElement element, XElement refElement, XmlSchemaElement xmlSchemaElement)
         {
             var clonedElement = new XElement(element);
             clonedElement.RemoveAttributes();
@@ -43,7 +36,7 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
 
             (string ReferenceElement, string PossibleElements) result = default;
 
-            clonedElement.Validate(xLinkElement.SchemaElement, XmlSchemaSet, (object sender, ValidationEventArgs args) =>
+            clonedElement.Validate(xmlSchemaElement, XmlSchemaSet, (object sender, ValidationEventArgs args) =>
             {
                 if (args.Severity == XmlSeverityType.Error)
                 {
@@ -57,17 +50,17 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
             return result;
         }
 
-        private static (string RefElement, string ValidElements) ParseXmlSchemaError(string message, XElement xElement)
+        private static (string RefElement, string ValidElements) ParseXmlSchemaError(string message, XElement element)
         {
             var match = _xmlSchemaErrorRegex.Match(message);
 
             if (!match.Success)
                 return default;
 
-            var refElementNsPrefix = GetPrefixOfNamespace(GetMatchValue(match, "childNs"), xElement);
+            var refElementNsPrefix = GetPrefixOfNamespace(GetMatchValue(match, "childNs"), element);
             var refElement = GetElementWithPrefix(refElementNsPrefix, GetMatchValue(match, "childElement"));
 
-            var possibleNsPrefix = GetPrefixOfNamespace(GetMatchValue(match, "posNs"), xElement);
+            var possibleNsPrefix = GetPrefixOfNamespace(GetMatchValue(match, "posNs"), element);
             var validElements = GetMatchValue(match, "posElements")?.Split(',', StringSplitOptions.TrimEntries)
                 .Select(element => GetElementWithPrefix(possibleNsPrefix, element))
                 .ToList();
@@ -96,7 +89,7 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
 
             for (int i = 0; i < otherElements.Count; i++)
             {
-                var prefix = GetPrefixOfNamespace(otherNs.ElementAtOrDefault(i), xElement);
+                var prefix = GetPrefixOfNamespace(otherNs.ElementAtOrDefault(i), element);
 
                 for (int j = 0; j < otherElements[i].Length; j++)
                     validElements.Add(GetElementWithPrefix(prefix, otherElements[i][j]));

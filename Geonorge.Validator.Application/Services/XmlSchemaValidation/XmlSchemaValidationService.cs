@@ -9,15 +9,11 @@ using Geonorge.Validator.XmlSchema.Validator;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Schema;
 using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
-using Xsd = System.Xml.Schema.XmlSchema;
 
 namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 {

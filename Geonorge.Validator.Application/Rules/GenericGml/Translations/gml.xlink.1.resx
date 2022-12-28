@@ -118,31 +118,34 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Description" xml:space="preserve">
-    <value>Fungerende og gyldige referanser mellom objekter til eksterne kodelisteverdier.</value>
+    <value>Fungerende og gyldige referanser mellom objekter og til eksterne kodelisteverdier.</value>
   </data>
   <data name="Message1" xml:space="preserve">
-    <value>Referansen fra {0} til {1} '{2}' har ugyldig format.</value>
+    <value>{0}: Elementet mangler referanse.</value>
   </data>
   <data name="Message2" xml:space="preserve">
-    <value>Referansen fra {0} til {1} '{2}' fungerer ikke.</value>
-  </data>
-  <data name="Message3" xml:space="preserve">
-    <value>Referansen fra {0} til {1} '{2}' er ugyldig. Gyldige objekttyper er: {3}.</value>
-  </data>
-  <data name="Message4" xml:space="preserve">
     <value>Referansen til kodelisten '{0}' mangler fragment.</value>
   </data>
-  <data name="Message5" xml:space="preserve">
-    <value>Verdien '{0}' finnes ikke i kodelisten '{1}'.</value>
-  </data>
-  <data name="Message6" xml:space="preserve">
+  <data name="Message3" xml:space="preserve">
     <value>Kunne ikke finne kodelisten '{0}' ({1}).</value>
   </data>
-  <data name="Message7" xml:space="preserve">
+  <data name="Message4" xml:space="preserve">
     <value>Kodelisten '{0}' er utilgjengelig ({1}).</value>
   </data>
-  <data name="Message8" xml:space="preserve">
+  <data name="Message5" xml:space="preserve">
     <value>Ressursen '{0}' er en ugyldig kodeliste.</value>
+  </data>
+  <data name="Message6" xml:space="preserve">
+    <value>Verdien '{0}' finnes ikke i kodelisten '{1}'.</value>
+  </data>
+  <data name="Message7" xml:space="preserve">
+    <value>Referansen fra {0} til {1} '{2}' har ugyldig format.</value>
+  </data>
+  <data name="Message8" xml:space="preserve">
+    <value>Referansen fra {0} til {1} '{2}' fungerer ikke.</value>
+  </data>
+  <data name="Message9" xml:space="preserve">
+    <value>Referansen fra {0} til {1} '{2}' er ugyldig. Gyldige objekttyper er: {3}.</value>
   </data>
   <data name="Name" xml:space="preserve">
     <value>Fungerende referanser</value>

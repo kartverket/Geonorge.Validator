@@ -1,7 +1,6 @@
 using DiBK.RuleValidator.Config;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.HttpClients.Codelist;
-using Geonorge.Validator.Application.HttpClients.CodelistResolver;
 using Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistry;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
 using Geonorge.Validator.Application.HttpClients.XmlSchema;
@@ -33,8 +32,6 @@ using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Xml.Schema;
-using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -94,27 +91,7 @@ services.ConfigureRuleInformation(options =>
     options.AddRuleInformation<IGeoJsonValidationInput>("Generell GeoJSON");
 });
 
-services.AddXmlSchemaValidator(configuration, options =>
-{
-    options.AddCodelistSelector(
-        GmlNs + "CodeType",       
-        element =>
-        {
-            var uriString = element.Annotation?
-                .Items
-                .OfType<XmlSchemaAppInfo>()
-                .SingleOrDefault()?
-                .Markup
-                .SingleOrDefault(node => node.LocalName == "defaultCodeSpace")?
-                .InnerText;
-
-            if (uriString == null)
-                return null;
-
-            return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
-        }
-    );
-});
+services.AddXmlSchemaValidator(configuration, options => { });
 
 services.AddHttpContextAccessor();
 
@@ -133,7 +110,6 @@ services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
 services.AddHttpClient<IXmlSchemaCacherHttpClient, XmlSchemaCacherHttpClient>();
 services.AddHttpClient<IJsonSchemaHttpClient, JsonSchemaHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
-services.AddHttpClient<ICodelistResolverHttpClient, CodelistResolverHttpClient>();
 services.AddHttpClient<IGmlApplicationSchemaRegistryHttpClient, GmlApplicationSchemaRegistryHttpClient>();
 
 services.AddHostedService<CacheService>();
@@ -189,7 +165,8 @@ app.UseResponseCompression();
 
 app.UseMiddleware<SerilogMiddleware>();
 
-app.Use(async (context, next) => {
+app.Use(async (context, next) =>
+{
     context.Request.EnableBuffering();
     await next();
 });

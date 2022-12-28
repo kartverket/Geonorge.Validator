@@ -11,13 +11,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Wmhelp.XPath2;
 using static Geonorge.Validator.Common.Helpers.XmlHelper;
-using Formatting = Newtonsoft.Json.Formatting;
 using CodeList = Geonorge.Validator.Application.Models.Data.Codelist.Codelist;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Geonorge.Validator.Application.HttpClients.Codelist
 {
@@ -28,9 +27,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             Formatting = Formatting.Indented,
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
-
-        private static readonly Regex _xPathRegex =
-            new(@"^\*\:FeatureCollection\/\*\:(featureMember|featureMembers|member)\/(?<rest_path>.*)$", RegexOptions.Compiled);
 
         private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
@@ -50,86 +46,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             _logger = logger;
         }
 
-        public async Task<List<CodeSpace>> GetCodeSpacesAsync(Dictionary<string, Uri> codelistUris)
-        {
-            /*_cachedUris.Clear();
-
-            var codelistData = await GetCodelistDataAsync(codelistUris);
-
-            if (codelistData == null)
-                return new();
-
-            var codeSpaces = new List<CodeSpace>();
-
-            foreach (var (uriAndXPaths, httpRequest) in codelistData)
-            {
-                var codelist = await httpRequest;
-
-                if (codelist == null)
-                    continue;
-
-                var url = uriAndXPaths.Key.AbsoluteUri;
-
-                foreach (var xPath in uriAndXPaths)
-                    codeSpaces.Add(new CodeSpace(xPath, url, codelist));
-            }
-
-            await SaveCachedCodelistUrisAsync();
-
-            return codeSpaces;*/
-
-            return null;
-        }
-
-        public async Task<List<GmlCodeSpace>> GetGmlCodeSpacesAsync(Dictionary<string, Uri> codelistUris)
-        {
-            /*_cachedUris.Clear();
-
-            var codelistData = await GetCodelistDataAsync(codelistUris);
-
-            if (codelistData == null)
-                return new();
-
-            var gmlCodeSpaces = new List<GmlCodeSpace>();
-
-            foreach (var (uriAndXPaths, httpRequest) in codelistData)
-            {
-                var codelist = httpRequest.Result;
-
-                if (codelist == null)
-                    continue;
-
-                var url = uriAndXPaths.Key.AbsoluteUri;
-
-                foreach (var fullXPath in uriAndXPaths)
-                {
-                    var (featureMemberName, xPath) = GetFeatureMemberNameWithXPathFromXPath(fullXPath);
-
-                    if (featureMemberName == default)
-                        continue;
-
-                    var gmlCodeSpace = gmlCodeSpaces
-                        .SingleOrDefault(gmlCodeSpace => gmlCodeSpace.FeatureMemberName == featureMemberName);
-
-                    if (gmlCodeSpace != null)
-                    {
-                        gmlCodeSpace.CodeSpaces.Add(new CodeSpace(xPath, url, codelist));
-                    }
-                    else
-                    {
-                        gmlCodeSpace = new(featureMemberName);
-                        gmlCodeSpace.CodeSpaces.Add(new CodeSpace(xPath, url, codelist));
-                        gmlCodeSpaces.Add(gmlCodeSpace);
-                    }
-                }
-            }
-
-            await SaveCachedCodelistUrisAsync();
-
-            return gmlCodeSpaces;*/
-            return null;
-        }
-
         public async Task<CodeList> GetCodelistAsync(Uri uri)
         {
             return await _memoryCache.GetOrCreateAsync(uri, async cacheEntry =>
@@ -144,17 +60,16 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 return codeList;
             });
         }
-
         
         public async Task<int> UpdateCacheAsync()
         {
-            /*var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
+            var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
 
             if (!File.Exists(cacheListFilePath))
                 return 0;
 
             var lines = await File.ReadAllLinesAsync(cacheListFilePath);
-            var tasks = new List<(Task<List<CodelistItem>> Request, Uri uri, string FilePath)>();
+            var tasks = new List<(Task<CodeList> Request, Uri uri, string FilePath)>();
 
             foreach (var line in lines)
             {
@@ -188,25 +103,8 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
 
             await SaveCachedCodelistUrisAsync();
 
-            return _cachedUris.Count;*/
-            return default;
+            return _cachedUris.Count;
         }
-
-        /*
-        private async Task<IEnumerable<(IGrouping<Uri, string> uriAndXPaths, Task<List<CodelistItem>> httpRequest)>> GetCodelistDataAsync(
-            Dictionary<string, Uri> codelistUris)
-        {
-            if (!codelistUris.Any())
-                return null;
-
-            var codelistData = codelistUris
-                .ToLookup(kvp => kvp.Value, kvp => kvp.Key)
-                .Select(grouping => (Grouping: grouping, Task: FetchCodelistAsync(grouping.Key)));
-
-            await Task.WhenAll(codelistData.Select(task => task.Task));
-
-            return codelistData;
-        }*/
 
         private async Task<CodeList> FetchCodelistAsync(Uri uri)
         {
@@ -264,6 +162,8 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                     codelist.Status = CodelistStatus.CodelistNotFound;
                 else if (response.StatusCode != HttpStatusCode.OK)
                     codelist.Status = CodelistStatus.CodelistUnavailable;
+                else
+                    codelist.Status = CodelistStatus.CodelistFound;
 
                 return codelist;
             }
@@ -278,7 +178,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
         {
             var path = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, uri.Host + uri.LocalPath));
 
-            return Path.ChangeExtension(path, "json");
+            return $"{path}.json";
         }
 
         private async Task SaveCachedCodelistUrisAsync()
@@ -334,21 +234,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 return CodelistType.GmlDictionary;
 
             return CodelistType.Unknown;
-        }
-
-        private static (string FeatureMemberName, string XPath) GetFeatureMemberNameWithXPathFromXPath(string xPath)
-        {
-            var match = _xPathRegex.Match(xPath);
-
-            if (!match.Success)
-                return default;
-
-            var restPath = match.Groups["rest_path"].Value;
-            var elementNames = restPath.Split("/");
-            var featureMemberName = elementNames[0].TrimStart("*:".ToCharArray());
-            var elementPath = string.Join("/", elementNames.Skip(1));
-
-            return (featureMemberName, elementPath);
         }
 
         private static List<CodelistItem> MapFromGeonorgeCodelist(XDocument document)

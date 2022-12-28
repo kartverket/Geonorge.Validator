@@ -1,12 +1,10 @@
 ﻿namespace Geonorge.Validator.Application.Models.Data.Codelist
 {
-    public enum CodelistResolverStatus
+    public enum CodelistStatus
     {
-        MissingUriFragment,
+        CodelistFound,
         CodelistNotFound,
         CodelistUnavailable,
-        InvalidCodelist,
-        ValueNotFound,
-        ValueFound
+        InvalidCodelist
     }
 }
