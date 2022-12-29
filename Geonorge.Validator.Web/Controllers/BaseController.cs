@@ -16,13 +16,15 @@ namespace Geonorge.Validator.Controllers
 
         protected IActionResult HandleException(Exception exception)
         {
+            #pragma warning disable CA2254 // Template should be a static expression
             _logger.LogError(exception.ToString());
+            #pragma warning restore CA2254 // Template should be a static expression
 
             return exception switch
             {
                 ArgumentException or InvalidDataException or FormatException => BadRequest("Kunne ikke validere datasett"),
                 InvalidFileException or InvalidXmlSchemaException or InvalidJsonSchemaException or XmlSchemaValidationException => BadRequest(exception.Message),
-                Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
+                Exception _ => StatusCode(500, "En ubehandlet feil har oppstått. Hvis feilen vedvarer, vennligst ta kontakt med systemadministrator."),
                 _ => null,
             };
         }

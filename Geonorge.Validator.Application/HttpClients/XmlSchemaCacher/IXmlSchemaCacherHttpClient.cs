@@ -6,6 +6,6 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
     public interface IXmlSchemaCacherHttpClient
     {
         Task CacheSchemasAsync(Uri uri);
-        Task<int> UpdateCacheAsync();
+        Task<int> UpdateCacheAsync(bool forceUpdate = false);
     }
 }

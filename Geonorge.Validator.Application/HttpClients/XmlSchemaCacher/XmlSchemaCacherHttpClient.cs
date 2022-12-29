@@ -1,5 +1,4 @@
-﻿using Geonorge.Validator.Application.HttpClients.XmlSchemaCacher;
-using Geonorge.Validator.XmlSchema.Config;
+﻿using Geonorge.Validator.XmlSchema.Config;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -15,6 +14,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
     {
         private readonly HttpClient _client;
         private readonly XmlSchemaValidatorSettings _settings;
+        private readonly List<string> _cachedUris;
 
         public XmlSchemaCacherHttpClient(
             HttpClient client,
@@ -22,6 +22,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
         {
             _client = client;
             _settings = options.Value;
+            _cachedUris = new();
         }
 
         public async Task CacheSchemasAsync(Uri uri)
@@ -32,10 +33,10 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
 
             UpdateSchemaLocations(downloaded);
 
-
+            await SaveCachedXmlSchemaUrisAsync();
         }
 
-        public async Task<int> UpdateCacheAsync()
+        public async Task<int> UpdateCacheAsync(bool forceUpdate = false)
         {
             var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
 
@@ -50,7 +51,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
                 var lineSplit = line.Split(",");
                 var lastCached = DateTime.Parse(lineSplit[1]);
 
-                if ((DateTime.Now - lastCached).TotalHours < 24 || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
+                if (!IsOutdated(lastCached, forceUpdate) || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
                     continue;
 
                 var task = DownloadSchemaAsync(uri);
@@ -58,9 +59,10 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
                 tasks.Add((task, uri));
             }
 
-            await Task.WhenAll(tasks.Select(task => task.Request));
-            var cachedUris = new List<string>();
+            await Task.WhenAll(tasks.Select(task => task.Request));            
+            
             var downloaded = new Dictionary<Uri, XDocument>();
+            _cachedUris.Clear();
 
             foreach (var (request, uri) in tasks)
             {
@@ -69,15 +71,15 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
                 if (data == null)
                     continue;
 
-                cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
+                _cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                 downloaded.Add(uri, data);
             }
 
             UpdateSchemaLocations(downloaded);
 
-            await SaveCachedXmlSchemaUrisAsync(cachedUris);
+            await SaveCachedXmlSchemaUrisAsync();
 
-            return cachedUris.Count;
+            return _cachedUris.Count;
         }
 
         private async Task DownloadSchemasAsync(Uri uri, Dictionary<Uri, XDocument> downloaded)
@@ -87,6 +89,8 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
 
             var document = await DownloadSchemaAsync(uri);
             downloaded.Add(uri, document);
+
+            _cachedUris.Add($"{uri.AbsoluteUri},{DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
 
             var schemaLocationElements = document.Root.Elements()
                 .Where(element => element.Name.LocalName == "include" || element.Name.LocalName == "import")
@@ -134,9 +138,9 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
             }
         }
 
-        private async Task SaveCachedXmlSchemaUrisAsync(List<string> cachedUris)
+        private async Task SaveCachedXmlSchemaUrisAsync()
         {
-            if (!cachedUris.Any())
+            if (!_cachedUris.Any())
                 return;
 
             var filePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
@@ -145,7 +149,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
             if (File.Exists(filePath))
                 existingCachedUris = await File.ReadAllLinesAsync(filePath);
 
-            var union = cachedUris.UnionBy(existingCachedUris, uri => uri.Split(',')[0]);
+            var union = _cachedUris.UnionBy(existingCachedUris, uri => uri.Split(',')[0]);
 
             await File.WriteAllLinesAsync(filePath, union);
         }
@@ -221,6 +225,14 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
         {
             return Uri.TryCreate(uriString, UriKind.Absolute, out var resultUri) &&
                 (resultUri.Scheme == Uri.UriSchemeHttp || resultUri.Scheme == Uri.UriSchemeHttps);
+        }
+
+        private static bool IsOutdated(DateTime lastCached, bool forceUpdate)
+        {
+            if (forceUpdate)
+                return true;
+
+            return (DateTime.Now - lastCached).TotalHours >= 24;
         }
     }
 }

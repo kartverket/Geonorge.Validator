@@ -7,6 +7,6 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
     public interface ICodelistHttpClient
     {
         Task<CodeList> GetCodelistAsync(Uri uri);
-        Task<int> UpdateCacheAsync();
+        Task<int> UpdateCacheAsync(bool forceUpdate = false);
     }
 }

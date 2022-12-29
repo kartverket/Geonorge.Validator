@@ -32,7 +32,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
         private readonly IMemoryCache _memoryCache;
         private readonly CodelistSettings _settings;
         private readonly ILogger<CodelistHttpClient> _logger;
-        private readonly List<string> _cachedUris = new();
+        private readonly List<string> _cachedUris;
 
         public CodelistHttpClient(
             HttpClient httpClient,
@@ -44,13 +44,14 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             _memoryCache = memoryCache;
             _settings = options.Value;
             _logger = logger;
+            _cachedUris = new();
         }
 
         public async Task<CodeList> GetCodelistAsync(Uri uri)
         {
             return await _memoryCache.GetOrCreateAsync(uri, async cacheEntry =>
             {
-                cacheEntry.SlidingExpiration = TimeSpan.FromDays(1);
+                cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(5);
 
                 _cachedUris.Clear();
 
@@ -61,7 +62,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             });
         }
         
-        public async Task<int> UpdateCacheAsync()
+        public async Task<int> UpdateCacheAsync(bool forceUpdate)
         {
             var cacheListFilePath = Path.GetFullPath(Path.Combine(_settings.CacheFilesPath, _settings.CachedUrisFileName));
 
@@ -76,7 +77,7 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 var lineSplit = line.Split(",");
                 var lastCached = DateTime.Parse(lineSplit[1]);
 
-                if ((DateTime.Now - lastCached).TotalHours < 24 || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
+                if (!IsOutdated(lastCached, forceUpdate) || !Uri.TryCreate(lineSplit[0], UriKind.Absolute, out var uri))
                     continue;
 
                 var filePath = GetFilePath(uri);
@@ -102,6 +103,9 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
             }
 
             await SaveCachedCodelistUrisAsync();
+
+            if (_memoryCache is MemoryCache memoryCache)
+                memoryCache.Compact(1);
 
             return _cachedUris.Count;
         }
@@ -264,6 +268,14 @@ namespace Geonorge.Validator.Application.HttpClients.Codelist
                 })
                 .OrderBy(codelistItem => codelistItem.Name)
                 .ToList();
+        }
+
+        private static bool IsOutdated(DateTime lastCached, bool forceUpdate)
+        {
+            if (forceUpdate)
+                return true;
+
+            return (DateTime.Now - lastCached).TotalHours >= 24;
         }
     }
 }

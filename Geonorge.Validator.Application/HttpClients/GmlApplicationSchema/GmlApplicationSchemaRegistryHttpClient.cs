@@ -43,7 +43,7 @@ namespace Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistr
             return await LoadDataFromDiskAsync();
         }
 
-        private async Task<List<ApplicationSchema>> CreateGmlApplicationSchemaRegistryAsync()
+        public async Task<List<ApplicationSchema>> CreateGmlApplicationSchemaRegistryAsync()
         {
             var containedItemsResult = await FetchJsonAsync(_settings.RegisterUri);
 

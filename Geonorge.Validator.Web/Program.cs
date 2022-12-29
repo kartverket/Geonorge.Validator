@@ -21,7 +21,10 @@ using Geonorge.Validator.Rules.GeoJson;
 using Geonorge.Validator.Web;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
+using Geonorge.Validator.Web.Security;
 using Geonorge.Validator.XmlSchema.Config;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
@@ -105,6 +108,7 @@ services.AddTransient<IJsonValidationService, JsonValidationService>();
 services.AddTransient<INotificationService, NotificationService>();
 services.AddTransient<IRuleSetService, RuleSetService>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+services.AddTransient<IAuthorizationHandler, ApiKeyRequirementHandler>();
 
 services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
 services.AddHttpClient<IXmlSchemaCacherHttpClient, XmlSchemaCacherHttpClient>();
@@ -118,6 +122,24 @@ services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.Section
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
 services.Configure<GmlApplicationSchemaRegistrySettings>(configuration.GetSection(GmlApplicationSchemaRegistrySettings.SectionName));
 services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
+
+services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = 401;
+            return Task.CompletedTask;
+        };
+    });
+
+var authenticationConfig = configuration.GetSection(AuthenticationConfig.SectionName);
+var apiKey = authenticationConfig.GetSection("ApiKey").Value;
+
+services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiKeyPolicy", policyBuilder => policyBuilder.AddRequirements(new ApiKeyRequirement(new[] { apiKey })));
+});
 
 var urlProxy = configuration.GetValue<string>("UrlProxy");
 
@@ -159,7 +181,7 @@ app.UseCors(options => options
     .AllowAnyHeader()
     .AllowCredentials()
     .WithMethods("GET", "POST")
-    .WithOrigins("http://localhost:3000"));
+    .WithOrigins("http://localhost:3000", "http://localhost:8080"));
 
 app.UseResponseCompression();
 

@@ -20,18 +20,15 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
         private readonly IRuleValidator _validator;
         private readonly ICodelistHttpClient _codelistHttpClient;
         private readonly INotificationService _notificationService;
-        private readonly XmlSchemaValidatorSettings _settings;
 
         public GenericGmlValidator(
             IRuleValidator validator,
             ICodelistHttpClient codelistHttpClient,
-            INotificationService notificationService,
-            IOptions<XmlSchemaValidatorSettings> options)
+            INotificationService notificationService)
         {
             _validator = validator;
             _codelistHttpClient = codelistHttpClient;
             _notificationService = notificationService;
-            _settings = options.Value;
         }
 
         public async Task<List<Rule>> Validate(

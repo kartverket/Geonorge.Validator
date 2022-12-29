@@ -7,5 +7,6 @@ namespace Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistr
     public interface IGmlApplicationSchemaRegistryHttpClient
     {
         Task<List<ApplicationSchema>> GetGmlApplicationSchemaRegistryAsync();
+        Task<List<ApplicationSchema>> CreateGmlApplicationSchemaRegistryAsync();
     }
 }

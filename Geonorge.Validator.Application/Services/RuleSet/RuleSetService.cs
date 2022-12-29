@@ -38,14 +38,12 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
         private readonly IJsonSchemaHttpClient _jsonSchemaHttpClient;
         private readonly IOptions<ValidatorOptions> _validatorOptions;
         private readonly RuleInfoOptions _ruleInfoOptions;
-        private readonly string _xsdCacheFilesPath;
 
         public RuleSetService(
             IRuleValidator ruleValidator,
             IMultipartRequestService multipartRequestService,
             IXmlSchemaHttpClient xsdHttpClient,
             IJsonSchemaHttpClient jsonSchemaHttpClient,
-            IOptions<XmlSchemaValidatorSettings> xsdValidatorOptions,
             IOptions<ValidatorOptions> validatorOptions,
             RuleInfoOptions ruleInfoOptions)
         {
@@ -53,7 +51,6 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             _multipartRequestService = multipartRequestService;
             _xmlSchemaHttpClient = xsdHttpClient;
             _jsonSchemaHttpClient = jsonSchemaHttpClient;
-            _xsdCacheFilesPath = xsdValidatorOptions.Value.CacheFilesPath;
             _validatorOptions = validatorOptions;
             _ruleInfoOptions = ruleInfoOptions;
         }
