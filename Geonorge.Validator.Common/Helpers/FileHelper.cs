@@ -14,8 +14,8 @@ namespace Geonorge.Validator.Common.Helpers
 
         public static async Task<FileType> GetFileTypeAsync(MultipartSection section)
         {
-            var buffer = new byte[500];
-            await section.Body.ReadAsync(buffer.AsMemory(0, 500));
+            var buffer = new byte[1000];
+            await section.Body.ReadAsync(buffer.AsMemory(0, 1000));
             section.Body.Position = 0;
 
             using var memoryStream = new MemoryStream(buffer);
