@@ -46,7 +46,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
 
                     if (contentDisposition.IsFileDisposition() && (name == "files" || name == "schema"))
                     {
-                        var fileType = await FileHelper.GetFileType(section);
+                        var fileType = await FileHelper.GetFileTypeAsync(section);
 
                         if (name == "files" && (fileType == FileType.XML || fileType == FileType.GML32 || fileType == FileType.JSON))
                         {
@@ -54,11 +54,11 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
                             fileTypes.Add(fileType);
                         }
                         else if (name == "schema" && schema == null && (fileType == FileType.XSD || fileType == FileType.JSON))
-                            schema = await CreateStreamAsync(contentDisposition, section);
+                            schema = await CreateStreamAsync(section);
                     }
                     else if (contentDisposition.IsFormDisposition() && (name == "skipRules" || name == "schemaUri"))
                     {
-                        formAccumulator = await AccumulateForm(formAccumulator, section, contentDisposition);
+                        formAccumulator = await AccumulateFormAsync(formAccumulator, section, contentDisposition);
                     }
                 }
 
@@ -79,14 +79,55 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             }
         }
 
+        public async Task<IFormFile> GetGmlFileFromMultipartAsync()
+        {
+            var request = _httpContextAccessor.HttpContext.Request;
+            var reader = new MultipartReader(request.GetMultipartBoundary(), request.Body);
+            MultipartSection section;
+
+            try
+            {
+                while ((section = await reader.ReadNextSectionAsync()) != null)
+                {
+                    if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
+                        continue;
+
+                    var name = contentDisposition.Name.Value;
+
+                    if (contentDisposition.IsFileDisposition() && name == "gmlFile" && await FileHelper.GetFileTypeAsync(section) == FileType.GML32)
+                        return await CreateFormFileAsync(contentDisposition, section);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private static async Task<InputData> CreateInputDataAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
         {
-            var memoryStream = await CreateStreamAsync(contentDisposition, section);
+            var memoryStream = await CreateStreamAsync(section);
 
             return new InputData(memoryStream, contentDisposition.FileName.ToString(), contentDisposition.Name.ToString());
         }
 
-        private static async Task<MemoryStream> CreateStreamAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        private static async Task<IFormFile> CreateFormFileAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        {
+            var memoryStream = new MemoryStream();
+            await section.Body.CopyToAsync(memoryStream);
+            await section.Body.DisposeAsync();
+            memoryStream.Position = 0;
+
+            return new FormFile(memoryStream, 0, memoryStream.Length, contentDisposition.Name.ToString(), contentDisposition.FileName.ToString())
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = section.ContentType
+            };
+        }
+
+        private static async Task<MemoryStream> CreateStreamAsync(MultipartSection section)
         {
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
@@ -96,7 +137,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             return memoryStream;
         }
 
-        private static async Task<KeyValueAccumulator> AccumulateForm(
+        private static async Task<KeyValueAccumulator> AccumulateFormAsync(
             KeyValueAccumulator formAccumulator, MultipartSection section, ContentDispositionHeaderValue contentDisposition)
         {
             var key = HeaderUtilities.RemoveQuotes(contentDisposition.Name).Value;

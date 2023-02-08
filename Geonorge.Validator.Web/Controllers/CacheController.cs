@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Geonorge.Validator.Controllers
+namespace Geonorge.Validator.Web.Controllers
 {
     [ApiController]
     [Authorize(Policy = "ApiKeyPolicy")]
@@ -53,7 +53,7 @@ namespace Geonorge.Validator.Controllers
 
                 foreach (var directory in directoryInfo.EnumerateDirectories())
                     directory.Delete(true);
-                
+
                 return NoContent();
             }
             catch (Exception exception)

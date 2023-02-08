@@ -1,7 +1,7 @@
 ﻿using Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistry;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Geonorge.Validator.Controllers
+namespace Geonorge.Validator.Web.Controllers
 {
     [ApiController]
     [Route("gml-applikasjonsskjema")]

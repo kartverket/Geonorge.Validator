@@ -5,7 +5,7 @@ using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Geonorge.Validator.Controllers
+namespace Geonorge.Validator.Web.Controllers
 {
     [ApiController]
     [Route("validering")]
@@ -34,7 +34,7 @@ namespace Geonorge.Validator.Controllers
             try
             {
                 var submittal = await _multipartRequestService.GetFilesFromMultipartAsync();
-                
+
                 if (!submittal.IsValid)
                     return BadRequest();
 

@@ -1,10 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace Geonorge.Validator.Common.Helpers
 {
     public class GmlHelper
     {
         private static readonly Regex _dimensionsRegex = new(@"srsDimension=""(?<dimensions>(\d))""", RegexOptions.Compiled);
+        private static readonly Regex _srsNameRegex = new(@"srsName=""(http:\/\/www\.opengis\.net\/def\/crs\/EPSG\/0\/|urn:ogc:def:crs:EPSG::|EPSG:)(?<epsg>\d+)""");
 
         public static async Task<int> GetDimensionsAsync(Stream stream)
         {
@@ -25,6 +27,25 @@ namespace Geonorge.Validator.Common.Helpers
                 return dimensions;
 
             return 2;
+        }
+
+        public static async Task<int?> GetEpsgCodeAsync(IFormFile file)
+        {
+            var buffer = new byte[5000];
+            await file.OpenReadStream().ReadAsync(buffer.AsMemory(0, 5000));
+
+            using var memoryStream = new MemoryStream(buffer);
+            using var streamReader = new StreamReader(memoryStream);
+            var fileString = streamReader.ReadToEnd();
+            var match = _srsNameRegex.Match(fileString);
+
+            if (match == null)
+                return null;
+
+            if (!int.TryParse(match.Groups["epsg"].Value, out var code))
+                return null;
+
+            return code;
         }
     }
 }

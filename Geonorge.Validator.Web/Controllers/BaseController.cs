@@ -2,7 +2,7 @@
 using Geonorge.Validator.XmlSchema.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Geonorge.Validator.Controllers
+namespace Geonorge.Validator.Web.Controllers
 {
     public abstract class BaseController : ControllerBase
     {
@@ -16,9 +16,9 @@ namespace Geonorge.Validator.Controllers
 
         protected IActionResult HandleException(Exception exception)
         {
-            #pragma warning disable CA2254 // Template should be a static expression
+#pragma warning disable CA2254 // Template should be a static expression
             _logger.LogError(exception.ToString());
-            #pragma warning restore CA2254 // Template should be a static expression
+#pragma warning restore CA2254 // Template should be a static expression
 
             return exception switch
             {

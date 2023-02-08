@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geonorge.Validator.Map", "Geonorge.Validator.Map\Geonorge.Validator.Map.csproj", "{B707D895-8DAE-43E0-B30C-388193DA41AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{D0D2ED13-1AE0-43D6-A193-38505AB8E113}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0D2ED13-1AE0-43D6-A193-38505AB8E113}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0D2ED13-1AE0-43D6-A193-38505AB8E113}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B707D895-8DAE-43E0-B30C-388193DA41AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B707D895-8DAE-43E0-B30C-388193DA41AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B707D895-8DAE-43E0-B30C-388193DA41AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B707D895-8DAE-43E0-B30C-388193DA41AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

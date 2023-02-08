@@ -2,7 +2,7 @@
 using Geonorge.Validator.Application.Services.RuleSetService;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Geonorge.Validator.Controllers
+namespace Geonorge.Validator.Web.Controllers
 {
     [ApiController]
     [Route("regler")]

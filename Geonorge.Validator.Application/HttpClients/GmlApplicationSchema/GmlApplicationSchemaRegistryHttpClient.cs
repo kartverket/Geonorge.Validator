@@ -69,17 +69,24 @@ namespace Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistr
                     Label = jObject["label"].ToString()
                 };
 
-                var versions = new List<ApplicationSchemaVersion>
-                {
-                    CreateApplicationSchemaVersion(jObject)
-                };
+                var version = CreateApplicationSchemaVersion(jObject);
+
+                if (version == null)
+                    continue;
+
+                var versions = new List<ApplicationSchemaVersion> { version };
 
                 var versionsToken = jObject["versions"];
 
                 if (versionsToken != null && versionsToken.Any())
                 {
                     foreach (var token in versionsToken)
-                        versions.Add(CreateApplicationSchemaVersion(token));
+                    {
+                        var schVersion = CreateApplicationSchemaVersion(token);
+
+                        if (schVersion != null)
+                            versions.Add(schVersion);
+                    }                        
                 }
 
                 applicationSchema.Versions = versions
@@ -137,13 +144,18 @@ namespace Geonorge.Validator.Application.HttpClients.GmlApplicationSchemaRegistr
 
         private static ApplicationSchemaVersion CreateApplicationSchemaVersion(JToken token)
         {
+            if (!Uri.TryCreate(token["documentreference"]?.ToString(), UriKind.Absolute, out var documentReference))
+                return null;
+
+            var versionNumber = token["versionNumber"].Value<int>();
+
             return new ApplicationSchemaVersion
             {
-                VersionNumber = token["versionNumber"].Value<int>(),
-                VersionName = token["versionName"].ToString(),
+                VersionNumber = versionNumber,
+                VersionName = token["versionName"]?.ToString() ?? versionNumber.ToString(),
                 Status = GetStatus(token["status"]),
                 Date = DateTime.Parse(token["dateSubmitted"].ToString()),
-                DocumentReference = new Uri(token["documentreference"].ToString())
+                DocumentReference = documentReference
             };
         }
 

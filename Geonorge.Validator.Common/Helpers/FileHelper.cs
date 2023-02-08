@@ -12,7 +12,7 @@ namespace Geonorge.Validator.Common.Helpers
         private static readonly Regex _xsdRegex = new(@"^<\?xml.*?<(.*:)?schema .*?xmlns(:.*)?=""http:\/\/www\.w3\.org\/2001\/XMLSchema""", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex _jsonRegex = new(@"\A(\s*?({|\[))", RegexOptions.Compiled);
 
-        public static async Task<FileType> GetFileType(MultipartSection section)
+        public static async Task<FileType> GetFileTypeAsync(MultipartSection section)
         {
             var buffer = new byte[500];
             await section.Body.ReadAsync(buffer.AsMemory(0, 500));

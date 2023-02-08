@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Geonorge.Validator.Rules.GeoJson": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:53843;http://localhost:53844"
+    }
+  }
+}

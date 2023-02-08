@@ -17,12 +17,17 @@ using Geonorge.Validator.Application.Services.XmlSchemaValidation;
 using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Application.Validators.GenericGml;
 using Geonorge.Validator.Application.Validators.GenericJson;
+using Geonorge.Validator.Map.HttpClients.Proxy;
+using Geonorge.Validator.Map.Models.Config.Map;
+using Geonorge.Validator.Map.Models.Config.Styling;
+using Geonorge.Validator.Map.Services;
 using Geonorge.Validator.Rules.GeoJson;
 using Geonorge.Validator.Web;
 using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
 using Geonorge.Validator.Web.Security;
 using Geonorge.Validator.XmlSchema.Config;
+using MaxRev.Gdal.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -40,12 +45,19 @@ var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 var configuration = builder.Configuration;
 
+services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Optimal;
+});
+
 services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
     options.MimeTypes = new[] { "application/json" };
     options.Providers.Add<GzipCompressionProvider>();
 });
+
+services.AddResponseCaching();
 
 services.AddControllers()
     .AddJsonOptions(options =>
@@ -108,6 +120,9 @@ services.AddTransient<IJsonValidationService, JsonValidationService>();
 services.AddTransient<INotificationService, NotificationService>();
 services.AddTransient<IRuleSetService, RuleSetService>();
 services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+services.AddTransient<IMapDocumentService, MapDocumentService>();
+services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
+services.AddTransient<IMapSettingsService, MapSettingsService>();
 services.AddTransient<IAuthorizationHandler, ApiKeyRequirementHandler>();
 
 services.AddHttpClient<IXmlSchemaHttpClient, XmlSchemaHttpClient>();
@@ -115,11 +130,14 @@ services.AddHttpClient<IXmlSchemaCacherHttpClient, XmlSchemaCacherHttpClient>();
 services.AddHttpClient<IJsonSchemaHttpClient, JsonSchemaHttpClient>();
 services.AddHttpClient<ICodelistHttpClient, CodelistHttpClient>();
 services.AddHttpClient<IGmlApplicationSchemaRegistryHttpClient, GmlApplicationSchemaRegistryHttpClient>();
+services.AddHttpClient<IProxyHttpClient, ProxyHttpClient>();
 
 services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
+services.Configure<MapSettings>(configuration.GetSection(MapSettings.SectionName));
+services.Configure<StylingSettings>(configuration.GetSection(StylingSettings.SectionName));
 services.Configure<GmlApplicationSchemaRegistrySettings>(configuration.GetSection(GmlApplicationSchemaRegistrySettings.SectionName));
 services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Optimal);
 
@@ -154,7 +172,7 @@ var cultureInfo = new CultureInfo("nb-NO");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-Ogr.RegisterAll();
+GdalBase.ConfigureAll();
 Ogr.UseExceptions();
 
 Log.Logger = new LoggerConfiguration()
@@ -184,6 +202,8 @@ app.UseCors(options => options
     .WithOrigins("http://localhost:3000", "http://localhost:8080"));
 
 app.UseResponseCompression();
+
+app.UseResponseCaching();
 
 app.UseMiddleware<SerilogMiddleware>();
 
