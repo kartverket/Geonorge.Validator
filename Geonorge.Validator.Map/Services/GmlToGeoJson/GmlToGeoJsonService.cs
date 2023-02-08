@@ -2,11 +2,10 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
-using OSGeo.OSR;
 using System.Text;
 using System.Xml.Linq;
-using AxisOrientation = Geonorge.Validator.Map.Models.Map.AxisOrientation;
 using static Geonorge.Validator.Map.Constants.Constants;
+using AxisOrientation = Geonorge.Validator.Map.Models.Map.AxisOrientation;
 
 namespace Geonorge.Validator.Map.Services
 {
@@ -96,17 +95,6 @@ namespace Geonorge.Validator.Map.Services
             }
 
             return otherGeometries;
-        }
-
-        public static CoordinateTransformation GetCoordinateTransformation(int srcEpsg, int destEpsg)
-        {
-            using var srcSr = new SpatialReference(null);
-            srcSr.ImportFromEPSG(srcEpsg);
-
-            using var destSr = new SpatialReference(null);
-            destSr.ImportFromEPSG(destEpsg);
-
-            return new CoordinateTransformation(srcSr, destSr);
         }
 
         private static Geometry GetGeometry(XElement geoElement, AxisOrientation axisOrientation)
