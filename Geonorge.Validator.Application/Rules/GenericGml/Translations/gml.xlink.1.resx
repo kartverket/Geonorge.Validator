@@ -123,6 +123,9 @@
   <data name="Message1" xml:space="preserve">
     <value>{0}: Elementet mangler referanse.</value>
   </data>
+  <data name="Message10" xml:space="preserve">
+    <value>Referansen fra {0} til {1} '{2}' er ugyldig. Gyldige objekttyper er: {3}.</value>
+  </data>
   <data name="Message2" xml:space="preserve">
     <value>Referansen til kodelisten '{0}' mangler fragment.</value>
   </data>
@@ -142,10 +145,10 @@
     <value>Referansen fra {0} til {1} '{2}' har ugyldig format.</value>
   </data>
   <data name="Message8" xml:space="preserve">
-    <value>Referansen fra {0} til {1} '{2}' fungerer ikke.</value>
+    <value>Referansen fra {0} til {1} '{2}' mangler fragment '#'.</value>
   </data>
   <data name="Message9" xml:space="preserve">
-    <value>Referansen fra {0} til {1} '{2}' er ugyldig. Gyldige objekttyper er: {3}.</value>
+    <value>Referansen fra {0} til {1} '{2}' fungerer ikke.</value>
   </data>
   <data name="Name" xml:space="preserve">
     <value>Fungerende referanser</value>

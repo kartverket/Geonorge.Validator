@@ -3,7 +3,9 @@ using Geonorge.Validator.Application.Services.JsonValidation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Common.Models;
+using Geonorge.Validator.GeoJson.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace Geonorge.Validator.Web.Controllers
 {

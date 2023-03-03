@@ -1,4 +1,4 @@
-﻿using Geonorge.Validator.Application.Exceptions;
+﻿using Geonorge.Validator.Common.Exceptions;
 using Geonorge.Validator.XmlSchema.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +23,7 @@ namespace Geonorge.Validator.Web.Controllers
             return exception switch
             {
                 ArgumentException or InvalidDataException or FormatException => BadRequest("Kunne ikke validere datasett"),
-                InvalidFileException or InvalidXmlSchemaException or InvalidJsonSchemaException or XmlSchemaValidationException => BadRequest(exception.Message),
+                InvalidFileException or InvalidXmlSchemaException or InvalidJsonSchemaException or InvalidJsonException or XmlSchemaValidationException => BadRequest(exception.Message),
                 Exception _ => StatusCode(500, "En ubehandlet feil har oppstått. Hvis feilen vedvarer, vennligst ta kontakt med systemadministrator."),
                 _ => null,
             };

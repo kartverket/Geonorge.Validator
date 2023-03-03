@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Xml.Schema;
 using _XmlSchema = System.Xml.Schema.XmlSchema;
 
@@ -17,7 +18,8 @@ namespace Geonorge.Validator.XmlSchema.Utils
             if (xmlSchemaData == null || !xmlSchemaData.Streams.Any())
                 return null;
 
-            var xmlResolver = new XmlFileCacheResolver(settings);
+            var httpClient = new HttpClient();
+            var xmlResolver = new XmlFileCacheResolver(httpClient, settings);
             var xmlSchemaSet = new XmlSchemaSet { XmlResolver = xmlResolver };
 
             AddXmlSchemas(xmlSchemaSet, xmlSchemaData, settings);
@@ -33,6 +35,10 @@ namespace Geonorge.Validator.XmlSchema.Utils
             {
                 Log.Logger.Error(exception, "Kunne ikke kompilere XmlSchemaSet!");
                 throw;
+            }
+            finally
+            {
+                httpClient.Dispose();
             }
         }
 

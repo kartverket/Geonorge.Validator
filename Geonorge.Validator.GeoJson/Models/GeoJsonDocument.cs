@@ -1,6 +1,8 @@
 ﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Common.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using static Geonorge.Validator.GeoJson.Helpers.GeoJsonHelper;
@@ -93,11 +95,20 @@ namespace Geonorge.Validator.GeoJson.Models
 
         public static async Task<GeoJsonDocument> CreateAsync(InputData data)
         {
+            var document = await JsonHelper.LoadJsonDocumentAsync(data.Stream);
+
+            return new GeoJsonDocument(document, data.FileName);
+        }
+
+        public static async Task<GeoJsonDocument> CreateAndValidateAsync(InputData data, JSchema geoJsonSchema)
+        {
             using var streamReader = new StreamReader(data.Stream);
             using var jsonReader = new JsonTextReader(streamReader);
             var document = await JToken.LoadAsync(jsonReader);
 
-            return new GeoJsonDocument(document, data.FileName);
+            return document.IsValid(geoJsonSchema) ?
+                new GeoJsonDocument(document, data.FileName) :
+                null;
         }
 
         private static int GetMaxDegreeOfParallelism()

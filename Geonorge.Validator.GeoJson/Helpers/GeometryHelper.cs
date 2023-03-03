@@ -7,7 +7,7 @@ namespace Geonorge.Validator.GeoJson.Helpers
     {
         public static (Geometry ExteriorRing, List<Geometry> InteriorRings) GetRingsOfPolygon(Geometry polygon)
         {
-            if (polygon.GetGeometryType() != wkbGeometryType.wkbPolygon)
+            if (polygon.GetGeometryType() != wkbGeometryType.wkbPolygon && polygon.GetGeometryType() != wkbGeometryType.wkbPolygon25D)
                 throw new GeometryException($"Geometrien ({polygon.GetGeometryType()}) er ikke et polygon.");
 
             var geomCount = polygon.GetGeometryCount();
@@ -26,11 +26,11 @@ namespace Geonorge.Validator.GeoJson.Helpers
         {
             var ringsList = new List<(Geometry ExteriorRing, List<Geometry> InteriorRings)>();
 
-            if (geometry.GetGeometryType() == wkbGeometryType.wkbPolygon)
+            if (geometry.GetGeometryType() == wkbGeometryType.wkbPolygon || geometry.GetGeometryType() == wkbGeometryType.wkbPolygon25D)
             {
                 ringsList.Add(GetRingsOfPolygon(geometry));
             }
-            else if (geometry.GetGeometryType() == wkbGeometryType.wkbMultiPolygon)
+            else if (geometry.GetGeometryType() == wkbGeometryType.wkbMultiPolygon || geometry.GetGeometryType() == wkbGeometryType.wkbMultiPolygon25D)
             {
                 var geomCount = geometry.GetGeometryCount();
 

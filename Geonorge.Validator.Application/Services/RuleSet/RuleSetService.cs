@@ -1,4 +1,5 @@
 ﻿using DiBK.RuleValidator;
+using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Rules.Gml;
 using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
@@ -6,16 +7,16 @@ using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Config;
 using Geonorge.Validator.Application.Models.Data;
-using Geonorge.Validator.Application.Models.Data.Json;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Validators.Config;
+using Geonorge.Validator.Common.Helpers;
 using Geonorge.Validator.Common.Models;
 using Geonorge.Validator.GeoJson.Helpers;
 using Geonorge.Validator.Rules.GeoJson;
-using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Schema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,7 +133,7 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             var ruleSets = new List<RuleSet>();
             var schema = await _jsonSchemaHttpClient.GetJsonSchemaAsync(submittal.InputData, submittal.Schema);
 
-            if (GeoJsonHelper.HasGeoJson(schema))
+            if (await IsGeoJsonAsync(submittal.InputData))
             {
                 var genericGeoJsonRuleInfo = _ruleInfoOptions.RuleInfo
                     .SingleOrDefault(ruleInfo => ruleInfo.RuleType == typeof(IGeoJsonValidationInput));
@@ -215,19 +216,17 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
             };
         }
 
-        private static Rule<IJsonSchemaValidationInput> GetJsonSchemaRule()
+        private static async Task<bool> IsGeoJsonAsync(DisposableList<InputData> inputData)
         {
-            return _schemaRuleAssembly.GetTypes()
-                .Where(type => type.IsSubclassOf(typeof(Rule<IJsonSchemaValidationInput>)) &&
-                    type.GetConstructor(Type.EmptyTypes) != null)
-                .Select(type =>
-                {
-                    var rule = Activator.CreateInstance(type) as Rule<IJsonSchemaValidationInput>;
-                    rule.Create();
+            foreach (var data in inputData)
+            {
+                var document = await JsonHelper.LoadJsonDocumentAsync(data.Stream);
 
-                    return rule;
-                })
-                .FirstOrDefault();
+                if (document.IsValid(GeoJsonHelper.GeoJsonSchema))
+                    return true;
+            }
+
+            return false;
         }
 
         private static XmlSchemaRule GetXmlSchemaRule()
@@ -238,6 +237,21 @@ namespace Geonorge.Validator.Application.Services.RuleSetService
                 .Select(type =>
                 {
                     var rule = Activator.CreateInstance(type) as XmlSchemaRule;
+                    rule.Create();
+
+                    return rule;
+                })
+                .FirstOrDefault();
+        }
+
+        private static JsonSchemaRule GetJsonSchemaRule()
+        {
+            return _schemaRuleAssembly.GetTypes()
+                .Where(type => type.IsSubclassOf(typeof(JsonSchemaRule)) &&
+                    type.GetConstructor(Type.EmptyTypes) != null)
+                .Select(type =>
+                {
+                    var rule = Activator.CreateInstance(type) as JsonSchemaRule;
                     rule.Create();
 
                     return rule;
