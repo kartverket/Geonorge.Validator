@@ -1,12 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using Geonorge.Validator.Common.Helpers;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using static Geonorge.Validator.GeoJson.Constants.Constants;
+using System.Reflection;
 
 namespace Geonorge.Validator.GeoJson.Helpers
 {
     public class GeoJsonHelper
     {
+        public static readonly JSchema GeoJsonSchema = LoadGeoJsonSchema();
+
         public static IEnumerable<JToken> GetAllTokens(JToken document)
         {
             var toSearch = new Stack<JToken>(document.Children());
@@ -60,33 +63,12 @@ namespace Geonorge.Validator.GeoJson.Helpers
             }
         }
 
-        public static bool HasGeoJson(JSchema schema)
+        private static JSchema LoadGeoJsonSchema()
         {
-            var schemaUris = new List<Uri>();
-            FindSchemaUris(schema, schemaUris);
-
-            return schemaUris
-                .Any(uri =>
-                {
-                    var uriWithoutScheme = GetUriWithoutScheme(uri);
-                    return GeoJsonSchemaIds.Any(uri => uriWithoutScheme == GetUriWithoutScheme(uri));
-                });
+            using var schemaStream = FileHelper.GetResourceStream("GeoJSON.schema.json", Assembly.Load("Geonorge.Validator.GeoJson"));
+            using var jsonReader = new JsonTextReader(new StreamReader(schemaStream));
+            
+            return JSchema.Load(jsonReader, new JSchemaUrlResolver());
         }
-
-        private static void FindSchemaUris(JSchema schema, List<Uri> schemaIds)
-        {
-            if (schema.Id != null)
-                schemaIds.Add(schema.Id);
-
-            if (schema.AllOf.Any())
-                foreach (var sch in schema.AllOf)
-                    FindSchemaUris(sch, schemaIds);
-
-            if (schema.Properties.Any())
-                foreach (var (_, sch) in schema.Properties)
-                    FindSchemaUris(sch, schemaIds);
-        }
-
-        private static string GetUriWithoutScheme(Uri uri) => uri.Host + uri.PathAndQuery + uri.Fragment;
     }
 }

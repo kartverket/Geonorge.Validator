@@ -1,11 +1,12 @@
 ﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Application.Models.Data;
 using Newtonsoft.Json.Schema;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.Services.JsonSchemaValidation
 {
     public interface IJsonSchemaValidationService
     {
-        List<JsonSchemaValidationError> Validate(InputData inputData, JSchema schema);
+        Task<JsonSchemaValidationResult> ValidateAsync(DisposableList<InputData> inputData, JSchema schema);
     }
 }

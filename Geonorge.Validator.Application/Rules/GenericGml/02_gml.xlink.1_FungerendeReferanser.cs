@@ -127,12 +127,24 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
 
                 if (xLink.Length != 2)
                 {
-                    this.AddMessage(
-                        Translate("Message7", GmlHelper.GetFeatureType(element), element.GetName(), xLink[0]),
-                        document.FileName,
-                        new[] { element.GetXPath() },
-                        new[] { GmlHelper.GetFeatureGmlId(element) }
-                    );
+                    if (xLink[0] == "#")
+                    {
+                        this.AddMessage(
+                            Translate("Message7", GmlHelper.GetFeatureType(element), element.GetName(), xLink[0]),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
+                    else
+                    {
+                        this.AddMessage(
+                            Translate("Message8", GmlHelper.GetFeatureType(element), element.GetName(), xLink[0]),
+                            document.FileName,
+                            new[] { element.GetXPath() },
+                            new[] { GmlHelper.GetFeatureGmlId(element) }
+                        );
+                    }
                 }
                 else
                 {
@@ -143,7 +155,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                     if (refElement == null)
                     {
                         this.AddMessage(
-                            Translate("Message8", GmlHelper.GetNameAndId(GmlHelper.GetFeatureElement(element)), element.GetName(), gmlId),
+                            Translate("Message9", GmlHelper.GetNameAndId(GmlHelper.GetFeatureElement(element)), element.GetName(), gmlId),
                             document.FileName,
                             new[] { element.GetXPath() },
                             new[] { GmlHelper.GetFeatureGmlId(element) }
@@ -162,7 +174,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                         if (validationResult != default)
                         {
                             this.AddMessage(
-                                Translate("Message9", GmlHelper.GetNameAndId(GmlHelper.GetFeatureElement(element)), validationResult.RefElement, gmlId, validationResult.ValidElements),
+                                Translate("Message10", GmlHelper.GetNameAndId(GmlHelper.GetFeatureElement(element)), validationResult.RefElement, gmlId, validationResult.ValidElements),
                                 document.FileName,
                                 new[] { element.GetXPath() },
                                 new[] { GmlHelper.GetFeatureGmlId(element) }

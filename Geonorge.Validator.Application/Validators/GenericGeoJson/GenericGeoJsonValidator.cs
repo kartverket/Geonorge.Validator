@@ -5,6 +5,7 @@ using Geonorge.Validator.Application.Services.Notification;
 using Geonorge.Validator.GeoJson.Models;
 using Geonorge.Validator.Rules.GeoJson;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Geonorge.Validator.Application.Validators.GenericJson
@@ -26,13 +27,16 @@ namespace Geonorge.Validator.Application.Validators.GenericJson
         {
             var geoJsonValidationInput = await GetGeoJsonValidationInput(inputData);
 
+            if (geoJsonValidationInput == null)
+                return new();
+
             await _validator.Validate(geoJsonValidationInput, options =>
             {
                 skipRules.ForEach(options.SkipRule);
                 options.OnRuleExecuted = OnRuleExecuted;
             });
 
-            return  _validator.GetAllRules();
+            return _validator.GetAllRules();
         }
 
         private async Task OnRuleExecuted(RuleResult result)
@@ -52,7 +56,9 @@ namespace Geonorge.Validator.Application.Validators.GenericJson
                 geoJsonDocuments.Add(await GeoJsonDocument.CreateAsync(data));
             }
 
-            return GeoJsonValidationInput.Create(geoJsonDocuments);
+            return geoJsonDocuments.Any() ?
+                GeoJsonValidationInput.Create(geoJsonDocuments) :
+                null;
         }
     }
 }

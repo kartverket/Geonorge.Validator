@@ -34,7 +34,7 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
         }
 
         public async Task<XmlSchemaValidationResult> ValidateAsync(
-            DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
+            IEnumerable<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespaces)
         {            
             var xmlSchemaRule = GetXmlSchemaRule();
             var xmlSchemaSet = CreateXmlSchemaSet(xmlSchemaData, _settings);

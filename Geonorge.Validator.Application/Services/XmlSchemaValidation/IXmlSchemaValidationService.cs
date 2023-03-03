@@ -8,6 +8,6 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 {
     public interface IXmlSchemaValidationService
     {
-        Task<XmlSchemaValidationResult> ValidateAsync(DisposableList<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespace);
+        Task<XmlSchemaValidationResult> ValidateAsync(IEnumerable<InputData> inputData, XmlSchemaData xmlSchemaData, List<string> xmlNamespace);
     }
 }

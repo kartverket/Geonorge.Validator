@@ -1,5 +1,6 @@
 ﻿using Geonorge.Validator.Common.Models;
 using Microsoft.AspNetCore.WebUtilities;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -64,6 +65,15 @@ namespace Geonorge.Validator.Common.Helpers
             memoryStream.Position = 0;
 
             return memoryStream;
+        }
+
+        public static Stream GetResourceStream(string fileName, Assembly assembly = null)
+        {
+            assembly ??= Assembly.GetExecutingAssembly();            
+            var name = assembly.GetManifestResourceNames().SingleOrDefault(name => name.EndsWith(fileName));
+            var stream = name != null ? assembly.GetManifestResourceStream(name) : null;
+
+            return stream;
         }
     }
 }

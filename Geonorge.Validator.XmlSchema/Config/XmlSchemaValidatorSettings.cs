@@ -1,10 +1,4 @@
-﻿using Geonorge.Validator.XmlSchema.Validator;
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Xml.Schema;
-
-namespace Geonorge.Validator.XmlSchema.Config
+﻿namespace Geonorge.Validator.XmlSchema.Config
 {
     public class XmlSchemaValidatorSettings
     {

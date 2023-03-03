@@ -50,7 +50,7 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
 
                         if (name == "files" && (fileType == FileType.XML || fileType == FileType.GML32 || fileType == FileType.JSON))
                         {
-                            files.Add(await CreateInputDataAsync(contentDisposition, section));
+                            files.Add(await CreateInputDataAsync(contentDisposition, section, fileType));
                             fileTypes.Add(fileType);
                         }
                         else if (name == "schema" && schema == null && (fileType == FileType.XSD || fileType == FileType.JSON))
@@ -106,11 +106,11 @@ namespace Geonorge.Validator.Application.Services.MultipartRequest
             }
         }
 
-        private static async Task<InputData> CreateInputDataAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)
+        private static async Task<InputData> CreateInputDataAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section, FileType fileType)
         {
             var memoryStream = await CreateStreamAsync(section);
 
-            return new InputData(memoryStream, contentDisposition.FileName.ToString(), contentDisposition.Name.ToString());
+            return new InputData(memoryStream, contentDisposition.FileName.ToString(), fileType);
         }
 
         private static async Task<IFormFile> CreateFormFileAsync(ContentDispositionHeaderValue contentDisposition, MultipartSection section)

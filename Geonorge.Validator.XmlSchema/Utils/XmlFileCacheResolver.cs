@@ -10,14 +10,15 @@ namespace Geonorge.Validator.XmlSchema.Utils
 {
     public class XmlFileCacheResolver : XmlUrlResolver
     {
+        private readonly HttpClient _httpClient;
         private readonly XmlSchemaValidatorSettings _settings;
-        private readonly HttpClient _client;
 
         public XmlFileCacheResolver(
+            HttpClient httpClient,
             XmlSchemaValidatorSettings settings)
         {
-            _settings = settings;
-            _client = new();
+            _httpClient = httpClient;
+            _settings = settings;            
         }
 
         public List<string> CachedUris { get; } = new();
@@ -34,7 +35,7 @@ namespace Geonorge.Validator.XmlSchema.Utils
                 if (File.Exists(filePath))
                     return File.OpenRead(filePath);                   
 
-                using var response = _client.GetAsync(absoluteUri).Result;
+                using var response = _httpClient.GetAsync(absoluteUri).Result;
                 var stream = response.Content.ReadAsStream();
 
                 var memoryStream = new MemoryStream();

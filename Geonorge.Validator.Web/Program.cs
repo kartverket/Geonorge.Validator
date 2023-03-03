@@ -135,6 +135,7 @@ services.AddHttpClient<IProxyHttpClient, ProxyHttpClient>();
 services.AddHostedService<CacheService>();
 
 services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
+services.Configure<JsonSchemaValidatorSettings>(configuration.GetSection(JsonSchemaValidatorSettings.SectionName));
 services.Configure<CodelistSettings>(configuration.GetSection(CodelistSettings.SectionName));
 services.Configure<MapSettings>(configuration.GetSection(MapSettings.SectionName));
 services.Configure<StylingSettings>(configuration.GetSection(StylingSettings.SectionName));

@@ -12,6 +12,8 @@ namespace Geonorge.Validator.Common.Models
         XSD,
         [Description("application/json")]
         JSON,
+        [Description("application/geo+json")]
+        GeoJSON,
         [Description("application/octet-stream")]
         Unknown
     }
