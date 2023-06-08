@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Geonorge.Validator.Common.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,15 +18,18 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
         public XLinkValidator(
             XmlSchemaSet xmlSchemaSet,
             HashSet<XmlSchemaElement> xmlSchemaElements,
+            Dictionary<string, Dictionary<XmlLineInfo, XmlSchemaLineInfo>> xmlSchemaMappings,
             Func<Uri, Task<CodeList>> fetchCodelist)
         {
             XmlSchemaSet = xmlSchemaSet;
             XmlSchemaElements = xmlSchemaElements;
+            XmlSchemaMappings = xmlSchemaMappings;
             FetchCodelist = fetchCodelist;
         }
 
         public XmlSchemaSet XmlSchemaSet { get; }
         public HashSet<XmlSchemaElement> XmlSchemaElements { get; } = new();
+        public Dictionary<string, Dictionary<XmlLineInfo, XmlSchemaLineInfo>> XmlSchemaMappings { get; } = new();
         public Func<Uri, Task<CodeList>> FetchCodelist { get; }
 
         public (string RefElement, string ValidElements) Validate(XElement element, XElement refElement, XmlSchemaElement xmlSchemaElement)

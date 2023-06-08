@@ -1,4 +1,6 @@
 ﻿using DiBK.RuleValidator.Extensions;
+using Geonorge.Validator.Common.Extensions;
+using Geonorge.Validator.Common.Models;
 using Geonorge.Validator.XmlSchema.Models;
 using Geonorge.Validator.XmlSchema.Translator;
 using System.Collections.Generic;
@@ -37,6 +39,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
             using var memoryStream = await CopyStreamAsync(inputData.Stream);
             using var reader = XmlReader.Create(memoryStream, xmlReaderSettings);
             var schemaElements = new HashSet<XmlSchemaElement>();
+            var schemaMappings = new Dictionary<XmlLineInfo, XmlSchemaLineInfo>();
 
             try
             {
@@ -51,6 +54,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
                         continue;
 
                     schemaElements.Add(schemaElement);
+                    schemaMappings.Add(reader.ToXmlLineInfo(), schemaElement.ToXmlSchemaLineInfo());
                 }
             }
             catch (XmlException exception)
@@ -69,7 +73,7 @@ namespace Geonorge.Validator.XmlSchema.Validator
 
             await EnrichValidationErrors(inputData);
 
-            return new XmlSchemaValidatorResult(_messages, schemaElements);
+            return new XmlSchemaValidatorResult(_messages, schemaElements, schemaMappings);
         }
 
         private XmlReaderSettings GetXmlReaderSettings(XmlSchemaSet xmlSchemaSet)

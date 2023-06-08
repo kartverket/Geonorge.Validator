@@ -6,8 +6,7 @@ using Geonorge.Validator.Application.HttpClients.Codelist;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.Notification;
-using Geonorge.Validator.XmlSchema.Config;
-using Microsoft.Extensions.Options;
+using Geonorge.Validator.Common.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -32,7 +31,11 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
         }
 
         public async Task<List<Rule>> Validate(
-            DisposableList<InputData> inputData, HashSet<XmlSchemaElement> xmlSchemaElements, XmlSchemaSet xmlSchemaSet, List<string> skipRules)
+            DisposableList<InputData> inputData, 
+            HashSet<XmlSchemaElement> xmlSchemaElements,
+            Dictionary<string, Dictionary<XmlLineInfo, XmlSchemaLineInfo>> xmlSchemaMappings,
+            XmlSchemaSet xmlSchemaSet, 
+            List<string> skipRules)
         {
             await _notificationService.SendAsync("Bearbeider data");
 
@@ -41,7 +44,7 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             var gmlValidationInputV2 = GmlValidationInputV2.Create(
                 gmlValidationInputV1.Surfaces, 
                 gmlValidationInputV1.Solids,
-                new XLinkValidator(xmlSchemaSet, xmlSchemaElements, uri => _codelistHttpClient.GetCodelistAsync(uri))
+                new XLinkValidator(xmlSchemaSet, xmlSchemaElements, xmlSchemaMappings, uri => _codelistHttpClient.GetCodelistAsync(uri))
             );
 
             await _notificationService.SendAsync("Validerer");

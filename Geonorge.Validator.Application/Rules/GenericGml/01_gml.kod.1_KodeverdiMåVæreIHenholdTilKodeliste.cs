@@ -3,6 +3,9 @@ using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Extensions.Gml;
 using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
+using Geonorge.Validator.Common.Extensions;
+using Geonorge.Validator.Common.Models;
+using Geonorge.Validator.XmlSchema.Validator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +17,11 @@ using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
+    public static class XElementExtensions
+    {
+
+    }
+
     public class KodeverdiMåVæreIHenholdTilEksternKodeliste : Rule<IGmlValidationInputV2>
     {
         public override void Create()
@@ -34,64 +42,72 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             var documents = data.Surfaces.Concat(data.Solids);
 
             foreach (var document in documents)
-                Validate(document, codelists);
+                Validate(document, codelists, data.XLinkValidator.XmlSchemaMappings[document.FileName]);
         }
 
-        private void Validate(GmlDocument document, Dictionary<XName, Codelist> codelists)
+        private void Validate(GmlDocument document, Dictionary<XmlSchemaLineInfo, Codelist> codelists, Dictionary<XmlLineInfo, XmlSchemaLineInfo> xmlSchemaMappings)
         {
             var codelistElements = document.Document.Descendants()
-                .Where(element => codelists.ContainsKey(element.Name))
+                .Select(element =>
+                {
+                    var xmlLineInfo = element.ToXmlLineInfo();
+
+                    if (xmlSchemaMappings.TryGetValue(xmlLineInfo, out var xmlSchemaLineInfo) && codelists.TryGetValue(xmlSchemaLineInfo, out var codelist))
+                        return (Element: element, Codelist: codelist);
+
+                    return default;
+                })
+                .Where(tuple => tuple != default)
                 .ToList();
 
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 8 };
 
-            Parallel.ForEach(codelistElements, parallelOptions, element =>
+            Parallel.ForEach(codelistElements, parallelOptions, tuple =>
             {
-                var code = element.Value;
+                var element = tuple.Element;
+                var code = tuple.Element.Value;
+                var codelist = tuple.Codelist;
 
-                if (codelists.TryGetValue(element.Name, out var codelist))
+                if (codelist.Status == CodelistStatus.CodelistNotFound)
                 {
-                    if (codelist.Status == CodelistStatus.CodelistNotFound)
-                    {
-                        this.AddMessage(
-                            Translate("Message1", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
-                            document.FileName,
-                            new[] { element.GetXPath() },
-                            new[] { GmlHelper.GetFeatureGmlId(element) }
-                        );
-                    }
-                    else if (codelist.Status == CodelistStatus.CodelistUnavailable)
-                    {
-                        this.AddMessage(
-                            Translate("Message2", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
-                            document.FileName,
-                            new[] { element.GetXPath() },
-                            new[] { GmlHelper.GetFeatureGmlId(element) }
-                        );
-                    }
-                    else if (codelist.Status == CodelistStatus.InvalidCodelist)
-                    {
-                        this.AddMessage(
-                            Translate("Message3", codelist.Uri.AbsoluteUri),
-                            document.FileName,
-                            new[] { element.GetXPath() },
-                            new[] { GmlHelper.GetFeatureGmlId(element) }
-                        );
-                    }
-                    else if (!codelist.Items.Any(codelistValue => codelistValue.Value == code))
-                    {
-                        this.AddMessage(
-                            Translate("Message4", code, codelist.Uri.AbsoluteUri),
-                            document.FileName,
-                            new[] { element.GetXPath() },
-                            new[] { GmlHelper.GetFeatureGmlId(element) }
-                        );
-                    }
+                    this.AddMessage(
+                        Translate("Message1", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
+                        document.FileName,
+                        new[] { element.GetXPath() },
+                        new[] { GmlHelper.GetFeatureGmlId(element) }
+                    );
+                }
+                else if (codelist.Status == CodelistStatus.CodelistUnavailable)
+                {
+                    this.AddMessage(
+                        Translate("Message2", codelist.Uri.AbsoluteUri, (int)codelist.HttpStatusCode),
+                        document.FileName,
+                        new[] { element.GetXPath() },
+                        new[] { GmlHelper.GetFeatureGmlId(element) }
+                    );
+                }
+                else if (codelist.Status == CodelistStatus.InvalidCodelist)
+                {
+                    this.AddMessage(
+                        Translate("Message3", codelist.Uri.AbsoluteUri),
+                        document.FileName,
+                        new[] { element.GetXPath() },
+                        new[] { GmlHelper.GetFeatureGmlId(element) }
+                    );
+                }
+                else if (!codelist.Items.Any(codelistValue => codelistValue.Value == code))
+                {
+                    this.AddMessage(
+                        Translate("Message4", code, codelist.Uri.AbsoluteUri),
+                        document.FileName,
+                        new[] { element.GetXPath() },
+                        new[] { GmlHelper.GetFeatureGmlId(element) }
+                    );
                 }
             });
         }
 
-        private static async Task<Dictionary<XName, Codelist>> GetCodelists(
+        private static async Task<Dictionary<XmlSchemaLineInfo, Codelist>> GetCodelists(
             HashSet<XmlSchemaElement> xmlSchemaElements, Func<Uri, Task<Codelist>> fetchCodelist)
         {
             var codeElements = xmlSchemaElements
@@ -99,7 +115,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                 .GroupBy(element => element.QualifiedName)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.ToList());
 
-            var codeListDict = new Dictionary<XName, Codelist>();
+            var codeListDict = new Dictionary<XmlSchemaLineInfo, Codelist>();
 
             foreach (var (qualifiedName, elements) in codeElements)
             {
@@ -111,17 +127,15 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                 foreach (var element in elements)
                 {
                     if (_codelistSelectors.TryGetValue(element.SchemaTypeName, out var resolveUri))
-                        uris.Add(resolveUri(element));
-                }
+                    {
+                        var uri = resolveUri(element);
 
-                var uri = uris
-                    .Where(uri => uri != null)
-                    .FirstOrDefault();
-
-                if (uri != null)
-                {
-                    var codelist = await fetchCodelist(uri);
-                    codeListDict.Add(name, codelist);
+                        if (uri != null)
+                        {
+                            var codelist = await fetchCodelist(uri);
+                            codeListDict.Add(element.ToXmlSchemaLineInfo(), codelist);
+                        }
+                    }
                 }
             }
 
