@@ -5,7 +5,6 @@ using Geonorge.Validator.Application.Models.Data.Codelist;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Common.Extensions;
 using Geonorge.Validator.Common.Models;
-using Geonorge.Validator.XmlSchema.Validator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +16,6 @@ using static DiBK.RuleValidator.Extensions.Gml.Constants.Namespace;
 
 namespace Geonorge.Validator.Application.Rules.GenericGml
 {
-    public static class XElementExtensions
-    {
-
-    }
-
     public class KodeverdiMåVæreIHenholdTilEksternKodeliste : Rule<IGmlValidationInputV2>
     {
         public override void Create()
