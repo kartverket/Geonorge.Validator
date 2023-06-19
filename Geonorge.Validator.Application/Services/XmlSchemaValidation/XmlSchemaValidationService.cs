@@ -3,6 +3,7 @@ using DiBK.RuleValidator.Extensions;
 using Geonorge.Validator.Application.Models;
 using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Rules.XmlSchema;
+using Geonorge.Validator.Common.Models;
 using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
 using Geonorge.Validator.XmlSchema.Validator;
@@ -12,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Schema;
 using static Geonorge.Validator.XmlSchema.Utils.XmlSchemaHelper;
 
@@ -39,6 +41,7 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
             var xmlSchemaRule = GetXmlSchemaRule();
             var xmlSchemaSet = CreateXmlSchemaSet(xmlSchemaData, _settings);
             var xmlSchemaElements = new HashSet<XmlSchemaElement>();
+            var xmlSchemaMappings = new Dictionary<string, Dictionary<XmlLineInfo, XmlSchemaLineInfo>>();
             var startTime = DateTime.Now;
 
             foreach (var data in inputData)
@@ -70,6 +73,7 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
                     .ToList()
                     .ForEach(xmlSchemaRule.AddMessage);
 
+                xmlSchemaMappings.Add(data.FileName, result.SchemaMappings);
                 xmlSchemaElements.UnionWith(result.SchemaElements);
             }
 
@@ -77,7 +81,7 @@ namespace Geonorge.Validator.Application.Services.XmlSchemaValidation
 
             LogInformation(xmlSchemaRule, startTime);
 
-            return new XmlSchemaValidationResult(xmlSchemaRule, xmlSchemaElements, xmlSchemaSet);
+            return new XmlSchemaValidationResult(xmlSchemaRule, xmlSchemaElements, xmlSchemaMappings, xmlSchemaSet);
         }
 
         private void LogInformation(XmlSchemaRule xmlSchemaRule, DateTime startTime)
