@@ -158,7 +158,7 @@ namespace Geonorge.Validator.Application.HttpClients.XmlSchemaCacher
         {
             var filePath = GetFilePath(uri);
 
-            return !File.Exists(filePath) && !downloaded.ContainsKey(uri);
+            return !downloaded.ContainsKey(uri) && (!File.Exists(filePath) || !_settings.CacheableHosts.Contains(uri.Host));
         }
 
         private string GetFilePath(Uri uri)
