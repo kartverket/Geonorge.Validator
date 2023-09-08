@@ -8,18 +8,16 @@ namespace Geonorge.Validator.Application.Models
     public class GmlValidationInput : IGmlValidationInputV1
     {
         private bool _disposed = false;
-        public List<GmlDocument> Surfaces { get; } = new();
-        public List<GmlDocument> Solids { get; } = new();
+        public List<GmlDocument> Documents { get; } = new();
 
-        private GmlValidationInput(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
+        private GmlValidationInput(IEnumerable<GmlDocument> documents)
         {
-            Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
-            Solids.AddRange(solids ?? new List<GmlDocument>());
+            Documents.AddRange(documents ?? new List<GmlDocument>());
         }
 
-        public static IGmlValidationInputV1 Create(IEnumerable<GmlDocument> surfaces, IEnumerable<GmlDocument> solids)
+        public static IGmlValidationInputV1 Create(IEnumerable<GmlDocument> documents)
         {
-            return new GmlValidationInput(surfaces, solids);
+            return new GmlValidationInput(documents);
         }
 
         public void Dispose()
@@ -33,10 +31,7 @@ namespace Geonorge.Validator.Application.Models
             if (!_disposed)
             {
                 if (disposing)
-                {
-                    Surfaces.ForEach(surface => surface.Dispose());
-                    Solids.ForEach(solid => solid.Dispose());
-                }
+                    Documents.ForEach(document => document.Dispose());
 
                 _disposed = true;
             }

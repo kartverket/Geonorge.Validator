@@ -16,8 +16,8 @@ namespace Geonorge.Validator.Web.Configuration
             {
                 options.AddValidator<IReguleringsplanforslagValidator, ReguleringsplanforslagValidator>(
                     ValidatorType.Reguleringsplanforslag,
-                    "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
-                    new[] { "5.0_rev20210827", "5.0_rev20211104" },
+                    "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/20230701",
+                    new[] { "20230701" },
                     typeof(Skjemavalidering),
                     new[] { typeof(IGmlValidationInputV1), typeof(IRpfValidationInput) },
                     options =>

@@ -10,7 +10,6 @@ using Geonorge.Validator.Common.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Schema;
-using static Geonorge.Validator.Common.Helpers.GmlHelper;
 
 namespace Geonorge.Validator.Application.Validators.GenericGml
 {
@@ -39,11 +38,10 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
         {
             await _notificationService.SendAsync("Bearbeider data");
 
-            var gmlValidationInputV1 = await GetGmlValidationInputV1(inputData);
+            var gmlValidationInputV1 = GetGmlValidationInputV1(inputData);
 
             var gmlValidationInputV2 = GmlValidationInputV2.Create(
-                gmlValidationInputV1.Surfaces, 
-                gmlValidationInputV1.Solids,
+                gmlValidationInputV1.Documents, 
                 new XLinkValidator(xmlSchemaSet, xmlSchemaElements, xmlSchemaMappings, uri => _codelistHttpClient.GetCodelistAsync(uri))
             );
 
@@ -74,29 +72,19 @@ namespace Geonorge.Validator.Application.Validators.GenericGml
             await _notificationService.SendAsync($"{result} ({result.TimeUsed:0.##} sek.)");
         }
 
-        private static async Task<IGmlValidationInputV1> GetGmlValidationInputV1(DisposableList<InputData> inputData)
+        private static IGmlValidationInputV1 GetGmlValidationInputV1(DisposableList<InputData> inputData)
         {
-            var gmlDocuments2D = new List<GmlDocument>();
-            var gmlDocuments3D = new List<GmlDocument>();
+            var documents = new List<GmlDocument>();
 
             foreach (var data in inputData)
             {
                 if (!data.IsValid)
                     continue;
 
-                var document = GmlDocument.Create(data);
-                var dimensions = await GetDimensionsAsync(data.Stream);
-
-                if (dimensions == 2)
-                    gmlDocuments2D.Add(document);
-                else if (dimensions == 3)
-                    gmlDocuments3D.Add(document);
+                documents.Add(GmlDocument.Create(data));
             }
 
-            return GmlValidationInput.Create(
-                gmlDocuments2D,
-                gmlDocuments3D
-            );
+            return GmlValidationInput.Create(documents);
         }
     }
 }

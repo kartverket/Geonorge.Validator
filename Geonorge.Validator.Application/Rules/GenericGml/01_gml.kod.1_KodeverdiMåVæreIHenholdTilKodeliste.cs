@@ -23,20 +23,18 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
             Id = "gml.kod.1";
         }
 
-        protected override async Task ValidateAsync(IGmlValidationInputV2 data)
+        protected override async Task ValidateAsync(IGmlValidationInputV2 input)
         {
-            if (!data.Surfaces.Any() && !data.Solids.Any())
+            if (!input.Documents.Any())
                 SkipRule();
 
-            var codelists = await GetCodelists(data.XLinkValidator.XmlSchemaElements, data.XLinkValidator.FetchCodelist);
+            var codelists = await GetCodelists(input.XLinkValidator.XmlSchemaElements, input.XLinkValidator.FetchCodelist);
 
             if (!codelists.Any())
                 SkipRule();
 
-            var documents = data.Surfaces.Concat(data.Solids);
-
-            foreach (var document in documents)
-                Validate(document, codelists, data.XLinkValidator.XmlSchemaMappings[document.FileName]);
+            foreach (var document in input.Documents)
+                Validate(document, codelists, input.XLinkValidator.XmlSchemaMappings[document.FileName]);
         }
 
         private void Validate(GmlDocument document, Dictionary<XmlSchemaLineInfo, Codelist> codelists, Dictionary<XmlLineInfo, XmlSchemaLineInfo> xmlSchemaMappings)
