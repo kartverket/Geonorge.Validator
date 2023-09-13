@@ -44,9 +44,7 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
                 if (disposing)
                 {
                     Plankart2D.ForEach(plankart => plankart.Dispose());
-
-                    if (Plankart3D != null)
-                        Plankart3D.Dispose();
+                    Plankart3D?.Dispose();
                 }
 
                 _disposed = true;

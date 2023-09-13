@@ -23,13 +23,11 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
 
         protected override async Task ValidateAsync(IGmlValidationInputV2 input)
         {
-            if (!input.Surfaces.Any() && !input.Solids.Any())
+            if (!input.Documents.Any())
                 SkipRule();
 
-            var documents = input.Surfaces.Concat(input.Solids);
-
-            foreach (var document in documents)
-                await ValidateAsync(documents, document, input.XLinkValidator);
+            foreach (var document in input.Documents)
+                await ValidateAsync(input.Documents, document, input.XLinkValidator);
         }
 
         private async Task ValidateAsync(IEnumerable<GmlDocument> documents, GmlDocument document, XLinkValidator xLinkValidator)

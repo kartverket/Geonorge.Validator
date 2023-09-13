@@ -7,26 +7,22 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
     public class GmlValidationInputV2 : IGmlValidationInputV2
     {
         private bool _disposed = false;
-        public List<GmlDocument> Surfaces { get; } = new();
-        public List<GmlDocument> Solids { get; } = new();
+        public List<GmlDocument> Documents { get; } = new();
         public XLinkValidator XLinkValidator { get; }
 
         private GmlValidationInputV2(
-            IEnumerable<GmlDocument> surfaces, 
-            IEnumerable<GmlDocument> solids, 
+            IEnumerable<GmlDocument> documents, 
             XLinkValidator xLinkValidator)
         {
-            Surfaces.AddRange(surfaces ?? new List<GmlDocument>());
-            Solids.AddRange(solids ?? new List<GmlDocument>());
+            Documents.AddRange(documents ?? new List<GmlDocument>());
             XLinkValidator = xLinkValidator;
         }
 
         public static IGmlValidationInputV2 Create(
-            IEnumerable<GmlDocument> surfaces, 
-            IEnumerable<GmlDocument> solids, 
+            IEnumerable<GmlDocument> documents, 
             XLinkValidator xLinkValidator)
         {
-            return new GmlValidationInputV2(surfaces, solids, xLinkValidator);
+            return new GmlValidationInputV2(documents, xLinkValidator);
         }
 
         public void Dispose()
@@ -40,10 +36,7 @@ namespace Geonorge.Validator.Application.Models.Data.Validation
             if (!_disposed)
             {
                 if (disposing)
-                {
-                    Surfaces.ForEach(surface => surface.Dispose());
-                    Solids.ForEach(solid => solid.Dispose());
-                }
+                    Documents.ForEach(surface => surface.Dispose());
 
                 _disposed = true;
             }
