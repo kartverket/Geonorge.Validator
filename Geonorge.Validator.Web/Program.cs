@@ -200,7 +200,7 @@ app.UseCors(options => options
     .AllowAnyHeader()
     .AllowCredentials()
     .WithMethods("GET", "POST")
-    .WithOrigins("http://localhost:3000", "http://localhost:8080"));
+    .WithOrigins("http://localhost:3000", "http://localhost:8080", "https://localhost:44388"));
 
 app.UseResponseCompression();
 

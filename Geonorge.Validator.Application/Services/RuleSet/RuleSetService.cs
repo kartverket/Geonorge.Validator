@@ -1,7 +1,6 @@
 ﻿using DiBK.RuleValidator;
 using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Rules.Gml;
-using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.HttpClients.JsonSchema;
 using Geonorge.Validator.Application.HttpClients.XmlSchema;
 using Geonorge.Validator.Application.Models;
@@ -10,6 +9,7 @@ using Geonorge.Validator.Application.Models.Data;
 using Geonorge.Validator.Application.Models.Data.Validation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Validators.Config;
+using Geonorge.Validator.Common.Exceptions;
 using Geonorge.Validator.Common.Helpers;
 using Geonorge.Validator.Common.Models;
 using Geonorge.Validator.GeoJson.Helpers;

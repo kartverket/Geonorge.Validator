@@ -1,5 +1,5 @@
 ﻿using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.Exceptions;
+using Geonorge.Validator.Common.Exceptions;
 using Geonorge.Validator.Common.Helpers;
 using Geonorge.Validator.XmlSchema.Config;
 using Geonorge.Validator.XmlSchema.Models;
