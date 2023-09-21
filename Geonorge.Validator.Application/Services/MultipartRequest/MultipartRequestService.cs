@@ -1,6 +1,6 @@
 ﻿using DiBK.RuleValidator.Extensions;
-using Geonorge.Validator.Application.Exceptions;
 using Geonorge.Validator.Application.Models.Data;
+using Geonorge.Validator.Common.Exceptions;
 using Geonorge.Validator.Common.Helpers;
 using Geonorge.Validator.Common.Models;
 using Microsoft.AspNetCore.Http;

@@ -3,9 +3,7 @@ using Geonorge.Validator.Application.Services.JsonValidation;
 using Geonorge.Validator.Application.Services.MultipartRequest;
 using Geonorge.Validator.Application.Services.XmlValidation;
 using Geonorge.Validator.Common.Models;
-using Geonorge.Validator.GeoJson.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 
 namespace Geonorge.Validator.Web.Controllers
 {
@@ -38,7 +36,7 @@ namespace Geonorge.Validator.Web.Controllers
                 var submittal = await _multipartRequestService.GetFilesFromMultipartAsync();
 
                 if (!submittal.IsValid)
-                    return BadRequest();
+                    return BadRequest("Datasettet er ugyldig");
 
                 ValidationReport report = null;
 
@@ -51,7 +49,7 @@ namespace Geonorge.Validator.Web.Controllers
                         report = await _jsonValidationService.ValidateAsync(submittal);
                         break;
                     default:
-                        return BadRequest();
+                        return BadRequest("Filtypen er ugyldig");
                 }
 
                 return Ok(report);
