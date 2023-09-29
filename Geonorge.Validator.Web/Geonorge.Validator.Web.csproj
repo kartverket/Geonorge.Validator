@@ -33,8 +33,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="Reguleringsplanforslag.Rules">
-	    <HintPath>..\Geonorge.Validator.Application\Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
+	  <Reference Include="Innsending.Planforslag.Rules">
+	    <HintPath>..\Geonorge.Validator.Application\Rules\Assemblies\Innsending.Planforslag.Rules.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
