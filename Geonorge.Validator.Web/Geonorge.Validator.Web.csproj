@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>af703952-6d95-4c86-819c-ce3f0b58c7ed</UserSecretsId>
 		<PlatformTarget>x64</PlatformTarget>
@@ -33,8 +33,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="Reguleringsplanforslag.Rules">
-	    <HintPath>..\Geonorge.Validator.Application\Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
+	  <Reference Include="Innsending.Planforslag.Rules">
+	    <HintPath>..\Geonorge.Validator.Application\Rules\Assemblies\Innsending.Planforslag.Rules.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 

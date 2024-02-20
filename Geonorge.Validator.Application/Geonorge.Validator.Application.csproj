@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.1.4" />
+		<PackageReference Include="Dibk.Ftpb.Common.Datamodels" Version="0.0.16" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.1.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
@@ -31,13 +32,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="Reguleringsplanforslag.Rules">
-	    <HintPath>Rules\Assemblies\Reguleringsplanforslag.Rules.dll</HintPath>
+	  <Reference Include="Innsending.Planforslag.Rules">
+	    <HintPath>Rules\Assemblies\Innsending.Planforslag.Rules.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Rules\Assemblies\Reguleringsplanforslag.Rules.dll">
+	  <None Update="Rules\Assemblies\Innsending.Planforslag.Rules.dll">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

@@ -27,7 +27,7 @@ namespace Geonorge.Validator.Map.Services
                 if (primaryGeoElement.Value == null)
                     return;
 
-                using var geometry = GetGeometry(primaryGeoElement.Value, axisOrientation);
+                var geometry = GetGeometry(primaryGeoElement.Value, axisOrientation);
 
                 if (geometry == null)
                     return;

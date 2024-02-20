@@ -2,8 +2,8 @@
 using Geonorge.Validator.Application.Validators;
 using Geonorge.Validator.Application.Validators.Config;
 using Geonorge.Validator.Application.Validators.Reguleringsplanforslag;
-using Reguleringsplanforslag.Rules;
-using Reguleringsplanforslag.Rules.Constants;
+using Innsending.Planforslag.Rules;
+using Innsending.Planforslag.Rules.Constants;
 using Skjemavalidering = Geonorge.Validator.Application.Rules.XmlSchema.Skjemavalidering;
 
 namespace Geonorge.Validator.Web.Configuration

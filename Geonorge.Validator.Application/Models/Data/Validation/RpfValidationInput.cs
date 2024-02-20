@@ -1,9 +1,9 @@
 ﻿using DiBK.RuleValidator.Extensions;
 using DiBK.RuleValidator.Extensions.Gml;
-using Reguleringsplanforslag.Rules;
-using Reguleringsplanforslag.Rules.Models;
-using SOSI.Produktspesifikasjon.Reguleringsplanforslag.Oversendelse;
-using SOSI.Produktspesifikasjon.Reguleringsplanforslag.Planbestemmelser;
+using Innsending.Planforslag.Rules;
+using Innsending.Planforslag.Rules.Models;
+using no.kxml.skjema.dibk.oversendelseReguleringsplanforslag;
+using no.kxml.skjema.dibk.planbestemmelser;
 using System;
 using System.Collections.Generic;
 

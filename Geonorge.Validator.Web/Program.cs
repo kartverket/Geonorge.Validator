@@ -27,13 +27,13 @@ using Geonorge.Validator.Web.Configuration;
 using Geonorge.Validator.Web.Middleware;
 using Geonorge.Validator.Web.Security;
 using Geonorge.Validator.XmlSchema.Config;
+using Innsending.Planforslag.Rules;
 using MaxRev.Gdal.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
-using Reguleringsplanforslag.Rules;
 using Serilog;
 using System.Globalization;
 using System.IO.Compression;
@@ -83,7 +83,7 @@ services.AddRuleValidator(settings =>
     settings.AddRuleAssembly("Geonorge.Validator.Application");
     settings.AddRuleAssembly("Geonorge.Validator.Rules.GeoJson");
     settings.AddRuleAssembly("DiBK.RuleValidator.Rules.Gml");
-    settings.AddRuleAssembly("Reguleringsplanforslag.Rules");
+    settings.AddRuleAssembly("Innsending.Planforslag.Rules");
 
     settings.MaxMessageCount = 500;
 });
