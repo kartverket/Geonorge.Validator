@@ -1,0 +1,56 @@
+# nonk8s
+apiVersion: "backstage.io/v1alpha1"
+kind: "Component"
+metadata:
+  name: "Geonorge.Validator"
+  tags:
+  - "public"
+spec:
+  type: "service"
+  lifecycle: "production"
+  owner: "datadeling_og_distribusjon"
+  system: "geonorge"
+  providesApis:
+  - "Geonorge.Validator-api"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Group"
+metadata:
+  name: "security_champion_Geonorge.Validator"
+  title: "Security Champion Geonorge.Validator"
+spec:
+  type: "security_champion"
+  parent: "land_security_champions"
+  members:
+  - "dagolav"
+  children:
+  - "resource:Geonorge.Validator"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
+metadata:
+  name: "Geonorge.Validator"
+  links:
+  - url: "https://github.com/kartverket/Geonorge.Validator"
+    title: "Geonorge.Validator på GitHub"
+spec:
+  type: "repo"
+  owner: "security_champion_Geonorge.Validator"
+  dependencyOf:
+  - "component:Geonorge.Validator"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "API"
+metadata:
+  name: "Geonorge.Validator-api"
+  tags:
+  - "public"
+spec:
+  type: "openapi"
+  lifecycle: "production"
+  owner: "datadeling_og_distribusjon"
+  definition: |
+    openapi: "3.0.0"
+    info:
+        title: Geonorge.Validator API
+    paths:
