@@ -1,0 +1,48 @@
+sops:
+    shamir_threshold: 2
+    key_groups:
+        - gcp_kms:
+            - resource_id: projects/geonorge-prod-ab96/locations/europe-north1/keyRings/geonorge-risc-key-ring/cryptoKeys/geonorge-risc-crypto-key
+              created_at: "2025-01-17T06:53:27Z"
+              enc: CiQAWCffg2py3PlcYJDWOYH5Sm8ynW69GYLaymbpTVpzj+wa8XESSgASqjeRIrVBxJnYH+fjnWUR6FcXpNdxS5A9E5b/R6MI/SYIdnbmuBEfsudnkzrVkKDxiplsVx3l9Ba0ZKKfTjv4T15vhf9oPKL9
+          hc_vault: []
+          age:
+            - recipient: age145s860ux96jvx6d7nwvzar588qjmgv5p47sp6nmmt2jnmhqh4scqcuk0mg
+              enc: |
+                -----BEGIN AGE ENCRYPTED FILE-----
+                YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBMVEkyR1RwUnFBZ0w2MHZH
+                aTFQeDNidmpuNXlJKzJib0NQd0NsMzN3ZWxrCkRCZ2VDRXp4RURwWlBqUlJmU0Z6
+                K2JidmVHcWM3aHByODdBRCtUN0tjN3MKLS0tIGVrNzBOWlZKM0R3REhLSldNTHdO
+                T1UyeHJqM0c5WjZPN2RLclg3d2oyQ1UKlsZQ/yv3L50BJa94kNFnHWMWXFvF6qF6
+                vhiOPgfjTHxGxc+h7Ta16T5lJ/1lCwtJEZ/6lAb70EHph98EamhyWIM=
+                -----END AGE ENCRYPTED FILE-----
+        - hc_vault: []
+          age:
+            - recipient: age18e0t6ve0vdxqzzjt7rxf0r6vzc37fhs5cad2qz40r02c3spzgvvq8uxz23
+              enc: |
+                -----BEGIN AGE ENCRYPTED FILE-----
+                YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBmZ1V1TUFNTy9Wby9Va01G
+                K3Z2dU1OQkxNakoxRThkY3Bielk4RVFjVkRZCmlhQWdMcUsxczhPTFhwYzdNMWph
+                NkM1d01FOXFwNllOWFBrV2NrSndmSUUKLS0tIEVBcmZPdFlvdlFvVU9hOGh5b0th
+                c1NEOExqak9UemFmeHQvc3lwWFdrREEK1OSxBmcK49xnoAnqJUTR0kijc5vUPcJ6
+                opW9Niu4Q5GFGOlBPT4Yy4hlZVD/tLbte3/GDa0vGgo87SqElQnbhDw=
+                -----END AGE ENCRYPTED FILE-----
+            - recipient: age1kjpgclkjev08aa8l2uy277gn0cngrkrkazt240405ezqywkm5axqt3d3tq
+              enc: |
+                -----BEGIN AGE ENCRYPTED FILE-----
+                YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsVXdFZ3A3UGFaVVFvSFVQ
+                MWl1SWVtRGtoLzNwUHp2MUJ1WWRxaTZ0YUhvCi95blRqcnNnT3YycHZRRjdUdEdC
+                L1NrWGtEVUpuQnJ3VllRUFI4c1p2STQKLS0tIHVwT250Q3NSZ0F6cUxaMklDQXd3
+                WUJrQWJWV0VPdi9Tc1QvaEJRTFhhOFUKdqdtSdof/VIduihCS1NIuUk5o8nxmTnA
+                N/38LwPRIrv6vTAtbvajcd5von+RejgQab0MJucwn5qM6Pfg15wGh6E=
+                -----END AGE ENCRYPTED FILE-----
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age: []
+    lastmodified: "2025-01-17T06:53:28Z"
+    mac: ENC[AES256_GCM,data:knuc9BR1HqkAcHtCSJZdp4362aODrt7MQEgmDtYVewPFtrLUl6LNXFzeSVuDTYxhr2GpzKystod3n1uJKew/IdNckWUpY1/9lmGzHlop34xNBdSnb0md1itc9/LtzcSAl71BVCytzExHH7ilwe1KXBbwLp5gtdY0aPcX5EevBF8=,iv:/tGpQhXfwB1wEBRIItjaBlOhKHiTUCExZyzG+zHdNoc=,tag:GmFLZpwW5L6GFZTjzIFRaw==,type:str]
+    pgp: []
+    unencrypted_suffix: _unencrypted
+    version: 3.9.0
