@@ -112,7 +112,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                     }
                 }
             }
-
+            
             var objectXLinkElements = xLinkElements
                 .Where(element => !codelistElementNames.Contains(element.Name))
                 .ToList();
@@ -187,8 +187,17 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
         {
             var qualifiedName = new XmlQualifiedName("ReferenceType", Namespace.GmlNs.NamespaceName);
 
-            return xmlSchemaElements
-                .Where(element => element.SchemaTypeName.Equals(qualifiedName))
+            static bool HasTargetElement(XmlSchemaElement element)
+            {
+                return element.Annotation?.Items
+                    .OfType<XmlSchemaAppInfo>()
+                    .SingleOrDefault()?
+                    .Markup
+                    .SingleOrDefault(node => node.LocalName == "targetElement") != null;
+            }
+
+            return [.. xmlSchemaElements
+                .Where(element => element.SchemaTypeName.Equals(qualifiedName) && !HasTargetElement(element))
                 .GroupBy(element => element.QualifiedName)
                 .Select(grouping =>
                 {
@@ -196,8 +205,7 @@ namespace Geonorge.Validator.Application.Rules.GenericGml
                     XName name = ns + grouping.Key.Name;
 
                     return name;
-                })
-                .ToList();
+                })];
         }
     }
 }
