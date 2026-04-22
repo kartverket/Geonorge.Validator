@@ -1,28 +1,26 @@
-# nonk8s
-apiVersion: "backstage.io/v1alpha1"
-kind: "Component"
+apiVersion: backstage.io/v1alpha1
+kind: Component
 metadata:
-  name: "Geonorge.Validator"
+  name: Geonorge.Validator
   tags:
-  - "public"
+    - public
 spec:
-  type: "service"
-  lifecycle: "production"
-  owner: "datadeling_og_distribusjon"
-  system: "geonorge"
-  providesApis:
-  - "Geonorge.Validator-api"
+  type: service
+  lifecycle: production
+  owner: group:default/geonorge
+  system: system:default/geonorge
+
 ---
-apiVersion: "backstage.io/v1alpha1"
-kind: "API"
+apiVersion: backstage.io/v1alpha1
+kind: API
 metadata:
-  name: "Geonorge.Validator-api"
+  name: Geonorge.Validator-api
   tags:
-  - "public"
+    - public
 spec:
-  type: "openapi"
-  lifecycle: "production"
-  owner: "datadeling_og_distribusjon"
+  type: openapi
+  lifecycle: production
+  owner: group:default/geonorge
   definition: |
     openapi: "3.0.0"
     info:
