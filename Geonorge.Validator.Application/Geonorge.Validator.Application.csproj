@@ -7,7 +7,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Dibk.Ftpb.Common.Datamodels" Version="0.0.16" />
-		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.1.5" />
+		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="2.1.6" />
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
