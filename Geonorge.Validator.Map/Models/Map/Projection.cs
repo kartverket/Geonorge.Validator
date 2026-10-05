@@ -5,6 +5,18 @@ namespace Geonorge.Validator.Map.Models.Map
 {
     public class Projection
     {
+        // Nyere EPSG-database (GDAL 3.13) bruker ETRS89-NOR [EUREF89] / UTM (11021-11026) som horisontal del av
+        // sammensatte koordinatsystemer (f.eks. 5972). Disse mappes til ETRS89 / UTM (25831-25836) som resten av løsningen bruker.
+        private static readonly Dictionary<int, int> _etrs89NorUtmCodes = new()
+        {
+            { 11021, 25831 },
+            { 11022, 25832 },
+            { 11023, 25833 },
+            { 11024, 25834 },
+            { 11025, 25835 },
+            { 11026, 25836 }
+        };
+
         public Epsg Epsg { get; set; }
         public Epsg Epsg2d { get; set; }
         public string Description { get; set; }
@@ -35,7 +47,7 @@ namespace Geonorge.Validator.Map.Models.Map
                     var authCode = spatialReference.GetAuthorityCode("projcs");
 
                     if (int.TryParse(authCode, out var code2d))
-                        projection.Epsg2d = new Epsg(code2d);
+                        projection.Epsg2d = new Epsg(_etrs89NorUtmCodes.GetValueOrDefault(code2d, code2d));
                 }
 
                 spatialReference.ExportToProj4(out string proj4);
