@@ -32,7 +32,7 @@ using MaxRev.Gdal.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using OSGeo.OGR;
 using Serilog;
 using System.Globalization;
