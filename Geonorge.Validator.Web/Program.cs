@@ -173,6 +173,8 @@ var cultureInfo = new CultureInfo("nb-NO");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
+_ = System.Security.Cryptography.RandomNumberGenerator.GetInt32(1);
+
 GdalBase.ConfigureAll();
 Ogr.UseExceptions();
 
