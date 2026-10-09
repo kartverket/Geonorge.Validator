@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="DiBK.RuleValidator.Extensions" Version="2.0.9" />
-    <PackageReference Include="MaxRev.Gdal.Core" Version="3.13.3.580" />
+    <PackageReference Include="MaxRev.Gdal.Core" Version="3.7.0.217" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.2" />
   </ItemGroup>
